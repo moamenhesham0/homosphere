@@ -78,7 +78,7 @@ Real estate website powered with ai agents.
 - **Firebase config:**
     - *.env*:
         - Holds Firebase connection details (API keys, etc.).
-        - **Always in .gitignored**, so create it in the frontend folder.
+        - **Always in `.gitignore`**, so create it in the frontend folder.
         - Code Content:
             ```
             VITE_FIREBASE_API_KEY=api_key
@@ -88,7 +88,7 @@ Real estate website powered with ai agents.
             VITE_FIREBASE_MESSAGING_SENDER_ID=messaging_sender_id
             VITE_FIREBASE_APP_ID=app_id
             ```
-    - *src/firebase.js* is configured to initialize and manage the Firebase instance.
+    - *src/services/firebase.js* is configured to initialize and manage the Firebase instance.
 - On commit, Husky runs lint-staged to auto-fix and format staged frontend files.
 ---
 # Code Style & Clean Code Guidelines
@@ -104,7 +104,7 @@ Real estate website powered with ai agents.
 
 # 1. Folders
 
-## 1. Naming Convention
+### 1.1 Category Folders
 - **Style:** `kebab-case`
 - **Examples:**
   - `components`
@@ -122,7 +122,7 @@ Real estate website powered with ai agents.
   - `BookingManagement`
 
 **Rule:**
-Use `*kebab-case*` for global/utility folders, `*PascalCase*` for application features.
+Use `kebab-case` for global/utility folders, `PascalCase` for application features.
 
 ## 2. Project Structure
 
