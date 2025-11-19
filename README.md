@@ -133,7 +133,7 @@ Use `kebab-case` for global/utility folders, `PascalCase` for application featur
     ├─ src/                        # Source files
     │   ├─ main/                   # Main application code
     │   │   ├─ java/               # Java packages
-    │   │   │   └─ homosphere
+    │   │   │   └─ com.homosphere.backend
     │   │   │       ├─ config/     # Configuration classes
     │   │   │       ├─ controller/ # REST controllers
     │   │   │       ├─ dto/        # Data Transfer Objects
