@@ -5,12 +5,13 @@ import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class UserPrincipal implements UserDetails{
 
-    private User user;
-    public UserPrincipal(User user){
-        this.user = user;
-    }
+    private final User user;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // TODO Auto-generated method stub
