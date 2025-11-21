@@ -12,7 +12,7 @@ Real estate website powered with ai agents.
 
 ## Tooling & Setup
 - Frontend: React + Vite
-- Firebase: config in `src/firebase.js`, secrets in `.env`
+- Supabase: config in `src/utils/supabase.js`, secrets in `.env`
 - ESLint & Prettier: auto-fix/format via `lint-staged` on commit
 - Husky: pre-commit hook runs lint-staged
 - Justfile: use `just setup` to install dependencies
@@ -75,20 +75,16 @@ Real estate website powered with ai agents.
 	```
 	just lint-fe
 	```
-- **Firebase config:**
+- **Supabase config:**
     - *.env*:
-        - Holds Firebase connection details (API keys, etc.).
+        - Holds Supabase connection details.
         - **Always in `.gitignore`**, so create it in the frontend folder.
         - Code Content:
             ```
-            VITE_FIREBASE_API_KEY=api_key
-            VITE_FIREBASE_AUTH_DOMAIN=project_id.firebaseapp.com
-            VITE_FIREBASE_PROJECT_ID=project_id
-            VITE_FIREBASE_STORAGE_BUCKET=project_id.appspot.com
-            VITE_FIREBASE_MESSAGING_SENDER_ID=messaging_sender_id
-            VITE_FIREBASE_APP_ID=app_id
+            VITE_SUPABASE_URL= SUPABASE_URL
+            VITE_SUPABASE_ANON_KEY= SUPABASE_ANON_KEY
             ```
-    - *src/services/firebase.js* is configured to initialize and manage the Firebase instance.
+    - *src/utils/supabase.js* is configured to initialize and manage the Supabase instance.
 - On commit, Husky runs lint-staged to auto-fix and format staged frontend files.
 ---
 # Code Style & Clean Code Guidelines
@@ -99,7 +95,7 @@ Real estate website powered with ai agents.
 - [3. Classes (OOP)](#3-classes-oop)
 - [4. Functions](#4-functions)
 - [5. Variables](#5-variables)
- - [6. Miscellaneous Practices](#6-miscellaneous-practices)
+- [6. Miscellaneous Practices](#6-miscellaneous-practices)
 
 
 # 1. Folders

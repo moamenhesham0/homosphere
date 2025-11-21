@@ -4,7 +4,7 @@ BACKEND_LINK := "-f homosphere-backend/pom.xml"
 
 # Define packages to install
 FE_DEV_PACKAGES := "eslint prettier eslint-plugin-prettier eslint-config-prettier husky lint-staged"
-FE_PACKAGES := "firebase zustand"
+FE_PACKAGES := "zustand @supabase/supabase-js"
 
 # Run frontend
 run-fe:
