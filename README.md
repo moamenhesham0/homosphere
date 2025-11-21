@@ -12,6 +12,7 @@ Real estate website powered with ai agents.
 
 ## Tooling & Setup
 - Frontend: React + Vite
+- Backend: Springboot (Maven)
 - Supabase: config in `src/utils/supabase.js`, secrets in `.env`
 - ESLint & Prettier: auto-fix/format via `lint-staged` on commit
 - Husky: pre-commit hook runs lint-staged
@@ -20,7 +21,85 @@ Real estate website powered with ai agents.
 ## Common Commands
 
 ### Setup
-#### Setup Justfile
+#### React
+
+
+Windows — Chocolatey (Admin PowerShell)
+
+```powershell
+choco install nodejs-lts -y
+```
+
+Windows — Scoop (standard PowerShell)
+
+```powershell
+iwr -useb get.scoop.sh | iex
+scoop bucket add main
+scoop install nodejs-lts
+```
+
+Linux — apt (Debian/Ubuntu)
+
+```bash
+sudo apt update
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs build-essential
+```
+
+macOS — Homebrew
+
+```bash
+brew install node@lts
+```
+
+#### Springboot (Maven)
+
+Windows — Chocolatey (Admin PowerShell)
+
+```powershell
+choco install temurin -y
+choco install maven -y
+
+# Springboot
+cd homosphere-backend
+mvn clean install
+```
+
+Windows — Scoop (standard PowerShell)
+
+```powershell
+iwr -useb get.scoop.sh | iex
+scoop bucket add main
+scoop install openjdk
+scoop install maven
+
+# Springboot
+cd homosphere-backend
+.\mvnw.cmd clean install
+```
+
+Linux (Debian/Ubuntu)
+
+```bash
+sudo apt update
+sudo apt install -y openjdk-21-jdk maven
+
+# Springboot
+cd homosphere-backend
+./mvnw clean install
+```
+
+macOS — Homebrew
+
+```bash
+brew install openjdk@21 maven
+
+# Springboot
+cd homosphere-backend
+./mvnw clean install
+```
+
+#### Justfile
 - Linux (Debian/Ubuntu)
     ```
     sudo apt install just
