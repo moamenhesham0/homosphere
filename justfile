@@ -1,14 +1,14 @@
-# Define working dirs links
-FRONTEND_LINK := "--prefix homosphere-frontend"
+# Working dirs
+FRONTEND_DIR := "homosphere-frontend"
 BACKEND_LINK := "-f homosphere-backend/pom.xml"
 
-# Define packages to install
+# Packages to install
 FE_DEV_PACKAGES := "eslint prettier eslint-plugin-prettier eslint-config-prettier husky lint-staged"
 FE_PACKAGES := "zustand @supabase/supabase-js"
 
 # Run frontend
 run-fe:
-    npm run dev {{FRONTEND_LINK}} -- --open
+    cd {{FRONTEND_DIR}} && npm run dev -- --open
     @echo "Frontend is running..."
 
 # Run backend
@@ -20,11 +20,9 @@ run-be:
 run: run-fe run-be
     @echo "Development environment is running..."
 
-# Setup development environment
+# Setup frontend
 setup-fe:
-    npm install {{FRONTEND_LINK}}
-    npm install {{FE_DEV_PACKAGES}} --save-dev {{FRONTEND_LINK}}
-    npm install {{FE_PACKAGES}} {{FRONTEND_LINK}}
+    cd {{FRONTEND_DIR}} && npm install && npm install {{FE_DEV_PACKAGES}} --save-dev && npm install {{FE_PACKAGES}}
     @echo "Frontend dependencies are installed."
 
 # Setup backend environment
@@ -38,9 +36,10 @@ setup: setup-fe setup-be
 
 # Format frontend code
 format-fe:
-    npm run format {{FRONTEND_LINK}}
+    cd {{FRONTEND_DIR}} && npm run format
     @echo "Frontend code formatted."
 
+# Lint frontend code
 lint-fe:
-    npm run lint {{FRONTEND_LINK}}
+    cd {{FRONTEND_DIR}} && npm run lint
     @echo "Frontend code linted."
