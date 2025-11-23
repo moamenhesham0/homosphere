@@ -1,0 +1,219 @@
+.subscription-container {
+  padding: 2rem;
+  margin: 0 auto;
+  color: #99BC85;
+  min-height: 86vh;
+  font-family: 'Söhne', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+.subscription-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.subscription-header h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+}
+
+
+.plan-cards {
+  display: flex ;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.plan-card {
+  background-color: #FDFAF6;
+  border: 2px solid #99BC85;
+  min-width: 200px;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.plan-card.go {
+  background-color: #FAF1E6;
+  border-color: #99BC85;
+}
+
+.hot-badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background-color: #99BC85;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.plan-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.price-container {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.plan-price {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #99BC85;
+  margin-right: 0.5rem;
+}
+
+.plan-period {
+  color: #8e8ea0;
+  font-size: 0.8rem;
+}
+
+.select-plan-btn {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 2rem;
+  border: none;
+  font-size: 0.95rem;
+  transition: opacity 0.2s;
+  background-color: #99BC85;
+  color: #ececf1;
+}
+
+
+.select-plan-btn:hover {
+  opacity: 0.9;
+}
+
+.plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.plan-feature {
+  display: flex;
+  align-items: center; /* Changed to center to align icon, text, and help button */
+  margin-bottom: 0.8rem;
+  color: #99BC85;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.feature-icon {
+  margin-right: 0.8rem;
+  color: #99BC85;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Tooltip Styles */
+.tooltip-container {
+  position: relative;
+  display: inline-flex;
+  margin-left: 8px;
+  cursor: help;
+}
+
+.help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #99BC85;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  color: #99BC85;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.tooltip-container:hover .help-icon {
+  background-color: #99BC85;
+  color: #fff;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 180px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; /* Position above the icon */
+  left: 50%;
+  margin-left: -100px; /* Center the tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.8rem;
+  font-weight: 400;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.toggle-container {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1.5rem;
+  border: 2px solid #99BC85;
+  border-radius: 999px;
+  background: transparent;
+  color: #99BC85;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background-color: #99BC85;
+  color: #fff;
+}
+
+.toggle-btn:hover {
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .plan-cards {
+    grid-template-columns: 1fr;
+  }
+}
