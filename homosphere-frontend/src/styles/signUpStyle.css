@@ -338,3 +338,18 @@
   color: #fff;
   border-color: #00a676;
 }
+
+.forget-password {
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.forget-password a {
+color: #00a676;
+text-decoration: none;
+}
+
+.forget-password a:hover {
+text-decoration: underline;
+color: #00a676;
+}
