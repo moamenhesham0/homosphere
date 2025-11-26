@@ -30,6 +30,10 @@ public class ProfileController {
         profileService.saveprofile(registerUser);
     }
 
+    @PutMapping("/api/public/editProfile/{id}")
+    public Profile editProfile (@PathVariable UUID id,@RequestBody Profile Profile){
+        return profileService.editInformation(id, Profile);
+    }
     
     @GetMapping("api/public/retrieveInf/{id}")
     public  Profile retrieveInformation(@PathVariable UUID id){

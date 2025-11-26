@@ -23,6 +23,14 @@ public class ProfileService {
         Profile profile = new Profile(registerUser.getFirstName(), registerUser.getLastName(), registerUser.getPassword(), registerUser.getEmail(),registerUser.getId());
         profileRepository.save(profile);
     }
+    @Transactional
+    public Profile editInformation(UUID id, Profile profileUpdate){
+        Profile old_data = profileRepository.findById(id).orElse(null);
+        
+        if(old_data == null || profileUpdate == null){
+            System.out.println("profile is Null or user not found");
+            return null;
+        }
         
         // Use Builder pattern to update profile
         ProfileUpdateBuilder builder = new ProfileUpdateBuilder(old_data);
