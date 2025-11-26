@@ -5,6 +5,7 @@ import './index.css';
 import App from './App.jsx';
 import SignUp from './pages/signUpPage.jsx';
 import SignIn from './pages/signInPage.jsx';
+import BuyerSubscriptionPage from './pages/BuyerSubscriptionPage.jsx';
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')).render(
                 <Route path="/" element={<App />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/signin" element={<SignIn />} />
+                <Route path="/buyer-subscription" element={<BuyerSubscriptionPage />} />
             </Routes>
         </BrowserRouter>
     </StrictMode>

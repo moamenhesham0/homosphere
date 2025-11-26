@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import './App.css';
-import BuyerSubscriptionPage from './pages/BuyerSubscriptionPage';
-
+import SignUpPage from './pages/signUpPage.jsx';
 function App() {
 
     return (
-        <BuyerSubscriptionPage />
+        <SignUpPage />
     );
 }
 
