@@ -47,7 +47,7 @@ const SignIn = () => {
 
     const signInUser = async () => {
         const result = await signInWithEmail(formData.email, formData.password);
-        
+
         if (result.success) {
             setSuccessMessage('Signed in successfully!');
             return true;
@@ -88,9 +88,9 @@ const SignIn = () => {
         <form className="form" onSubmit={handleSubmit}>
             <p className="title">Sign In</p>
             <p className="message">Sign in now and get full access to our app.</p>
-            
+
             <MessageDisplay error={error} successMessage={successMessage} />
-            
+
             <FormInput
                 required
                 name="email"
@@ -111,15 +111,15 @@ const SignIn = () => {
                 showPassword={showPassword}
                 onTogglePassword={() => setShowPassword(!showPassword)}
             />
-            
-            <p className="forget-password"><Link to={ROUTES.FORGOT_PASSWORD}>Forgot your password?</Link></p>
+
+            <p className="forget-password"><Link to={ROUTES.FORGET_PASSWORD}>Forgot your password?</Link></p>
 
             <button className="submit" type="submit" disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Submit'}
             </button>
-            
+
             <p className="signin">Don't have an account? <Link to={ROUTES.SIGNUP}>Sign up</Link></p>
-            
+
             <GoogleSignInButton />
         </form>
     );

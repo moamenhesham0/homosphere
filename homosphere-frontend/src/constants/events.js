@@ -1,0 +1,2 @@
+export const PASSWORD_RECOVERY = 'PASSWORD_RECOVERY';
+export const SIGNED_IN = 'SIGNED_IN';
