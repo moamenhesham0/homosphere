@@ -44,7 +44,8 @@ class ProfileServiceTest {
             "Doe",
             "password123",
             "john.doe@example.com",
-            testId
+            testId,
+            "buyer"
         );
         
         testProfile = new Profile(
