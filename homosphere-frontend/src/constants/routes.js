@@ -6,6 +6,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   FORGET_PASSWORD: '/forget-password',
   AUTH: '/auth',
+  SUBSCRIPTION: '/subscription',
 };
 
 // External links

@@ -33,3 +33,9 @@ node_modules/
 #ide
 .vscode
 .idea
+
+#h2 data
+homosphere-backend/data/
+*.db
+*.mv.db
+*.trace.db
