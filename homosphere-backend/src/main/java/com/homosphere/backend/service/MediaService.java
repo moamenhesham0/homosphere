@@ -64,6 +64,7 @@ public class MediaService {
             .build();
 
         try {
+            
             s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
         } catch (IOException e) {
             throw new FileUploadException("File upload to Cloudflare R2 failed", e);
