@@ -10,6 +10,8 @@ import ForgetPassword from '@pages/forgetPasswordPage';
 import AuthPage from '@pages/authPage.jsx';
 import SignUp from './pages/signUpPage.jsx';
 import SignIn from './pages/signInPage.jsx';
+import Layout from './components/Layout.jsx';
+import { AuthProvider } from './contexts/AuthContext.jsx';
 import SubscriptionPage from './pages/SubscriptionPage.jsx';
 import Profile from './pages/Profile.jsx';
 
