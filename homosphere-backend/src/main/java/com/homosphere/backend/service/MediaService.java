@@ -7,6 +7,9 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+
 
 import com.homosphere.backend.exception.FileUploadException;
 import com.homosphere.backend.exception.UnsupportedMediaTypeException;
@@ -24,6 +27,15 @@ public class MediaService {
 
     @Value("${cloudflare.r2.bucket}")
     private String bucket;
+
+    @Value("${cloudflare.r2.account-id}")
+    private String accountId;
+
+    @Value("${cloudflare.r2.endpoint:https://%s.r2.cloudflarestorage.com}")
+    private String endpoint;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     public String uploadFile(MultipartFile file){
 
@@ -56,9 +68,17 @@ public class MediaService {
         } catch (IOException e) {
             throw new FileUploadException("File upload to Cloudflare R2 failed", e);
         }
-        return key;
+        // Build and return the public URL
+        String url = String.format(endpoint, accountId) + "/" + bucket + "/" + key;
+        return url;
+    }/*  */
+
+    public String getPhotoUrl(String id) {
+        // Build the public URL for the photo using its id (key)
+        return String.format(endpoint, accountId) + "/" + bucket + "/" + id;
     }
 
+    
     private String getFileExtension(String original) {
         int extIdx = original.lastIndexOf('.');
         if (extIdx < 0 || extIdx == original.length()-1) {
