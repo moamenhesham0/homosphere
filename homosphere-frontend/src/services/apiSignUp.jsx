@@ -1,4 +1,5 @@
 import { supabase } from '../utils/supabase.js';
+import { ROUTES } from '../constants/routes.js';
 
 export async function signUpWithEmail(email, password, firstname, lastname, role) {
   try {
@@ -7,6 +8,7 @@ export async function signUpWithEmail(email, password, firstname, lastname, role
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}${ROUTES.SUBSCRIPTION}`,
         data: {
           first_name: firstname,
           last_name: lastname,

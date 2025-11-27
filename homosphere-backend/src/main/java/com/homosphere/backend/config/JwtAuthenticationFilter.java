@@ -29,10 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final UserRepository userRepository;
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                    HttpServletResponse response, 
-                                    FilterChain filterChain) throws ServletException, IOException {
-    
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         /**
          * Authorization: Bearer <JWT_TOKEN_HERE>
         */                   
@@ -41,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         String userEmail = null;
         String userRole = null;
         String token;                                
-        
+
         /**
          * Extract JWT token from Authorization header
          */
@@ -67,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         * avoid overwriting existing authnication from previous filter
         */
         if(userId != null && SecurityContextHolder.getContext().getAuthentication() == null){
-    
+
             if (!jwtService.validateToken(token)) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
                 return;
