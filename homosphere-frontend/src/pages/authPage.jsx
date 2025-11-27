@@ -5,9 +5,11 @@ const AuthPage = () => {
     const redirectTo = searchParams.get(AUTH_ARGS.REDIRECT_TO);
 
     return (
-        <div>
-            <p>Authentication Completed</p>
-            <a href={`${window.location.origin}${redirectTo}`}>{`${window.location.origin}${redirectTo}`}</a>
+        <div className="auth-page-center">
+            <div>
+                <p>Authentication Completed</p>
+                <a href={`${window.location.origin}${redirectTo}`}>{`${window.location.origin}${redirectTo}`}</a>
+            </div>
         </div>
     );
 }
