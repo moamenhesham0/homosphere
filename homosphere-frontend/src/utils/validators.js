@@ -10,7 +10,7 @@ export const emailFormatValidation = (email) => {
   return emailFormat.test(email);
 };
 
-// Validation registry pattern 
+// Validation registry pattern
 export const fieldValidators = {
   firstname: (value) => {
     if (!value || value.trim() === "" || value.startsWith(" ")) {
@@ -32,6 +32,13 @@ export const fieldValidators = {
     }
     if (!emailFormatValidation(value)) {
       return 'Invalid email format';
+    }
+    return null;
+  },
+
+  currentPassword: (value) => {
+    if (!value) {
+      return 'Current Password required';
     }
     return null;
   },

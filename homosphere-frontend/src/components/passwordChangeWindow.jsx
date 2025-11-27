@@ -5,8 +5,9 @@ import { getInputClass, getFieldError } from '../utils/validators';
 import { supabase } from '../utils/supabase';
 import '../styles/enterPasswordWindow.css';
 
-const EnterPasswordWindow = ({ onClose, onSubmit }) => {
+const PasswordChangeWindow = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
+    currentPassword: '',
     password: '',
     confirmPassword: '',
     confirmDelete: false
@@ -27,6 +28,13 @@ const EnterPasswordWindow = ({ onClose, onSubmit }) => {
     e.preventDefault();
     setError('');
 
+    // Validate current password
+    const currentPasswordError = getFieldError('currentPassword', formData.currentPassword, formData);
+    if (currentPasswordError) {
+      setError(currentPasswordError);
+      return;
+    }
+
     // Validate password
     const passwordError = getFieldError('password', formData.password, formData);
     if (passwordError) {
@@ -41,13 +49,7 @@ const EnterPasswordWindow = ({ onClose, onSubmit }) => {
       return;
     }
 
-    // Validate checkbox
-    if (!formData.confirmDelete) {
-      setError('You must confirm account deletion');
-      return;
-    }
-
-    // Verify password with Supabase
+    // Verify current password with Supabase
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -58,18 +60,17 @@ const EnterPasswordWindow = ({ onClose, onSubmit }) => {
 
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: user.email,
-        password: formData.password
+        password: formData.currentPassword
       });
 
       if (authError) {
-        setError('Incorrect password');
+        setError('Incorrect current password');
         return;
       }
 
-
       onSubmit(formData.password);
     } catch (err) {
-      setError('Failed to verify password');
+      setError('Failed to verify current password');
     }
   };
 
@@ -78,10 +79,22 @@ const EnterPasswordWindow = ({ onClose, onSubmit }) => {
       <div className="modal-content">
         <button className="close-button" onClick={onClose}>×</button>
 
-        <h2 className="title">Delete Account</h2>
-        <p className="message">This action cannot be undone. Please enter your password to confirm.</p>
+        <h2 className="title">Change Password</h2>
+        <p className="message">Please enter your current password and your new password.</p>
 
         <form className="form" onSubmit={handleSubmit}>
+
+            <PasswordInput
+                name="currentPassword"
+                value={formData.oldPassword}
+                onChange={handleChange}
+                className={getInputClass('currentPassword', formData.currentPassword, formData)}
+                label="Current Password"
+                showPassword={showPassword}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                required
+            />
+
           <PasswordInput
             name="password"
             value={formData.password}
@@ -104,21 +117,11 @@ const EnterPasswordWindow = ({ onClose, onSubmit }) => {
             required
           />
 
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="confirmDelete"
-              className="checkbox"
-              checked={formData.confirmDelete}
-              onChange={handleChange}
-            />
-            <span>I understand this will permanently delete my account</span>
-          </label>
 
           <MessageDisplay error={error} />
 
           <button type="submit" className="submit delete-button">
-            Delete Account
+            Change Password
           </button>
         </form>
       </div>
@@ -126,4 +129,4 @@ const EnterPasswordWindow = ({ onClose, onSubmit }) => {
   );
 };
 
-export default EnterPasswordWindow;
+export default PasswordChangeWindow;

@@ -76,6 +76,7 @@ const SignIn = () => {
         try {
             const success = await signInUser();
             if (success) {
+                
                 redirectToProfile();
             }
         } catch (error) {
@@ -84,44 +85,40 @@ const SignIn = () => {
             setIsLoading(false);
         }
     };
+
     return (
-        <form className="form" onSubmit={handleSubmit}>
-            <p className="title">Sign In</p>
-            <p className="message">Sign in now and get full access to our app.</p>
-
-            <MessageDisplay error={error} successMessage={successMessage} />
-
-            <FormInput
-                required
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                type="email"
-                className={getInputClass('email', formData.email, formData)}
-                label="Email"
-            />
-
-            <PasswordInput
-                required
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className={getInputClass('password', formData.password, formData)}
-                label="Password"
-                showPassword={showPassword}
-                onTogglePassword={() => setShowPassword(!showPassword)}
-            />
-
-            <p className="forget-password"><Link to={ROUTES.FORGET_PASSWORD}>Forgot your password?</Link></p>
-
-            <button className="submit" type="submit" disabled={isLoading}>
-                {isLoading ? 'Signing in...' : 'Submit'}
-            </button>
-
-            <p className="signin">Don't have an account? <Link to={ROUTES.SIGNUP}>Sign up</Link></p>
-
-            <GoogleSignInButton />
-        </form>
+        <div className="auth-page-center">
+            <form className="form" onSubmit={handleSubmit}>
+                <p className="title">Sign In</p>
+                <p className="message">Sign in now and get full access to our app.</p>
+                <MessageDisplay error={error} successMessage={successMessage} />
+                <FormInput
+                    required
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    type="email"
+                    className={getInputClass('email', formData.email, formData)}
+                    label="Email"
+                />
+                <PasswordInput
+                    required
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={getInputClass('password', formData.password, formData)}
+                    label="Password"
+                    showPassword={showPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                />
+                <p className="forget-password"><Link to={ROUTES.FORGET_PASSWORD}>Forgot your password?</Link></p>
+                <button className="submit" type="submit" disabled={isLoading}>
+                    {isLoading ? 'Signing in...' : 'Submit'}
+                </button>
+                <p className="signin">Don't have an account? <Link to={ROUTES.SIGNUP}>Sign up</Link></p>
+                <GoogleSignInButton />
+            </form>
+        </div>
     );
 };
 

@@ -267,9 +267,9 @@ const ForgetPassword = () => {
 
 
     return (
-        <>
+        <div className="auth-page-center">
             {states[mode]()}
-        </>
+        </div>
     );
 }
 
