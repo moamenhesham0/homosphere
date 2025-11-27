@@ -64,7 +64,7 @@ public class MediaService {
             .build();
 
         try {
-            
+
             s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
         } catch (IOException e) {
             throw new FileUploadException("File upload to Cloudflare R2 failed", e);
@@ -83,9 +83,10 @@ public class MediaService {
     private String getFileExtension(String original) {
         int extIdx = original.lastIndexOf('.');
         if (extIdx < 0 || extIdx == original.length()-1) {
-            throw new IllegalArgumentException("Invalid file extension in filename: " + original);
+            throw new IllegalArgumentException("Invalid file extens " + original);
         }
 
         return original.substring(extIdx+1);
     }
+    //ddddddddddddddddddddddddddddddddddd
 }
