@@ -4,10 +4,15 @@ export const ROUTES = {
   SIGNIN: '/signin',
   SIGNUP: '/signup',
   PROFILE: '/profile',
-  FORGOT_PASSWORD: '/forgot-password',
+  FORGET_PASSWORD: '/forget-password',
+  AUTH: '/auth',
 };
 
 // External links
 export const EXTERNAL_LINKS = {
   PRIVACY_POLICY: 'https://www.termsfeed.com/public/uploads/2021/12/sample-privacy-policy-template.pdf',
 };
+
+export const AUTH_ARGS = {
+  REDIRECT_TO: 'redirectTo',
+}
