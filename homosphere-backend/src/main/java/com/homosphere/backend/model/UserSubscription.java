@@ -1,6 +1,7 @@
 package com.homosphere.backend.model;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +20,7 @@ import lombok.Data;
 public class UserSubscription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userSubscriptionId;
+    private UUID userSubscriptionId;
 
     @ManyToOne
     @JoinColumn(name = "id")

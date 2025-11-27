@@ -37,7 +37,7 @@ public class JwtService {
         return extractClaim(token, claims -> {
             HashMap<?, ?> metaData = claims.get("user_metadata", HashMap.class);
             if (metaData != null) {
-                return metaData.get("Email").toString();
+                return metaData.get("email").toString();
             }
             throw new IllegalArgumentException("Email missing in token");
         }
@@ -48,7 +48,7 @@ public class JwtService {
         return extractClaim(token, claims -> {
             HashMap<?, ?> metaData = claims.get("user_metadata", HashMap.class);
             if (metaData != null) {
-                return metaData.get("Role").toString();
+                return metaData.get("role").toString();
             }
             throw new IllegalArgumentException("Role missing in token");
         }
