@@ -1,0 +1,144 @@
+.profile-page {
+  display: flex;
+  background-color: #FCFAF6;
+  min-height: 100vh;
+  padding: 30px;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.left-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-right: 40px;
+}
+
+.photo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-photo {
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  object-fit: cover;
+  background-color: #E4EFE7;
+}
+
+.upload-btn {
+  margin-top: 15px;
+  padding: 8px 12px;
+  background-color: #99BC85;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.upload-btn input {
+  display: none;
+}
+.delete-photo-btn {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #f44336;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.delete-photo-btn:hover {
+  background-color: #d32f2f;
+}
+
+
+.right-panel {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.section {
+  background-color: #E4EFE7;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #99BC85;
+}
+
+.field-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.field input,
+.section textarea {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.section textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.profile-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.edit-btn {
+  padding: 10px 20px;
+  background-color: #99BC85;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
