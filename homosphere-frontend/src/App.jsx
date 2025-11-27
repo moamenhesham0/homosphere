@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import './App.css';
-
+import SignUpPage from './pages/signUpPage.jsx';
 function App() {
     return (
         <div className="home-container">
