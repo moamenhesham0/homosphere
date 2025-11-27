@@ -50,8 +50,8 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/signin" className="signin-btn">Sign In</Link>
-              <Link to="/signup" className="signup-btn">Get Started</Link>
+              <Link to="/signin" className="logout-btn" onClick={handleSignOut}>Log out</Link>
+              <Link to="/profile" className="profile-btn">Profile</Link>
             </>
           )}
         </div>

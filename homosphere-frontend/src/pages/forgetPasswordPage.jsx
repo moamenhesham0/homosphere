@@ -148,11 +148,12 @@ const ForgetPassword = () => {
     /**
      * Sets the page to show that the password has been reset successfully
      */
-    const setSuccessfulReset = () => {
+    const setSuccessfulReset = async () => {
         setSuccessMessage('Password has been reset successfully!');
         sessionStorage.removeItem(KEYS.RESET);
         sessionStorage.removeItem(KEYS.TOKEN_TIME_STAMP);
         sessionStorage.setItem(KEYS.REQUEST, 'true');
+        await supabase.auth.signOut();
         setTimeout(() => {
             navigate(ROUTES.SIGNIN);
         }, 2000);
@@ -184,10 +185,11 @@ const ForgetPassword = () => {
         }
 
         const result = await sendResetPasswordForEmail(formData.password);
+        await supabase.auth.signOut();
         if (!result.success) {
             setError(result.error);
         } else {
-            setSuccessfulReset();
+            await setSuccessfulReset();
         }
     });
 
