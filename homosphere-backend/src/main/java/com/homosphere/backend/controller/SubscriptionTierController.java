@@ -49,6 +49,27 @@ public class SubscriptionTierController {
         return subscriptionTierRepository.findBySellerFalse();
     }
 
+    @GetMapping("/{role}-tiers")
+    public ResponseEntity<List<SubscriptionTier>> getSubscriptionTiersByRole(@PathVariable String role) {
+        if (role == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        final String normalizedRole = role.trim().toLowerCase();
+        Boolean isSellerRole = switch (normalizedRole) {
+            case "seller", "broker" -> true;
+            case "buyer" -> false;
+            default -> null;
+        };
+
+        if (isSellerRole == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<SubscriptionTier> tiers = subscriptionTierRepository.findBySeller(isSellerRole);
+        return ResponseEntity.ok(tiers);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<SubscriptionTier> updateSubscriptionTier(@PathVariable Long id, @RequestBody SubscriptionTier subscriptionTierDetails) {
         return subscriptionTierRepository.findById(id)

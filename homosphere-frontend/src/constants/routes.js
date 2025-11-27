@@ -5,7 +5,7 @@ export const ROUTES = {
   SIGNUP: '/signup',
   PROFILE: '/profile',
   FORGOT_PASSWORD: '/forgot-password',
-  BUYER_SUBSCRIPTION: '/buyer-subscription',
+  SUBSCRIPTION: '/subscription',
 };
 
 // External links

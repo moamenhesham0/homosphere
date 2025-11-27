@@ -1,6 +1,7 @@
 package com.homosphere.backend.controller;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,19 +32,19 @@ public class UserSubscriptionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserSubscription> getUserSubscriptionById(@PathVariable Long id) {
+    public ResponseEntity<UserSubscription> getUserSubscriptionById(@PathVariable UUID id) {
         return userSubscriptionRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/user/{userId}")
-    public List<UserSubscription> getUserSubscriptionsByUserId(@PathVariable Long userId) {
+    public List<UserSubscription> getUserSubscriptionsByUserId(@PathVariable UUID userId) {
         return userSubscriptionRepository.findByUserId(userId);
     }
 
     @GetMapping("/user/{userId}/role-tier")
-    public List<UserSubscriptionRoleTierDTO> getUserRoleAndTier(@PathVariable Long userId) {
+    public List<UserSubscriptionRoleTierDTO> getUserRoleAndTier(@PathVariable UUID userId) {
         return userSubscriptionRepository.findByUserId(userId).stream()
                 .map(sub -> new UserSubscriptionRoleTierDTO(
                         sub.getSubscription().getSubscriptionId(),
@@ -57,7 +58,7 @@ public class UserSubscriptionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserSubscription> updateUserSubscription(@PathVariable Long id, @RequestBody UserSubscription userSubscriptionDetails) {
+    public ResponseEntity<UserSubscription> updateUserSubscription(@PathVariable UUID id, @RequestBody UserSubscription userSubscriptionDetails) {
         return userSubscriptionRepository.findById(id)
                 .map(userSubscription -> {
                     userSubscription.setStartDate(userSubscriptionDetails.getStartDate());
@@ -72,7 +73,7 @@ public class UserSubscriptionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserSubscription(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUserSubscription(@PathVariable UUID id) {
         if (userSubscriptionRepository.existsById(id)) {
             userSubscriptionRepository.deleteById(id);
             return ResponseEntity.ok().build();

@@ -12,9 +12,13 @@ const useSubscriptionPlans = (role) => {
     const fetchPlans = async () => {
       try {
         const apiRole = role === 'broker' ? 'seller' : role;
+        console.log(`Fetching plans for role: ${apiRole}`);
         const response = await axios.get(`http://localhost:8080/api/subscription-tiers/${apiRole.toLowerCase()}-tiers`);
+        console.log("Fetched plans:", response.data);
         
         const formattedPlans = response.data.map(plan => ({
+            id: plan.subscriptionId,
+            priority: plan.visibilityPriority,
             name: plan.name,
             isHot: plan.popular,
             buttonText: `Get ${plan.name}`,

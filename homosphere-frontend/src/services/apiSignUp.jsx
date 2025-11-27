@@ -8,7 +8,7 @@ export async function signUpWithEmail(email, password, firstname, lastname, role
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}${ROUTES.BUYER_SUBSCRIPTION}`,
+        emailRedirectTo: `${window.location.origin}${ROUTES.SUBSCRIPTION}`,
         data: {
           first_name: firstname,
           last_name: lastname,

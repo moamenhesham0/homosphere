@@ -9,4 +9,5 @@ import com.homosphere.backend.model.SubscriptionTier;
 public interface SubscriptionTierRepository extends JpaRepository<SubscriptionTier, Long> {
     List<SubscriptionTier> findBySellerTrue();
     List<SubscriptionTier> findBySellerFalse();
+    List<SubscriptionTier> findBySeller(boolean seller);
 }

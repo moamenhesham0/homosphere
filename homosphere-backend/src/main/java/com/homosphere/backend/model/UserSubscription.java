@@ -22,8 +22,8 @@ public class UserSubscription {
     private Long userSubscriptionId;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "id")
+    private Profile user;
 
     @ManyToOne
     @JoinColumn(name = "subscription_id")

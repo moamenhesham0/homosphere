@@ -1,6 +1,32 @@
 import React from 'react';
 
-const PlanCard = ({ plan, billingCycle }) => {
+const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, onSelect }) => {
+    let buttonText = plan.buttonText;
+    let isCurrent = false;
+
+    if (currentSubscriptionId) {
+        if (plan.id === currentSubscriptionId) {
+            buttonText = "Current Plan";
+            isCurrent = true;
+        } else if (plan.priority > currentPriority) {
+            buttonText = "Upgrade";
+        } else {
+            buttonText = "Downgrade";
+        }
+    }
+
+    const handleSelect = () => {
+        let action = "subscribe";
+        if (currentSubscriptionId) {
+             if (plan.priority > currentPriority) action = "upgrade";
+             else if (plan.priority < currentPriority) action = "downgrade";
+        }
+        
+        if (window.confirm(`Are you sure you want to ${action} to the ${plan.name} plan?`)) {
+            if (onSelect) onSelect(plan);
+        }
+    };
+
     return (
         <div className={`plan-card ${plan.name.toLowerCase()}`}>
             {plan.isHot && <span className="hot-badge">HOT</span>}
@@ -13,8 +39,12 @@ const PlanCard = ({ plan, billingCycle }) => {
                     {plan.period.find(p => p[billingCycle])?.[billingCycle]}
                 </span>
             </div>
-            <button className="select-plan-btn">
-                {plan.buttonText}
+            <button 
+                className={`select-plan-btn ${isCurrent ? 'current-plan-btn' : ''}`} 
+                disabled={isCurrent}
+                onClick={handleSelect}
+            >
+                {buttonText}
             </button>
 
             <ul className="plan-features">
