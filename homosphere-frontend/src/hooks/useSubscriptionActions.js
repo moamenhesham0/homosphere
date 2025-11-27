@@ -60,8 +60,30 @@ const useSubscriptionActions = () => {
             return { success: false, error: 'Failed to create subscription. Please try again.' };
         }
     } else {
-        console.log("User already has a subscription. Upgrade/Downgrade logic needed.");
-        return { success: false, error: 'User already has a subscription' };
+        // User already has a subscription - upgrade or downgrade
+        try {
+            const startDate = new Date();
+            const endDate = new Date(startDate);
+            if (billingCycle === 'month') {
+                endDate.setMonth(endDate.getMonth() + 1);
+            } else {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            }
+
+            const updatePayload = {
+                newSubscriptionTierId: plan.id,
+                frequency: billingCycle === 'month' ? 'MONTHLY' : 'YEARLY',
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0]
+            };
+
+            await axios.put(`http://localhost:8080/api/user-subscriptions/user/${userId}/update-tier`, updatePayload);
+            setCurrentSubscriptionId(plan.id);
+            return { success: true, message: `Successfully updated to ${plan.name}!` };
+        } catch (error) {
+            console.error("Error updating subscription:", error);
+            return { success: false, error: 'Failed to update subscription. Please try again.' };
+        }
     }
   };
 

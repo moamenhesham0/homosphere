@@ -102,6 +102,8 @@
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
+  color: #000;
+  background-color: #FDFAF6;
 }
 
 .section textarea {
