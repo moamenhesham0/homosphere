@@ -32,6 +32,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        
+        // Skip JWT validation for public endpoints only
+        String requestPath = request.getRequestURI();
+        if (requestPath.startsWith("/api/auth/") || 
+            requestPath.startsWith("/api/public/") || 
+            requestPath.startsWith("/api/subscription-tiers/") ||
+            requestPath.startsWith("/api/user-subscriptions/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         /**
          * Authorization: Bearer <JWT_TOKEN_HERE>
         */
@@ -56,8 +67,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             return;
         }
 
-        token = authHeader.replaceFirst("Bearer ", "");
-        try {
+          token = authHeader.replaceFirst("Bearer ", "");
+          try {
             userId = jwtService.extractUserId(token);
         } catch (Exception e) {
             logger.warn("Token extraction failed: {}", e.getMessage());
@@ -99,9 +110,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             */
             UsernamePasswordAuthenticationToken authToken = 
                 new UsernamePasswordAuthenticationToken(
-                    userPrincipal, 
+                    userId,  // Use userId as principal
                     null, 
-                    userPrincipal.getAuthorities()
+                    null  // No authorities needed for delete
                 );
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }

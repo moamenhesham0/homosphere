@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
-import "./Profile.css";
+import { useNavigate } from "react-router-dom";
+import "../styles/Profile.css";
 import { fetchUserData } from "../services/userApi";
+import EnterPasswordWindow from "../components/enterPasswordWindow";
+import useDeleteUser from "../hooks/useDeleteUser";
+import { supabase } from "../utils/supabase";
+import PasswordChangeWindow  from "../components/passwordChangeWindow";
 
 export default function Profile() {
+  const navigate = useNavigate();
+  const { deleteUser, loading: deleteLoading, error: deleteError } = useDeleteUser();
+
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // Store the original API data to preserve fields we don't edit
   const [originalData, setOriginalData] = useState(null);
@@ -33,9 +43,17 @@ export default function Profile() {
     const getUser = async () => {
       try {
         setLoading(true);
-        const mappedUser = await fetchUserData(tempUser.id);
-        setUser(mappedUser);
-        setTempUser(mappedUser);
+        // Get user ID from Supabase session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setError("No active session");
+          navigate('/signin');
+          return;
+        }
+        const userId = session.user.id;
+        const mappedUser = await fetchUserData(userId);
+        setUser({ ...mappedUser, id: userId });
+        setTempUser({ ...mappedUser, id: userId });
         setError(null);
       } catch (err) {
         setError(err.message);
@@ -45,7 +63,7 @@ export default function Profile() {
       }
     };
     getUser();
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     setTempUser({ ...tempUser, [e.target.name]: e.target.value });
@@ -133,10 +151,44 @@ export default function Profile() {
     setSuccessMessage("");
   };
 
-  if (loading) {
+  const handleDeleteAccount = async (password) => {
+    try {
+      const result = await deleteUser();
+
+      if (result.success) {
+        // Navigate to sign in page after successful deletion
+        navigate('/signin');
+      } else {
+        setError(result.error || 'Failed to delete account');
+        setShowDeleteModal(false);
+      }
+    } catch (err) {
+      setError('Failed to delete account');
+      setShowDeleteModal(false);
+    }
+  };
+
+  const handlePasswordChange = async (newPassword) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,  // New password
+      });
+      if (error) {
+        setPasswordError(error.message);
+        return;
+      }
+      setError(null);
+      setSuccessMessage('Password changed successfully!');
+      setShowPasswordModal(false);
+    } catch (err) {
+      setError('Failed to change password');
+    }
+  }
+
+  if (loading || deleteLoading) {
     return (
       <div className="profile-page">
-        <div className="loading">Loading profile...</div>
+        <div className="loading">{deleteLoading ? 'Deleting account...' : 'Loading profile...'}</div>
       </div>
     );
   }
@@ -269,11 +321,22 @@ export default function Profile() {
           />
         </div>
 
+        {error && <div className="error-message">{error}</div>}
+        {successMessage && <div className="success-message">{successMessage}</div>}
+
         <div className="profile-buttons">
           {!editMode ? (
-            <button className="edit-btn" onClick={() => setEditMode(true)}>
-              Edit Profile
-            </button>
+            <>
+              <button className="edit-btn" onClick={() => setEditMode(true)}>
+                Edit Profile
+              </button>
+              <button className="change-password-btn" onClick={() => setShowPasswordModal(true)}>
+                Change Password
+              </button>
+              <button className="delete-account-btn" onClick={() => setShowDeleteModal(true)}>
+                Delete Account
+              </button>
+            </>
           ) : (
             <>
               <button className="save-btn" onClick={saveChanges}>
@@ -286,6 +349,21 @@ export default function Profile() {
           )}
         </div>
       </div>
+
+      {showDeleteModal && (
+        <EnterPasswordWindow
+          onClose={() => setShowDeleteModal(false)}
+          onSubmit={handleDeleteAccount}
+        />
+      )}
+
+      {showPasswordModal && (
+        <PasswordChangeWindow
+          onClose={() => setShowPasswordModal(false)}
+          onSubmit={handlePasswordChange}
+        />
+
+      )}
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase.js';
 
-export const useUserRole = () => {
+export const useUserData = () => {
   const [role, setRole] = useState(null);
   const [subscriptionId, setSubscriptionId] = useState(null);
+  const [email, setEmail] = useState(null);
+  const [firstName, setFirstName] = useState(null);
+  const [lastName, setLastName] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -59,6 +62,10 @@ export const useUserRole = () => {
             setRole(user.user_metadata?.role ?? null);
           }
           await fetchSubscriptionDetails(user.id);
+          setRole(user.user_metadata.role);
+          setEmail(user.email);
+          setFirstName(user.user_metadata.first_name);
+          setLastName(user.user_metadata.last_name);
         }
       } else if (isMounted) {
         setRole(null);
@@ -73,11 +80,17 @@ export const useUserRole = () => {
       if (session?.user) {
         const userRole = session.user.user_metadata?.role ?? null;
         setRole(userRole);
+        setEmail(session.user.email);
+        setFirstName(session.user.user_metadata.first_name);
+        setLastName(session.user.user_metadata.last_name);
         fetchSubscriptionDetails(session.user.id);
       } else {
         setRole(null);
         setSubscriptionId(null);
-      }
+        setEmail(null);
+        setFirstName(null);
+        setLastName(null);
+      } 
     });
 
     return () => {
@@ -86,5 +99,10 @@ export const useUserRole = () => {
     };
   }, []);
 
-  return [role, setRole, subscriptionId, setSubscriptionId];
+  return [role, setRole, subscriptionId, setSubscriptionId, email, firstName, lastName];
+};
+
+export const useUserRole = () => {
+  const [role, setRole, subscriptionId, setSubscriptionId, email, firstName, lastName] = useUserData();
+  return [role, setRole];
 };

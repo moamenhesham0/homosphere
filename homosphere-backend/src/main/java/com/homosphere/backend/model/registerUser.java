@@ -9,12 +9,17 @@ public class registerUser {
     private String lastName;
     private String password;
     private String Email;
-    public registerUser(String firstName, String lastName, String password, String email,UUID id) {
+    private String role;
+    private Long subscriptionTierId;
+    private String billingCycle;
+    
+    public registerUser(String firstName, String lastName, String password, String email,UUID id, String role) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
         this.Email = email;
+        this.role = role;
     }
     public UUID getId() {
         return id;
@@ -45,6 +50,21 @@ public class registerUser {
     }
     public void setEmail(String email) {
         Email = email;
+    }
+    public String getRole() {
+        return role;
+    }
+    public Long getSubscriptionTierId() {
+        return subscriptionTierId;
+    }
+    public void setSubscriptionTierId(Long subscriptionTierId) {
+        this.subscriptionTierId = subscriptionTierId;
+    }
+    public String getBillingCycle() {
+        return billingCycle;
+    }
+    public void setBillingCycle(String billingCycle) {
+        this.billingCycle = billingCycle;
     }
     
 }

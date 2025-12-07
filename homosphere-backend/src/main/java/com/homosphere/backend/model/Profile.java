@@ -31,7 +31,7 @@ public class Profile {
     private String lastName;
 
     @Column(name = "googleOuthId")
-    private int googleOuthId;
+    private Integer googleOuthId;
 
     @Column(name = "role")
     private String role;

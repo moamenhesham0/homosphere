@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class ApplicationConfig {
@@ -19,5 +20,10 @@ public class ApplicationConfig {
                 .roles("ADMIN")
                 .build();
         return new InMemoryUserDetailsManager(user);
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }

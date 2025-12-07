@@ -15,9 +15,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.homosphere.backend.dto.UpdateSubscriptionTierDTO;
 import com.homosphere.backend.dto.UserSubscriptionRoleTierDTO;
 import com.homosphere.backend.model.UserSubscription;
 import com.homosphere.backend.repository.UserSubscriptionRepository;
+import com.homosphere.backend.service.UserSubscriptionService;
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/user-subscriptions")
@@ -26,13 +29,16 @@ public class UserSubscriptionController {
     @Autowired
     private UserSubscriptionRepository userSubscriptionRepository;
 
+    @Autowired
+    private UserSubscriptionService userSubscriptionService;
+
     @GetMapping
     public List<UserSubscription> getAllUserSubscriptions() {
         return userSubscriptionRepository.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserSubscription> getUserSubscriptionById(@PathVariable UUID id) {
+    public ResponseEntity<UserSubscription> getUserSubscriptionById(@PathVariable Long id) {
         return userSubscriptionRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -58,7 +64,7 @@ public class UserSubscriptionController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserSubscription> updateUserSubscription(@PathVariable UUID id, @RequestBody UserSubscription userSubscriptionDetails) {
+    public ResponseEntity<UserSubscription> updateUserSubscription(@PathVariable Long id, @RequestBody UserSubscription userSubscriptionDetails) {
         return userSubscriptionRepository.findById(id)
                 .map(userSubscription -> {
                     userSubscription.setStartDate(userSubscriptionDetails.getStartDate());
@@ -72,8 +78,25 @@ public class UserSubscriptionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/user/{userId}/update-tier")
+    public ResponseEntity<UserSubscription> updateUserSubscriptionTier(
+            @PathVariable UUID userId,
+            @RequestBody UpdateSubscriptionTierDTO updateDTO) {
+
+        try {
+            UserSubscription updated = userSubscriptionService.updateTier(userId, updateDTO);
+            return ResponseEntity.ok(updated);
+
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserSubscription(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteUserSubscription(@PathVariable Long id) {
         if (userSubscriptionRepository.existsById(id)) {
             userSubscriptionRepository.deleteById(id);
             return ResponseEntity.ok().build();

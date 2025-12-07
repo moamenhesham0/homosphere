@@ -102,6 +102,8 @@
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 14px;
+  color: #000;
+  background-color: #FDFAF6;
 }
 
 .section textarea {
@@ -141,4 +143,36 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.delete-account-btn {
+  padding: 10px 20px;
+  background-color: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-account-btn:hover {
+  background-color: #b71c1c;
+}
+
+.error-message {
+  padding: 12px;
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 6px;
+  margin-top: 10px;
+  border-left: 4px solid #c62828;
+}
+
+.success-message {
+  padding: 12px;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 6px;
+  margin-top: 10px;
+  border-left: 4px solid #2e7d32;
 }
