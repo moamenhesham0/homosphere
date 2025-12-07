@@ -1,6 +1,8 @@
 package com.homosphere.backend.config;
 
 import java.io.IOException;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +21,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-
-import java.util.Optional;
-import java.util.UUID;
 @Component
 @AllArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter{
@@ -43,11 +42,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             return;
         }
         
-        /**
-         * Authorization: Bearer <JWT_TOKEN_HERE>
-        */
-        String requestPath = request.getRequestURI();
-        
         // Skip JWT authentication for signup endpoints (user doesn't exist yet)
         if (requestPath.equals("/api/auth/google-signup") || requestPath.equals("/api/auth/signup")) {
             filterChain.doFilter(request, response);
@@ -56,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         
         String authHeader = request.getHeader("Authorization");
         String userId = null;
-        String token;                                
+        String token;
 
         /**
          * Extract JWT token from Authorization header
