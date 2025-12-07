@@ -9,9 +9,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.homosphere.backend.model.User;
+import com.homosphere.backend.model.Profile;
 import com.homosphere.backend.model.UserPrincipal;
-import com.homosphere.backend.repository.UserRepository;
+import com.homosphere.backend.repository.ProfileRepository;
 import com.homosphere.backend.service.JwtService;
 
 import jakarta.servlet.FilterChain;
@@ -21,13 +21,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 
 import java.util.Optional;
+import java.util.UUID;
 @Component
 @AllArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
     private final JwtService jwtService;
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-    private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -44,11 +45,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         
         /**
          * Authorization: Bearer <JWT_TOKEN_HERE>
-        */                   
+        */
+        String requestPath = request.getRequestURI();
+        
+        // Skip JWT authentication for signup endpoints (user doesn't exist yet)
+        if (requestPath.equals("/api/auth/google-signup") || requestPath.equals("/api/auth/signup")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         String authHeader = request.getHeader("Authorization");
         String userId = null;
-        String userEmail = null;
-        String userRole = null;
         String token;                                
 
         /**
@@ -60,18 +67,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             return;
         }
 
-        token = authHeader.replaceFirst("Bearer ", "");
-        try {
+          token = authHeader.replaceFirst("Bearer ", "");
+          try {
             userId = jwtService.extractUserId(token);
-            
-            // Try to extract email and role, but don't fail if they're missing
-            try {
-                userEmail = jwtService.extractUserEmail(token);
-                userRole = jwtService.extractUserRole(token);
-            } catch (Exception e) {
-                logger.debug("User metadata not found in token (this is okay for some operations): {}", e.getMessage());
-                // For endpoints that only need user ID (like profile deletion), we can continue
-            }
         } catch (Exception e) {
             logger.warn("Token extraction failed: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
@@ -89,8 +87,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
                 return;
             }
 
-            // For profile deletion endpoint, we don't need to load user from database
-            // Just create a simple authentication with the user ID
+            UUID userUuid;
+            try {
+                userUuid = UUID.fromString(userId);
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid UUID format for userId: {}", userId);
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID format");
+                return;
+            }
+
+            Optional<Profile> userOpt = profileRepository.findById(userUuid);
+            if (userOpt.isEmpty()) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
+                return;
+            }
+
+            Profile user = userOpt.get();
+            UserPrincipal userPrincipal = new UserPrincipal(user);
+
+           /**
+            * set user for authnication
+            */
             UsernamePasswordAuthenticationToken authToken = 
                 new UsernamePasswordAuthenticationToken(
                     userId,  // Use userId as principal

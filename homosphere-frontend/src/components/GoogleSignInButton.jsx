@@ -1,9 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../utils/supabase';
 
-const GoogleSignInButton = ({ onClick }) => {
+const GoogleSignInButton = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) {
+        console.error('Google sign-in error:', error);
+        alert('Failed to sign in with Google');
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      alert('An error occurred during Google sign-in');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <div className="buttons-container">
-      <div className="google-login-button" onClick={onClick}>
+      <div 
+        className="google-login-button" 
+        onClick={handleGoogleSignIn}
+        style={{ opacity: isLoading ? 0.6 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+      >
         <svg
           stroke="currentColor"
           fill="currentColor"
@@ -39,7 +68,7 @@ const GoogleSignInButton = ({ onClick }) => {
         c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
           ></path>
         </svg>
-        <span>Sign in with Google</span>
+        <span>{isLoading ? 'Signing in...' : 'Sign in with Google'}</span>
       </div>
     </div>
   );
