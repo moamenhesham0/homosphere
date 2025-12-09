@@ -22,3 +22,20 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# backend
+target/
+/.mvn/
+
+# frontend
+node_modules/
+
+#ide
+.vscode
+.idea
+
+#h2 data
+homosphere-backend/data/
+*.db
+*.mv.db
+*.trace.db
