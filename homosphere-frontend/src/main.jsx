@@ -15,6 +15,7 @@ import AuthCallback from './pages/AuthCallback.jsx';
 import Profile from './pages/Profile.jsx';
 import PropertyListingForm from './pages/PropertyListingForm.jsx';
 import AdminPortal from './pages/AdminPortal.jsx';
+import SearchPage from './pages/SearchPage.jsx';
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -33,6 +34,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path={ROUTES.PROPERTY_LISTING_FORM} element={<PropertyListingForm />} />
                     <Route path={ROUTES.PROFILE} element={<Profile />} />
                     <Route path={ROUTES.ADMIN_PORTAL} element={<AdminPortal />} />
+                    <Route path={ROUTES.SEARCH} element={<SearchPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>

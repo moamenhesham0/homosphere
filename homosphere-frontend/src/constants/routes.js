@@ -8,7 +8,8 @@ export const ROUTES = {
   AUTH: '/auth',
   SUBSCRIPTION: '/subscription',
   PROPERTY_LISTING_FORM: '/property-listing-form',
-  ADMIN_PORTAL: '/admin-portal'
+  ADMIN_PORTAL: '/admin-portal',
+  SEARCH: '/search',
 };
 
 // External links
