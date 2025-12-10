@@ -44,7 +44,8 @@ public class SecurityConfig {
                 // authenticated user endpoints (require token)
                 .requestMatchers("/api/user/**").authenticated() // User's own profile/subscriptions
                 .requestMatchers("/api/media/upload").authenticated() // Authenticated upload
-
+                .requestMatchers("/api/viewing-requests/**").authenticated() // Viewing requests
+                
                 // admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/user-subscriptions").hasRole("ADMIN") // Get all subscriptions
