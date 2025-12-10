@@ -1,14 +1,15 @@
 package com.homosphere.backend.dto;
 
 import java.util.UUID;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileDto {
+public class UserDto {
     private UUID id;
     private String email;
     private String firstName;

@@ -26,10 +26,21 @@ const AuthCallback = () => {
           const token = session.access_token;
           
           try {
+            // Parse user metadata from Google OAuth
+            const userMetadata = session.user.user_metadata || {};
+            const fullName = userMetadata.full_name || '';
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
             // Sync user with backend (create or update)
             await api.syncGoogleUser({
               email: session.user.email,
-              fullName: session.user.user_metadata?.full_name,
+              firstName: firstName,
+              lastName: lastName,
+              avatarUrl: userMetadata.avatar_url || userMetadata.picture || null,
+              googleId: session.user.id,
+              role: 'BUYER' // Default role for Google signup
             }, token);
 
             // Fetch complete user profile from backend

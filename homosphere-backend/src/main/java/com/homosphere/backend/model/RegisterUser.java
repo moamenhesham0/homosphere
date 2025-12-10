@@ -2,7 +2,7 @@ package com.homosphere.backend.model;
 
 import java.util.UUID;
 
-public class registerUser {
+public class RegisterUser {
 
     private UUID id;
     private String firstName;
@@ -13,7 +13,7 @@ public class registerUser {
     private Long subscriptionTierId;
     private String billingCycle;
     
-    public registerUser(String firstName, String lastName, String password, String email,UUID id, String role) {
+    public RegisterUser(String firstName, String lastName, String password, String email,UUID id, String role) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;

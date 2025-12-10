@@ -6,15 +6,15 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.homosphere.backend.model.Profile;
-import com.homosphere.backend.model.ProfileUpdateBuilder;
+import com.homosphere.backend.model.RegisterUser;
 import com.homosphere.backend.model.SubscriptionTier;
+import com.homosphere.backend.model.User;
 import com.homosphere.backend.model.UserSubscription;
 import com.homosphere.backend.model.UserSubscription.PaymentFrequency;
 import com.homosphere.backend.model.UserSubscription.Status;
-import com.homosphere.backend.model.registerUser;
-import com.homosphere.backend.repository.ProfileRepository;
+import com.homosphere.backend.model.UserUpdateBuilder;
 import com.homosphere.backend.repository.SubscriptionTierRepository;
+import com.homosphere.backend.repository.UserRepository;
 import com.homosphere.backend.repository.UserSubscriptionRepository;
 
 import jakarta.transaction.Transactional;
@@ -22,22 +22,22 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ProfileService {
+public class UserService {
     
-    private final ProfileRepository profileRepository;
+    private final UserRepository userRepository;
     private final SubscriptionTierRepository subscriptionTierRepository;
     private final UserSubscriptionRepository userSubscriptionRepository;
 
     @Transactional
-    public void saveprofile(registerUser registerUser){
-        Profile profile = new Profile(registerUser.getFirstName(), registerUser.getLastName(), registerUser.getPassword(), registerUser.getEmail(),registerUser.getId());
+    public void saveUser(RegisterUser registerUser){
+        User user = new User(registerUser.getFirstName(), registerUser.getLastName(), registerUser.getPassword(), registerUser.getEmail(),registerUser.getId());
         
         // Set role if provided
         if (registerUser.getRole() != null && !registerUser.getRole().isEmpty()) {
-            profile.setRole(registerUser.getRole());
+            user.setRole(registerUser.getRole());
         }
         
-        profileRepository.save(profile);
+        userRepository.save(user);
         
         // Create subscription if tier is selected
         if (registerUser.getSubscriptionTierId() != null) {
@@ -45,7 +45,7 @@ public class ProfileService {
                 .orElseThrow(() -> new RuntimeException("Subscription tier not found"));
             
             UserSubscription subscription = new UserSubscription();
-            subscription.setUser(profile);
+            subscription.setUser(user);
             subscription.setSubscription(tier);
             subscription.setStartDate(LocalDate.now());
             
@@ -65,35 +65,35 @@ public class ProfileService {
         }
     }
     @Transactional
-    public Profile editInformation(UUID id, Profile profileUpdate){
-        Profile old_data = profileRepository.findById(id).orElse(null);
+    public User editInformation(UUID id, User userUpdate){
+        User old_data = userRepository.findById(id).orElse(null);
         
-        if(old_data == null || profileUpdate == null){
-            System.out.println("profile is Null or user not found");
+        if(old_data == null || userUpdate == null){
+            System.out.println("user is Null or user not found");
             return null;
         }
         
-        // Use Builder pattern to update profile
-        ProfileUpdateBuilder builder = new ProfileUpdateBuilder(old_data);
+        // Use Builder pattern to update user information
+         UserUpdateBuilder builder = new UserUpdateBuilder(old_data);
         
-        Profile updatedProfile = builder
-            .withFirstName(profileUpdate.getFirstName())
-            .withLastName(profileUpdate.getLastName())
-            .withBio(profileUpdate.getBio())
-            .withRole(profileUpdate.getRole())
-            .withPhone(profileUpdate.getPhone())
-            .withLocation(profileUpdate.getLocation())
-            .withPhoto(profileUpdate.getPhoto())
+        User updatedProfile = builder
+            .withFirstName(userUpdate.getFirstName())
+            .withLastName(userUpdate.getLastName())
+            .withBio(userUpdate.getBio())
+            .withRole(userUpdate.getRole())
+            .withPhone(userUpdate.getPhone())
+            .withLocation(userUpdate.getLocation())
+            .withPhoto(userUpdate.getPhoto())
             .build();
         
         System.out.println(updatedProfile.getBio() + " " + updatedProfile.getLocation());
-        return profileRepository.save(updatedProfile);
+        return userRepository.save(updatedProfile);
     }
-    public Profile GetInformation(UUID id){
-        return profileRepository.findById(id).orElse(null);
+    public User getInformation(UUID id){
+        return userRepository.findById(id).orElse(null);
     }
-    public String signuPprofile(UUID id){
-        boolean exists = profileRepository.findById(id).isPresent();
+    public String signUpUser(UUID id){
+        boolean exists = userRepository.findById(id).isPresent();
         if(exists)
             return "OK";
         else

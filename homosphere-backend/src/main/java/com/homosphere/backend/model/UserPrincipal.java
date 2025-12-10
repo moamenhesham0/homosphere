@@ -15,21 +15,21 @@ import lombok.RequiredArgsConstructor;
 
 public class UserPrincipal implements UserDetails{
 
-    private final Profile profile;
+    private final User user;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + profile.getRole().toUpperCase()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase()));
     }
 
     @Override
     public String getPassword() {
-        return profile.getPassword();
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return profile.getEmail();
+        return user.getEmail();
     }
 
 }
