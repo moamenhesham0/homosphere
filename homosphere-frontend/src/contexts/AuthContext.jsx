@@ -68,6 +68,45 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     }
   };
+  
+  const login = async (email, password) => {
+    try {
+      // First, sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Get the session token
+      const session = data.session;
+      if (session && session.access_token) {
+        setToken(session.access_token);
+        setIsAuthenticated(true);
+
+        // Sync with backend
+        try {
+          const { api } = await import('../utils/api');
+          const response = await api.login(session.access_token);
+          
+          // Set user profile from backend response
+          if (response && response.user) {
+            setUser(response.user);
+          }
+        } catch (backendError) {
+          console.error('Backend sync error:', backendError);
+          // If user not found in backend, might need to complete signup
+          throw new Error('Please complete your profile setup');
+        }
+
+        return { success: true, message: 'Signed in successfully!' };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
 
   const signup = async (signupData) => {
     try {
@@ -135,6 +174,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     setUserProfile,
     logout,
+    login,
     signup,
   };
 

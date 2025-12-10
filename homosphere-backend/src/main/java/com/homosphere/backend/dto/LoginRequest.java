@@ -7,11 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private String message;
-    private UserDto user;
-    
-    public AuthResponse(String message) {
-        this.message = message;
-    }
+public class LoginRequest {
+    private String email;
+    private String password;
 }
