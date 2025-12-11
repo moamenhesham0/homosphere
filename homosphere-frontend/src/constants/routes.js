@@ -10,6 +10,7 @@ export const ROUTES = {
   PROPERTY_LISTING_FORM: '/property-listing-form',
   ADMIN_PORTAL: '/admin-portal',
   SEARCH: '/search',
+  ANALYTICS: '/analytics',
 };
 
 // External links
