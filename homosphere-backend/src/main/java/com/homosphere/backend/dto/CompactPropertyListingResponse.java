@@ -20,4 +20,8 @@ public class CompactPropertyListingResponse {
     private Integer bedrooms;
     private String city;
     private String state;
+    public void setId(UUID randomUUID) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setId'");
+    }
 }

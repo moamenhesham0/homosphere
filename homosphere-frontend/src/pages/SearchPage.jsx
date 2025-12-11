@@ -101,10 +101,10 @@ const SearchPage = () => {
             }
 
             const data = await response.json(); 
-            
+            console.log('Fetched properties from backend:', data);
             // --- 3. Map DTO to Frontend State (Handling missing mock data fields) ---
             const mappedProperties = (data.content || []).map(p => ({
-                id: p.id,
+                id: p.propertyListingId || p.id, // Use propertyListingId if present, fallback to id
                 title: p.title,
                 // Combine city and state for display
                 location: `${p.city || ''}${p.city && p.state ? ', ' : ''}${p.state || ''}`,

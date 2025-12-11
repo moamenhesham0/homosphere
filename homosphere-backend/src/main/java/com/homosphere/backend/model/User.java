@@ -78,4 +78,8 @@ public class User {
          this.id=userId;
     }
 
+    public UUID getUserId() {
+        return this.id;
+    }
+
 }
