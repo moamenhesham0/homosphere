@@ -59,7 +59,7 @@ public class UserSubscriptionController {
         }
         String userId = authentication.getPrincipal().toString();
         UUID uuid = UUID.fromString(userId);
-        return ResponseEntity.ok(userSubscriptionRepository.findByUserId(uuid));
+        return ResponseEntity.ok(userSubscriptionRepository.findByUser_Id(uuid));
     }
 
     @GetMapping("/my-role-tier")
@@ -69,7 +69,7 @@ public class UserSubscriptionController {
         }
         String userId = authentication.getPrincipal().toString();
         UUID uuid = UUID.fromString(userId);
-        List<UserSubscriptionRoleTierDTO> result = userSubscriptionRepository.findByUserId(uuid).stream()
+        List<UserSubscriptionRoleTierDTO> result = userSubscriptionRepository.findByUser_Id(uuid).stream()
                 .map(sub -> new UserSubscriptionRoleTierDTO(
                         sub.getSubscription().getSubscriptionId(),
                         sub.getUser().getRole()))
@@ -83,7 +83,7 @@ public class UserSubscriptionController {
         if (userId == null) {
             return ResponseEntity.badRequest().build();
         }
-        List<UserSubscriptionRoleTierDTO> result = userSubscriptionRepository.findByUserId(userId).stream()
+        List<UserSubscriptionRoleTierDTO> result = userSubscriptionRepository.findByUser_Id(userId).stream()
                 .map(sub -> new UserSubscriptionRoleTierDTO(
                         sub.getSubscription().getSubscriptionId(),
                         sub.getUser().getRole()))

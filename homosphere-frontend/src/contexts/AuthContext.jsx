@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
+import { getUserFromToken } from '../utils/jwt';
 
 export const AuthContext = createContext(null);
 
@@ -27,9 +28,15 @@ export const AuthProvider = ({ children }) => {
         if (session) {
           setToken(session.access_token);
           setIsAuthenticated(true);
-          // Don't set user here - let callback fetch from backend
+          // Extract user info from token
+          const userInfo = getUserFromToken(session.access_token);
+          console.log('Auth state change - User from token:', userInfo);
+          if (userInfo) {
+            setUser(userInfo);
+          }
+          // Also fetch full profile from backend
+          await fetchUserProfile(session.access_token);
         } else {
-
           setToken(null);
           setUser(null);
           setIsAuthenticated(false);
@@ -46,24 +53,52 @@ export const AuthProvider = ({ children }) => {
       if (session) {
         setToken(session.access_token);
         setIsAuthenticated(true);
-
-        // Fetch user profile from backend
-        try {
-          const { api } = await import('../utils/api');
-          const response = await api.login(session.access_token);
-          if (response && response.user) {
-            setUser(response.user);
-          }
-        } catch (backendError) {
-          console.error('Failed to fetch user profile:', backendError);
-          // User is authenticated with Supabase but not in backend
-          // They may need to complete their profile
+        // Extract user info from token
+        const userInfo = getUserFromToken(session.access_token);
+        console.log('Check session - User from token:', userInfo);
+        if (userInfo) {
+          setUser(userInfo);
         }
+        // Also fetch full profile from backend
+        await fetchUserProfile(session.access_token);
       }
     } catch (error) {
       console.error('Session check error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async (accessToken) => {
+    try {
+      const { api } = await import('../utils/api');
+      const response = await api.login(accessToken);
+      
+      console.log('fetchUserProfile - Response:', response);
+      console.log('fetchUserProfile - User data:', response?.user);
+      console.log('fetchUserProfile - User role:', response?.user?.role);
+      
+      if (response && response.user) {
+        // Merge backend data with existing user data from token
+        // Only override with non-null values from backend
+        setUser(prevUser => {
+          const merged = { ...prevUser };
+          Object.keys(response.user).forEach(key => {
+            if (response.user[key] !== null && response.user[key] !== undefined) {
+              merged[key] = response.user[key];
+            }
+          });
+          // Always preserve role from token if backend role is null
+          if (!response.user.role && prevUser?.role) {
+            merged.role = prevUser.role;
+          }
+          console.log('Merged user data:', merged);
+          return merged;
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      // Don't throw - user data from token is already set
     }
   };
 
@@ -100,46 +135,38 @@ export const AuthProvider = ({ children }) => {
         setToken(session.access_token);
         setIsAuthenticated(true);
 
-        // Sync with backend
+        // Extract user info from token immediately
+        const userInfo = getUserFromToken(session.access_token);
+        console.log('Login - User from token:', userInfo);
+        if (userInfo) {
+          setUser(userInfo);
+        }
+
+        // Sync with backend for additional data
         try {
           const { api } = await import('../utils/api');
           const response = await api.login(session.access_token);
-
-          // Set user profile from backend response
+          
+          // Merge backend data with token data, preserving role from token
           if (response && response.user) {
-            setUser(response.user);
+            setUser(prevUser => {
+              const merged = { ...prevUser };
+              Object.keys(response.user).forEach(key => {
+                if (response.user[key] !== null && response.user[key] !== undefined) {
+                  merged[key] = response.user[key];
+                }
+              });
+              // Always preserve role from token if backend role is null
+              if (!response.user.role && prevUser?.role) {
+                merged.role = prevUser.role;
+              }
+              console.log('Login - Merged user data:', merged);
+              return merged;
+            });
           }
         } catch (backendError) {
           console.error('Backend sync error:', backendError);
-
-          // If user not found in backend, auto-create them
-          if (backendError.message?.includes('not found')) {
-            try {
-              const { api } = await import('../utils/api');
-
-              // Try to create user in backend with Supabase data
-              const role = supabaseUser.user_metadata?.role || 'BUYER';
-              const signupData = {
-                email: supabaseUser.email,
-                firstName: supabaseUser.user_metadata?.first_name || supabaseUser.email.split('@')[0],
-                lastName: supabaseUser.user_metadata?.last_name || '',
-                role: role.toUpperCase(), // Ensure uppercase for backend validation
-                password: password // Backend expects this but won't use it since Supabase handles auth
-              };
-
-              const signupResponse = await api.signup(signupData, session.access_token);
-
-              if (signupResponse && signupResponse.user) {
-                setUser(signupResponse.user);
-                return { success: true, message: 'Account synced successfully!' };
-              }
-            } catch (syncError) {
-              console.error('Auto-sync failed:', syncError);
-              throw new Error('Failed to sync account. Please contact support.');
-            }
-          } else {
-            throw backendError;
-          }
+          // Continue with token data - don't fail login
         }
 
         return { success: true, message: 'Signed in successfully!' };
@@ -216,6 +243,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     setUserProfile,
     logout,
+    signOut: logout, // Alias for compatibility
     login,
     signup,
   };

@@ -55,7 +55,7 @@ public class AuthService {
         } else {
             // Create new user for Google user
             user = new User();
-            user.setId(userId);
+            user.setUser_id(userId);
             user.setEmail(request.getEmail());
             user.setFirstName(request.getFirstName());
             user.setLastName(request.getLastName());
@@ -72,7 +72,7 @@ public class AuthService {
     public UserDto processRegularSignup(UUID userId, SignupRequest request) {
         // Check if email already exists with different user
         Optional<User> existingByEmail = userRepository.findByEmail(request.getEmail());
-        if (existingByEmail.isPresent() && !existingByEmail.get().getId().equals(userId)) {
+        if (existingByEmail.isPresent() && !existingByEmail.get().getUser_id().equals(userId)) {
             throw new IllegalArgumentException("Email already registered");
         }
         
@@ -96,7 +96,7 @@ public class AuthService {
             }
         } else {
             user = new User();
-            user.setId(userId);
+            user.setUser_id(userId);
             user.setEmail(request.getEmail());
             user.setFirstName(request.getFirstName());
             user.setLastName(request.getLastName());
@@ -165,7 +165,7 @@ public class AuthService {
 
     private UserDto convertToDto(User user) {
         UserDto dto = new UserDto();
-        dto.setId(user.getId());
+        dto.setId(user.getUser_id());
         dto.setEmail(user.getEmail());
         dto.setFirstName(user.getFirstName());
         dto.setLastName(user.getLastName());

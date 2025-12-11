@@ -70,12 +70,12 @@ public class User {
     @Column (name = "photo")
     private String photo;
 
-    public User(String firstName , String lastName , String password , String email,UUID id){
+    public User(String firstName , String lastName , String password , String email,UUID user_id){
          this.email=email;
          this.firstName = firstName;
          this.lastName = lastName;
          this.password = password;
-         this.id=id;
+         this.user_id=user_id;
     }
 
 }
