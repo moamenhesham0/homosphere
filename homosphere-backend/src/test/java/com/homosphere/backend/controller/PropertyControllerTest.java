@@ -58,7 +58,7 @@ class PropertyControllerTest {
     void setUp() {
         // Create sample response
         compactResponse = new CompactPropertyListingResponse();
-        compactResponse.setId(UUID.randomUUID());
+        compactResponse.setPropertyListingId(UUID.randomUUID());
         compactResponse.setTitle("3 Bed Apartment in New York");
         compactResponse.setPrice(850000.0);
         compactResponse.setBedrooms(3);
@@ -178,7 +178,7 @@ class PropertyControllerTest {
     void searchProperties_WithMultipleResults_ReturnsPaginatedResponse() throws Exception {
         // Arrange
         CompactPropertyListingResponse response2 = new CompactPropertyListingResponse();
-        response2.setId(UUID.randomUUID());
+        response2.setPropertyListingId(UUID.randomUUID());
         response2.setTitle("4 Bed House");
         response2.setPrice(1200000.0);
         response2.setBedrooms(4);

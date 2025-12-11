@@ -1,0 +1,290 @@
+{
+	"info": {
+		"_postman_id": "subscription-tiers-collection",
+		"name": "Homosphere Subscription Tiers",
+		"description": "Collection to create subscription tiers for Homosphere - 3 Buyer tiers (1 free) and 4 Seller/Broker tiers (all paid)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Buyer Tiers",
+			"item": [
+				{
+					"name": "Create Basic Buyer (Free)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Basic Buyer\",\n    \"seller\": false,\n    \"monthlyPrice\": 0.00,\n    \"yearlyPrice\": 0.00,\n    \"visibilityPriority\": 1,\n    \"description\": \"Free plan for casual home buyers\",\n    \"popular\": false,\n    \"features\": [\n        {\n            \"name\": \"Browse all listings\",\n            \"tooltip\": \"View all available properties on the platform\"\n        },\n        {\n            \"name\": \"Save up to 5 favorites\",\n            \"tooltip\": \"Bookmark up to 5 properties for later viewing\"\n        },\n        {\n            \"name\": \"Basic search filters\",\n            \"tooltip\": \"Filter by location, price, and property type\"\n        },\n        {\n            \"name\": \"Email support\",\n            \"tooltip\": \"Get help via email within 48-72 hours\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Premium Buyer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Premium Buyer\",\n    \"seller\": false,\n    \"monthlyPrice\": 19.99,\n    \"yearlyPrice\": 199.99,\n    \"visibilityPriority\": 2,\n    \"description\": \"Enhanced plan for serious home buyers\",\n    \"popular\": true,\n    \"features\": [\n        {\n            \"name\": \"Unlimited saved favorites\",\n            \"tooltip\": \"Save as many properties as you want\"\n        },\n        {\n            \"name\": \"Advanced search filters\",\n            \"tooltip\": \"Filter by amenities, schools, commute time, and more\"\n        },\n        {\n            \"name\": \"Instant property alerts\",\n            \"tooltip\": \"Get notified immediately when matching properties are listed\"\n        },\n        {\n            \"name\": \"Property comparison tool\",\n            \"tooltip\": \"Compare up to 10 properties side-by-side\"\n        },\n        {\n            \"name\": \"Priority viewing requests\",\n            \"tooltip\": \"Your viewing requests are prioritized by sellers\"\n        },\n        {\n            \"name\": \"Chat support\",\n            \"tooltip\": \"Get help via live chat during business hours\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create VIP Buyer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"VIP Buyer\",\n    \"seller\": false,\n    \"monthlyPrice\": 49.99,\n    \"yearlyPrice\": 499.99,\n    \"visibilityPriority\": 3,\n    \"description\": \"Premium plan with exclusive benefits for elite buyers\",\n    \"popular\": false,\n    \"features\": [\n        {\n            \"name\": \"All Premium features\",\n            \"tooltip\": \"Includes everything from Premium Buyer plan\"\n        },\n        {\n            \"name\": \"Early access to new listings\",\n            \"tooltip\": \"See new properties 24 hours before they go public\"\n        },\n        {\n            \"name\": \"Dedicated account manager\",\n            \"tooltip\": \"Personal assistant to help with your property search\"\n        },\n        {\n            \"name\": \"Virtual property tours\",\n            \"tooltip\": \"Request virtual walkthroughs before in-person visits\"\n        },\n        {\n            \"name\": \"Market insights & reports\",\n            \"tooltip\": \"Access detailed neighborhood and market trend reports\"\n        },\n        {\n            \"name\": \"Direct seller messaging\",\n            \"tooltip\": \"Communicate directly with property owners/agents\"\n        },\n        {\n            \"name\": \"24/7 priority support\",\n            \"tooltip\": \"Round-the-clock support via phone, chat, and email\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Seller/Broker Tiers",
+			"item": [
+				{
+					"name": "Create Starter Seller",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Starter Seller\",\n    \"seller\": true,\n    \"monthlyPrice\": 29.99,\n    \"yearlyPrice\": 299.99,\n    \"visibilityPriority\": 1,\n    \"description\": \"Entry-level plan for new sellers and agents\",\n    \"popular\": false,\n    \"features\": [\n        {\n            \"name\": \"Up to 5 active listings\",\n            \"tooltip\": \"List up to 5 properties at a time\"\n        },\n        {\n            \"name\": \"Standard listing placement\",\n            \"tooltip\": \"Your properties appear in regular search results\"\n        },\n        {\n            \"name\": \"Basic analytics\",\n            \"tooltip\": \"Track views and inquiries for your listings\"\n        },\n        {\n            \"name\": \"Photo uploads (up to 10 per listing)\",\n            \"tooltip\": \"Add up to 10 photos per property\"\n        },\n        {\n            \"name\": \"Email support\",\n            \"tooltip\": \"Get help via email within 24-48 hours\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Professional Seller",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Professional Seller\",\n    \"seller\": true,\n    \"monthlyPrice\": 79.99,\n    \"yearlyPrice\": 799.99,\n    \"visibilityPriority\": 2,\n    \"description\": \"Professional plan for active sellers and brokers\",\n    \"popular\": true,\n    \"features\": [\n        {\n            \"name\": \"Up to 20 active listings\",\n            \"tooltip\": \"List up to 20 properties at a time\"\n        },\n        {\n            \"name\": \"Featured placement\",\n            \"tooltip\": \"Your listings appear higher in search results\"\n        },\n        {\n            \"name\": \"Advanced analytics dashboard\",\n            \"tooltip\": \"Detailed metrics on views, engagement, and lead quality\"\n        },\n        {\n            \"name\": \"Unlimited photo uploads\",\n            \"tooltip\": \"Add as many photos as needed per property\"\n        },\n        {\n            \"name\": \"Video tour support\",\n            \"tooltip\": \"Upload video tours for your properties\"\n        },\n        {\n            \"name\": \"Lead management system\",\n            \"tooltip\": \"Organize and track buyer inquiries and viewing requests\"\n        },\n        {\n            \"name\": \"Priority chat support\",\n            \"tooltip\": \"Get help via live chat with priority response\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Premium Seller",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Premium Seller\",\n    \"seller\": true,\n    \"monthlyPrice\": 149.99,\n    \"yearlyPrice\": 1499.99,\n    \"visibilityPriority\": 3,\n    \"description\": \"Premium plan for established real estate professionals\",\n    \"popular\": false,\n    \"features\": [\n        {\n            \"name\": \"Up to 50 active listings\",\n            \"tooltip\": \"List up to 50 properties at a time\"\n        },\n        {\n            \"name\": \"Top priority placement\",\n            \"tooltip\": \"Your listings appear at the top of all search results\"\n        },\n        {\n            \"name\": \"All Professional features\",\n            \"tooltip\": \"Includes everything from Professional Seller plan\"\n        },\n        {\n            \"name\": \"Branded profile page\",\n            \"tooltip\": \"Custom profile page with your branding and logo\"\n        },\n        {\n            \"name\": \"Social media integration\",\n            \"tooltip\": \"Auto-share listings to your social media accounts\"\n        },\n        {\n            \"name\": \"CRM integration\",\n            \"tooltip\": \"Connect with popular CRM tools for seamless workflow\"\n        },\n        {\n            \"name\": \"Automated email campaigns\",\n            \"tooltip\": \"Send automated follow-ups to interested buyers\"\n        },\n        {\n            \"name\": \"Dedicated account manager\",\n            \"tooltip\": \"Personal support specialist for your account\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Enterprise Seller",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Enterprise Seller\",\n    \"seller\": true,\n    \"monthlyPrice\": 299.99,\n    \"yearlyPrice\": 2999.99,\n    \"visibilityPriority\": 4,\n    \"description\": \"Enterprise solution for large agencies and property developers\",\n    \"popular\": false,\n    \"features\": [\n        {\n            \"name\": \"Unlimited listings\",\n            \"tooltip\": \"List as many properties as you need\"\n        },\n        {\n            \"name\": \"Maximum visibility boost\",\n            \"tooltip\": \"Highest priority placement across the entire platform\"\n        },\n        {\n            \"name\": \"All Premium features\",\n            \"tooltip\": \"Includes everything from Premium Seller plan\"\n        },\n        {\n            \"name\": \"Multi-user team accounts\",\n            \"tooltip\": \"Add unlimited team members with role-based access\"\n        },\n        {\n            \"name\": \"White-label solutions\",\n            \"tooltip\": \"Custom branding options throughout your listings\"\n        },\n        {\n            \"name\": \"API access\",\n            \"tooltip\": \"Integrate with your own systems via API\"\n        },\n        {\n            \"name\": \"Advanced reporting & BI tools\",\n            \"tooltip\": \"Comprehensive business intelligence and custom reports\"\n        },\n        {\n            \"name\": \"Featured agency badge\",\n            \"tooltip\": \"Special verification badge on all your listings\"\n        },\n        {\n            \"name\": \"Priority advertising spots\",\n            \"tooltip\": \"Featured placement on homepage and category pages\"\n        },\n        {\n            \"name\": \"24/7 dedicated support team\",\n            \"tooltip\": \"Round-the-clock priority support with dedicated specialists\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Utility Requests",
+			"item": [
+				{
+					"name": "Get All Subscription Tiers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Buyer Tiers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers/buyer-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers",
+								"buyer-tiers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Seller Tiers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/subscription-tiers/seller-tiers",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"subscription-tiers",
+								"seller-tiers"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

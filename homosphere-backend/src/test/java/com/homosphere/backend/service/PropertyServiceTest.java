@@ -62,7 +62,7 @@ class PropertyServiceTest {
         propertyListing.setProperty(property);
 
         compactResponse = new CompactPropertyListingResponse();
-        compactResponse.setId(propertyListing.getPropertyListingId());
+        compactResponse.setPropertyListingId(propertyListing.getPropertyListingId());
         compactResponse.setTitle("3 Bed Apartment");
         compactResponse.setPrice(850000.0);
         compactResponse.setBedrooms(3);

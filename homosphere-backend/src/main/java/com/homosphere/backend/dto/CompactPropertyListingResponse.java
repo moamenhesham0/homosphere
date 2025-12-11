@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,8 +18,4 @@ public class CompactPropertyListingResponse {
     private Integer bedrooms;
     private String city;
     private String state;
-    public void setId(UUID randomUUID) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setId'");
-    }
 }
