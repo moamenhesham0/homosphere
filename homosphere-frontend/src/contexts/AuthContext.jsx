@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { getUserFromToken } from '../utils/jwt';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     }
   };
-  
+
   const login = async (email, password) => {
     try {
       // First, sign in with Supabase
@@ -129,6 +129,8 @@ export const AuthProvider = ({ children }) => {
 
       // Get the session token
       const session = data.session;
+      const supabaseUser = data.user;
+
       if (session && session.access_token) {
         setToken(session.access_token);
         setIsAuthenticated(true);
@@ -211,7 +213,7 @@ export const AuthProvider = ({ children }) => {
 
         const { api } = await import('../utils/api');
         const response = await api.signup(backendData, session.access_token);
-        
+
         // Set user profile from backend response
         if (response && response.user) {
           setUser(response.user);
@@ -222,10 +224,10 @@ export const AuthProvider = ({ children }) => {
         return { success: true, message: 'Account created successfully!' };
       } else {
         // Email verification required - no session yet
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: 'Check your email for the confirmation link!',
-          requiresVerification: true 
+          requiresVerification: true
         };
       }
     } catch (error) {

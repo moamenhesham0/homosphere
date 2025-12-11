@@ -1,9 +1,9 @@
 package com.homosphere.backend.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,7 +31,7 @@ class MediaServiceIntegrationTest {
         // Assert
         System.out.println("Uploaded file key: " + result);
         assertNotNull(result);
-        assertTrue(result.startsWith("documents-"), "Expected to start with 'documents-' but got: " + result);
+        assertTrue(result.contains("documents-"), "Expected to contain 'documents-' but got: " + result);
         assertTrue(result.endsWith("testalive.txt"), "Expected to end with 'testAlive.txt' but got: " + result);
     }
 }

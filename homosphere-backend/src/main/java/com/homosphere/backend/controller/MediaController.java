@@ -1,5 +1,7 @@
 package com.homosphere.backend.controller;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,31 +23,31 @@ public class MediaController {
     private final MediaService mediaService;
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(
+    public ResponseEntity<?> uploadFile(
             @RequestParam("file") MultipartFile file,
             Authentication authentication) {
-        
+
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Unauthorized");
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
-        
+
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body("File is required and cannot be empty");
+            return ResponseEntity.badRequest().body(Map.of("message", "File is required and cannot be empty"));
         }
-        
-        // Validate file size (e.g., max 5MB)
-        if (file.getSize() > 5 * 1024 * 1024) {
-            return ResponseEntity.badRequest().body("File size must not exceed 5MB");
+
+        // Validate file size (e.g., max 10MB for images)
+        if (file.getSize() > 10 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body(Map.of("message", "File size must not exceed 10MB"));
         }
-        
+
         // Validate file type (images only)
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            return ResponseEntity.badRequest().body("Only image files are allowed");
+            return ResponseEntity.badRequest().body(Map.of("message", "Only image files are allowed"));
         }
-        
+
         String url = mediaService.uploadFile(file);
-        return ResponseEntity.ok(url);
+        return ResponseEntity.ok(Map.of("url", url));
     }
 
     @GetMapping("/photo")
