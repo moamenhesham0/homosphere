@@ -131,7 +131,8 @@
 }
 
 .signin-btn,
-.profile-btn {
+.profile-btn,
+.admin-btn {
   color: #00a676;
   background: transparent;
   border: 1.5px solid #00a676;
@@ -148,7 +149,8 @@
 }
 
 .signin-btn:hover,
-.profile-btn:hover {
+.profile-btn:hover,
+.admin-btn:hover {
   background: #00a676;
   color: white;
   box-shadow: 0 4px 15px rgba(0, 166, 118, 0.3);
@@ -244,6 +246,7 @@
 
   .signin-btn,
   .profile-btn,
+  .admin-btn,
   .signup-btn,
   .signout-btn {
     padding: 0.5rem 1rem;

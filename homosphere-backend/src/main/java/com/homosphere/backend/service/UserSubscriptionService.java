@@ -35,7 +35,7 @@ public class UserSubscriptionService {
     }
 
     private UserSubscription findActiveSubscription(UUID userId) {
-        List<UserSubscription> subscriptions = userSubscriptionRepository.findByUserId(userId);
+        List<UserSubscription> subscriptions = userSubscriptionRepository.findByUser_Id(userId);
         return subscriptions.stream()
                 .filter(sub -> sub.getStatus() == UserSubscription.Status.ACTIVE)
                 .findFirst()
