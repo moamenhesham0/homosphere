@@ -5,11 +5,11 @@
     box-shadow: 
         0 10px 30px rgba(0, 0, 0, 0.08),
         0 1px 3px #0000000d;
-    width: 200%;
-    max-width: 200%;
+    width: 100%;
+    max-width: 100%;
     font-family: 'Söhne', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    margin-left: -45%;
+    margin-left: -0%;
     border: 1px solid rgba(153, 188, 133, 0.2);
     position: relative;
     overflow: hidden;
