@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -22,7 +24,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ViewingRequest {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "request_viewing_id")
@@ -35,13 +36,14 @@ public class ViewingRequest {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    @Column(nullable = false, length = 50)
+    // Buyer information
+    @Column(name = "buyer_name", nullable = false, length = 50)
     private String name;
     
-    @Column(nullable = false)
+    @Column(name = "buyer_email", nullable = false)
     private String email;
     
-    @Column(nullable = false, length = 15)
+    @Column(name = "buyer_phone", nullable = false, length = 15)
     private String phone;
 
     @Column(name = "submitted_at", nullable = false)
@@ -55,6 +57,17 @@ public class ViewingRequest {
     
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
+
+    public enum Status {
+        PENDING,
+        APPROVED,
+        REJECTED,
+        RESCHEDULED
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private Status status;
     
     @Column(length = 200)
     private String message;

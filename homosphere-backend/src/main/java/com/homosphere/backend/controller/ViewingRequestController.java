@@ -16,6 +16,7 @@ import com.homosphere.backend.dto.ViewingRequestDTO;
 import com.homosphere.backend.model.ViewingRequest;
 import com.homosphere.backend.service.ViewingRequestService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -26,12 +27,12 @@ public class ViewingRequestController {
     private final ViewingRequestService viewingRequestService;
     
     @PostMapping
-    public ResponseEntity<ViewingRequest> createViewingRequest(
-            @RequestBody ViewingRequestDTO dto,
+    public ResponseEntity<?> createViewingRequest(
+            @Valid @RequestBody ViewingRequestDTO dto,
             Authentication authentication) {
         
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body("Unauthorized");
         }
         
         try {
@@ -40,8 +41,12 @@ public class ViewingRequestController {
             
             ViewingRequest created = viewingRequestService.createViewingRequest(userUuid, dto);
             return ResponseEntity.ok(created);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Invalid data: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
     

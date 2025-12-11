@@ -109,14 +109,14 @@ const RequestViewForm = ({ propertyId, onClose }) => {
       const token = session.access_token;
   
       const requestData = {
-        propertyId,
+        propertyId: propertyId,
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         preferredDate: formData.preferredDate,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
-        message: formData.message
+        startTime: formData.startTime + ':00', // Format as HH:mm:ss
+        endTime: formData.endTime + ':00', // Format as HH:mm:ss
+        message: formData.message || ''
       };
 
       console.log('Request data:', requestData);
@@ -151,7 +151,7 @@ const RequestViewForm = ({ propertyId, onClose }) => {
   }
 
   return (
-    <div className="request-view-form">
+    <div className="request-view-form" onClick={(e) => e.stopPropagation()}>
       <div className="form-header">
         <h2>Request a Viewing</h2>
         <button onClick={onClose} className="close-icon">&times;</button>

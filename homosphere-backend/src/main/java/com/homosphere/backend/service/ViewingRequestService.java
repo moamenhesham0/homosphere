@@ -37,6 +37,7 @@ public class ViewingRequestService {
         viewingRequest.setPreferredDate(dto.getPreferredDate());
         viewingRequest.setStartTime(dto.getStartTime());
         viewingRequest.setEndTime(dto.getEndTime());
+        viewingRequest.setStatus(ViewingRequest.Status.PENDING);
         viewingRequest.setMessage(dto.getMessage());
         
         return viewingRequestRepository.save(viewingRequest);
