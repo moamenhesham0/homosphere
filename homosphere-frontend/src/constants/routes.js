@@ -7,6 +7,7 @@ export const ROUTES = {
   FORGET_PASSWORD: '/forget-password',
   AUTH: '/auth',
   SUBSCRIPTION: '/subscription',
+  ADMIN_PORTAL: '/admin-portal',
 };
 
 // External links

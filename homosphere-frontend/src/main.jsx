@@ -13,6 +13,7 @@ import Layout from './components/Layout.jsx';
 import SubscriptionPage from './pages/SubscriptionPage.jsx';
 import AuthCallback from './pages/AuthCallback.jsx';
 import Profile from './pages/Profile.jsx';
+import AdminPortal from './pages/AdminPortal.jsx';
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path="/" element={<App />} />
                     <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
                     <Route path={ROUTES.PROFILE} element={<Profile />} />
+                    <Route path={ROUTES.ADMIN_PORTAL} element={<AdminPortal />} />
                 </Route>
             </Routes>
         </BrowserRouter>

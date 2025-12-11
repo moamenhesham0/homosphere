@@ -37,11 +37,11 @@ const SignIn = () => {
             return false;
         }
 
-        const passwordError = getFieldError('password', formData.password, formData);
-        if (passwordError) {
-            setErrorMessage(passwordError);
-            return false;
-        }
+        // const passwordError = getFieldError('password', formData.password, formData);
+        // if (passwordError) {
+        //     setErrorMessage(passwordError);
+        //     return false;
+        // }
 
         return true;
     };
