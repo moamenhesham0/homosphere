@@ -91,15 +91,17 @@ class ViewingRequestControllerTest {
             .thenReturn(mockViewingRequest);
 
         // Act
-        ResponseEntity<ViewingRequest> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
+        ResponseEntity<?> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(mockViewingRequest.getId(), response.getBody().getId());
-        assertEquals(mockViewingRequest.getPropertyId(), response.getBody().getPropertyId());
-        assertEquals(mockViewingRequest.getName(), response.getBody().getName());
+        assertTrue(response.getBody() instanceof ViewingRequest);
+        ViewingRequest responseBody = (ViewingRequest) response.getBody();
+        assertEquals(mockViewingRequest.getId(), responseBody.getId());
+        assertEquals(mockViewingRequest.getPropertyId(), responseBody.getPropertyId());
+        assertEquals(mockViewingRequest.getName(), responseBody.getName());
 
         verify(authentication, times(1)).isAuthenticated();
         verify(authentication, times(1)).getPrincipal();
@@ -109,12 +111,13 @@ class ViewingRequestControllerTest {
     @Test
     void createViewingRequest_NullAuthentication_Returns401() {
         // Act
-        ResponseEntity<ViewingRequest> response = viewingRequestController.createViewingRequest(mockDTO, null);
+        ResponseEntity<?> response = viewingRequestController.createViewingRequest(mockDTO, null);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNull(response.getBody());
+        assertNotNull(response.getBody());
+        assertEquals("Unauthorized", response.getBody());
 
         verify(viewingRequestService, never()).createViewingRequest(any(UUID.class), any(ViewingRequestDTO.class));
     }
@@ -125,12 +128,13 @@ class ViewingRequestControllerTest {
         when(authentication.isAuthenticated()).thenReturn(false);
 
         // Act
-        ResponseEntity<ViewingRequest> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
+        ResponseEntity<?> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNull(response.getBody());
+        assertNotNull(response.getBody());
+        assertEquals("Unauthorized", response.getBody());
 
         verify(authentication, times(1)).isAuthenticated();
         verify(authentication, never()).getPrincipal();
@@ -144,12 +148,13 @@ class ViewingRequestControllerTest {
         when(authentication.getPrincipal()).thenReturn("invalid-uuid");
 
         // Act
-        ResponseEntity<ViewingRequest> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
+        ResponseEntity<?> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNull(response.getBody());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody() instanceof String);
 
         verify(viewingRequestService, never()).createViewingRequest(any(UUID.class), any(ViewingRequestDTO.class));
     }
@@ -163,12 +168,13 @@ class ViewingRequestControllerTest {
             .thenThrow(new RuntimeException("User not found"));
 
         // Act
-        ResponseEntity<ViewingRequest> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
+        ResponseEntity<?> response = viewingRequestController.createViewingRequest(mockDTO, authentication);
 
         // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNull(response.getBody());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody() instanceof String);
 
         verify(viewingRequestService, times(1)).createViewingRequest(eq(userId), any(ViewingRequestDTO.class));
     }
