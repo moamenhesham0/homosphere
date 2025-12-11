@@ -55,7 +55,7 @@ class AdminControllerTest {
         regularUserId = UUID.randomUUID();
 
         adminUser = new User();
-        adminUser.setUser_id(adminUserId);
+        adminUser.setId(adminUserId);
         adminUser.setEmail("admin@test.com");
         adminUser.setFirstName("Admin");
         adminUser.setLastName("User");
@@ -63,7 +63,7 @@ class AdminControllerTest {
         adminUser.setIsVerified(true);
 
         regularUser = new User();
-        regularUser.setUser_id(regularUserId);
+        regularUser.setId(regularUserId);
         regularUser.setEmail("user@test.com");
         regularUser.setFirstName("Regular");
         regularUser.setLastName("User");
@@ -288,7 +288,7 @@ class AdminControllerTest {
         request.put("lastName", "User");
 
         User existingUser = new User();
-        existingUser.setUser_id(existingId);
+        existingUser.setId(existingId);
         when(userRepository.findById(existingId)).thenReturn(Optional.of(existingUser));
 
         // Act
@@ -371,7 +371,7 @@ class AdminControllerTest {
 
         UUID targetAdminId = UUID.randomUUID();
         User targetAdmin = new User();
-        targetAdmin.setUser_id(targetAdminId);
+        targetAdmin.setId(targetAdminId);
         targetAdmin.setEmail("target@test.com");
         targetAdmin.setRole("ADMIN");
 
@@ -435,7 +435,7 @@ class AdminControllerTest {
 
         UUID targetAdminId = UUID.randomUUID();
         User targetAdmin = new User();
-        targetAdmin.setUser_id(targetAdminId);
+        targetAdmin.setId(targetAdminId);
         targetAdmin.setEmail("target@test.com");
         targetAdmin.setRole("ADMIN");
 
@@ -470,7 +470,7 @@ class AdminControllerTest {
 
         UUID targetAdminId = UUID.randomUUID();
         User targetAdmin = new User();
-        targetAdmin.setUser_id(targetAdminId);
+        targetAdmin.setId(targetAdminId);
         targetAdmin.setEmail("target@test.com");
         targetAdmin.setRole("ADMIN");
 

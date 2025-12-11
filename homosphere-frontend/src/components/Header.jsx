@@ -32,6 +32,8 @@ const Header = () => {
           {user?.role !== 'ADMIN' && (
             <Link to="/subscription" className="nav-link">Subscription</Link>
           )}
+          <Link to="/search" className="nav-link">Search</Link>
+          <Link to="/subscription" className="nav-link">Subscription</Link>
           <Link to="/about" className="nav-link">About</Link>
           <Link to="/contact" className="nav-link">Contact</Link>
         </nav>

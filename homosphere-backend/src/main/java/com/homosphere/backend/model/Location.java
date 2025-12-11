@@ -26,4 +26,14 @@ public class Location {
 
     private Double latitude;
     private Double longitude;
+
+    public Location(String street, String city, String state, String zipCode, Double latitude, Double longitude) {
+        this.locationId = java.util.UUID.randomUUID();
+        this.street = street;
+        this.city = city;
+        this.state = state;
+        this.zipCode = zipCode;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }

@@ -78,7 +78,7 @@ class UserServiceTest {
             assertEquals("Doe", savedUser.getLastName());
             assertEquals("password123", savedUser.getPassword());
             assertEquals("john.doe@example.com", savedUser.getEmail());
-            assertEquals(testId, savedUser.getUser_id());
+            assertEquals(testId, savedUser.getId());
             return savedUser;
         });
 
@@ -181,7 +181,7 @@ class UserServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals(testId, result.getUser_id());
+        assertEquals(testId, result.getId());
         assertEquals("John", result.getFirstName());
         assertEquals("Doe", result.getLastName());
         assertEquals("john.doe@example.com", result.getEmail());

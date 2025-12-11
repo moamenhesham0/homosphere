@@ -15,7 +15,7 @@ public class AdminMapper {
      */
     public User mapAdminRequestToUser(Map<String, String> request, UUID userId) {
         User user = new User();
-        user.setUser_id(userId);
+        user.setId(userId);
         user.setEmail(request.get("email"));
         user.setFirstName(request.get("firstName"));
         user.setLastName(request.get("lastName"));
