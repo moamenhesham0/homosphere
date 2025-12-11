@@ -3,6 +3,7 @@ import React from 'react';
 const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, onSelect }) => {
     let buttonText = plan.buttonText;
     let isCurrent = false;
+    let buttonClass = '';
 
     if (currentSubscriptionId) {
         if (plan.id === currentSubscriptionId) {
@@ -10,12 +11,16 @@ const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, 
             isCurrent = true;
         } else if (plan.priority > currentPriority) {
             buttonText = "Upgrade";
+            buttonClass = 'upgrade-btn';
         } else {
             buttonText = "Downgrade";
+            buttonClass = 'downgrade-btn';
         }
     }
 
     const handleSelect = () => {
+        if (isCurrent) return;
+        
         let action = "subscribe";
         if (currentSubscriptionId) {
              if (plan.priority > currentPriority) action = "upgrade";
@@ -40,7 +45,7 @@ const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, 
                 </span>
             </div>
             <button 
-                className={`select-plan-btn ${isCurrent ? 'current-plan-btn' : ''}`} 
+                className={`select-plan-btn ${isCurrent ? 'current-plan-btn' : buttonClass}`} 
                 disabled={isCurrent}
                 onClick={handleSelect}
             >

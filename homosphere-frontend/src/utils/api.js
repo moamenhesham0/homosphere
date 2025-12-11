@@ -58,8 +58,11 @@ export const api = {
     
     // Login - sync with backend after Supabase authentication
     login: (token) => apiCall('/api/auth/login', {
-        method: 'POST'
-    }, token),
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    }),
 
     // Get user profile from backend
     getUserProfile: (token) => apiCall('/api/user/profile', {

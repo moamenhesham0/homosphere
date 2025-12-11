@@ -11,9 +11,14 @@ export const useUserData = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchSubscriptionDetails = async (userId) => {
+    const fetchSubscriptionDetails = async (token) => {
       try {
-        const response = await fetch(`http://localhost:8080/api/user-subscriptions/user/${userId}/role-tier`);
+        const response = await fetch(`http://localhost:8080/api/user-subscriptions/my-role-tier`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         if (!response.ok) {
           throw new Error(`Failed to fetch subscription data: ${response.status}`);
         }
@@ -61,7 +66,7 @@ export const useUserData = () => {
           if (isMounted) {
             setRole(user.user_metadata?.role ?? null);
           }
-          await fetchSubscriptionDetails(user.id);
+          await fetchSubscriptionDetails(session.access_token);
           setRole(user.user_metadata.role);
           setEmail(user.email);
           setFirstName(user.user_metadata.first_name);
@@ -83,7 +88,7 @@ export const useUserData = () => {
         setEmail(session.user.email);
         setFirstName(session.user.user_metadata.first_name);
         setLastName(session.user.user_metadata.last_name);
-        fetchSubscriptionDetails(session.user.id);
+        fetchSubscriptionDetails(session.access_token);
       } else {
         setRole(null);
         setSubscriptionId(null);

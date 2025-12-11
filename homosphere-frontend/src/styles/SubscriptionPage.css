@@ -106,6 +106,24 @@
   opacity: 0.7;
 }
 
+.select-plan-btn.upgrade-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.select-plan-btn.upgrade-btn:hover {
+  background-color: #45a049;
+}
+
+.select-plan-btn.downgrade-btn {
+  background-color: #ff9800;
+  color: white;
+}
+
+.select-plan-btn.downgrade-btn:hover {
+  background-color: #e68900;
+}
+
 .plan-features {
   list-style: none;
   padding: 0;

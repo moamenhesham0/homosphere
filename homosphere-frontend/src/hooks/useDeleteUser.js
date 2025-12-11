@@ -28,7 +28,7 @@ const useDeleteUser = () => {
 
       // Delete user from backend database (includes profile, subscriptions, and Supabase auth)
       // Send JWT token for authentication - backend will verify user is deleting their own account
-      const backendResponse = await axios.delete(`http://localhost:8080/api/profile/${userId}`, {
+      const backendResponse = await axios.delete(`http://localhost:8080/api/user`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
