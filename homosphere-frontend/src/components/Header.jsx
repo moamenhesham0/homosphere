@@ -3,12 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import '../styles/Header.css';
 
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, token, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
       navigate('/signin');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -33,13 +33,13 @@ const Header = () => {
             <Link to="/subscription" className="nav-link">Subscription</Link>
           )}
           <Link to="/search" className="nav-link">Search</Link>
-          <Link to="/subscription" className="nav-link">Subscription</Link>
           <Link to="/about" className="nav-link">About</Link>
           <Link to="/contact" className="nav-link">Contact</Link>
+          <Link to="/analytics" className="nav-link">Analytics</Link>
         </nav>
 
         <div className="header-actions">
-          {user ? (
+          {isAuthenticated || token ? (
             <>
               {user.role !== 'ADMIN' && (
                 <Link to="/profile" className="profile-btn">

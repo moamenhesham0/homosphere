@@ -11,6 +11,7 @@ export const ROUTES = {
   ADMIN_PORTAL: '/admin-portal',
   SEARCH: '/search',
   REQUEST_VIEW: '/request-viewing',
+  ANALYTICS: '/analytics',
 };
 
 // External links
