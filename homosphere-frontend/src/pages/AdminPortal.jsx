@@ -169,7 +169,7 @@ export default function AdminPortal() {
         throw new Error(`Failed to delete admin: ${response.status}`);
       }
 
-      setAdmins(admins.filter(admin => admin.user_id !== adminId));
+      setAdmins(admins.filter(admin => admin.id !== adminId));
       setSuccessMessage(`Admin ${adminEmail} has been removed successfully!`);
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
@@ -212,7 +212,7 @@ export default function AdminPortal() {
             ) : (
               <div className="admins-grid">
                 {admins.map((admin) => (
-                  <div key={admin.user_id} className="admin-card">
+                  <div key={admin.id} className="admin-card">
                     <div className="admin-info">
                       <div className="admin-name">
                         {admin.firstName} {admin.lastName}
@@ -225,14 +225,14 @@ export default function AdminPortal() {
                     <div className="admin-actions-card">
                       <button
                         className="btn btn-view"
-                        onClick={() => navigate(`/profile/${admin.user_id}`)}
+                        onClick={() => navigate(`/profile/${admin.id}`)}
                       >
                         View Profile
                       </button>
-                      {admin.user_id !== user.id && (
+                      {admin.id !== user.id && (
                         <button
                           className="btn btn-danger"
-                          onClick={() => handleDeleteAdmin(admin.user_id, admin.email)}
+                          onClick={() => handleDeleteAdmin(admin.id, admin.email)}
                         >
                           Remove Admin
                         </button>

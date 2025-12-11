@@ -44,6 +44,12 @@ const SubscriptionPage = () => {
   const handleSelectPlan = async (plan) => {
     if (isSubmitting) return;
     
+    // Prevent selecting the same plan
+    if (plan.id === currentSubscriptionId) {
+      alert('You are already subscribed to this plan.');
+      return;
+    }
+    
     const action = isFirstTime ? "subscribe" : (currentSubscriptionId ? 
       (plan.priority > currentPriority ? "upgrade" : "downgrade") : "subscribe");
     
@@ -53,7 +59,10 @@ const SubscriptionPage = () => {
     setIsSubmitting(false);
     
     if (result.success) {
-      alert(result.message);
+      const message = currentSubscriptionId ? 
+        `Successfully ${action}d to ${plan.name}!` : 
+        `Successfully subscribed to ${plan.name}!`;
+      alert(message);
       if (isFirstTime) {
         setIsFirstTime(false);
         navigate('/profile');

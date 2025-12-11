@@ -72,6 +72,53 @@ export const fieldValidators = {
       return 'You must agree to the Terms & Conditions';
     }
     return null;
+  },
+
+  phone: (value) => {
+    if (!value || value.trim() === "") {
+      return 'Phone number is required';
+    }
+    const phoneRegex = /^\d{10,15}$/;
+    if (!phoneRegex.test(value.replace(/[\s-]/g, ''))) {
+      return 'Please enter a valid phone number (10-15 digits)';
+    }
+    return null;
+  },
+
+  name: (value) => {
+    if (!value || value.trim() === "" || value.startsWith(" ")) {
+      return 'Name is required';
+    }
+    return null;
+  },
+
+  preferredDate: (value) => {
+    if (!value) {
+      return 'Preferred date is required';
+    }
+    return null;
+  },
+
+  startTime: (value) => {
+    if (!value) {
+      return 'Start time is required';
+    }
+    return null;
+  },
+
+  endTime: (value, formData) => {
+    if (!value) {
+      return 'End time is required';
+    }
+    if (formData && formData.startTime) {
+      const start = new Date(`2000-01-01T${formData.startTime}`);
+      const end = new Date(`2000-01-01T${value}`);
+      const diffMinutes = (end - start) / (1000 * 60);
+      if (diffMinutes < 30) {
+        return 'Time slot must be at least 30 minutes';
+      }
+    }
+    return null;
   }
 };
 

@@ -33,6 +33,8 @@ const useSubscriptionActions = () => {
                 await axios.post('http://localhost:8080/api/public/user', userData);
             } else {
                 // For existing users without subscription, use the regular subscription API
+                const { data: { session } } = await supabase.auth.getSession();
+                
                 const startDate = new Date();
                 const endDate = new Date(startDate);
                 if (billingCycle === 'month') {
@@ -50,7 +52,11 @@ const useSubscriptionActions = () => {
                     status: 'ACTIVE'
                 };
 
-                await axios.post('http://localhost:8080/api/user-subscriptions', payload);
+                await axios.post('http://localhost:8080/api/user-subscriptions', payload, {
+                    headers: {
+                        'Authorization': `Bearer ${session?.access_token}`
+                    }
+                });
             }
             
             setCurrentSubscriptionId(plan.id);
@@ -62,6 +68,8 @@ const useSubscriptionActions = () => {
     } else {
         // User already has a subscription - upgrade or downgrade
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            
             const startDate = new Date();
             const endDate = new Date(startDate);
             if (billingCycle === 'month') {
@@ -77,12 +85,17 @@ const useSubscriptionActions = () => {
                 endDate: endDate.toISOString().split('T')[0]
             };
 
-            await axios.put(`http://localhost:8080/api/user-subscriptions/user/${userId}/update-tier`, updatePayload);
+            await axios.put(`http://localhost:8080/api/user-subscriptions/update-my-tier`, updatePayload, {
+                headers: {
+                    'Authorization': `Bearer ${session?.access_token}`
+                }
+            });
             setCurrentSubscriptionId(plan.id);
             return { success: true, message: `Successfully updated to ${plan.name}!` };
         } catch (error) {
             console.error("Error updating subscription:", error);
-            return { success: false, error: 'Failed to update subscription. Please try again.' };
+            const errorMessage = error.response?.data?.message || error.response?.data || 'Failed to update subscription. Please try again.';
+            return { success: false, error: errorMessage };
         }
     }
   };

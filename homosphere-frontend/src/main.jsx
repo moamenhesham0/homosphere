@@ -19,6 +19,7 @@ import SearchPage from './pages/SearchPage.jsx';
 import PropertyDetailsPage from './pages/PropertyDetailsPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 
+
 createRoot(document.getElementById('root')).render(
     <StrictMode>
         <AuthProvider>
