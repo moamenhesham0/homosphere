@@ -1,13 +1,29 @@
 package com.homosphere.backend.model;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import com.homosphere.backend.enums.PropertyListingStatus;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "property_listing")
@@ -17,9 +33,9 @@ import java.util.List;
 public class PropertyListing {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "property_listing_id")
-    private Long propertyListingId;
+    private UUID propertyListingId;
 
     @Column(name = "title")
     private String title;
@@ -43,7 +59,7 @@ public class PropertyListing {
     private PropertyImage bannerImage;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "property_id")
+    @JoinColumn(name = "property_listing_id")
     private List<PropertyImage> propertyImages;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -56,9 +72,6 @@ public class PropertyListing {
     @Enumerated(EnumType.STRING)
     @Column(name = "property_listing_status")
     private PropertyListingStatus propertyListingStatus;
-
-    @Column(name = "submission_date")
-    private LocalDateTime submissionDate;
 
     @Column(name = "publication_date")
     private LocalDateTime publicationDate;

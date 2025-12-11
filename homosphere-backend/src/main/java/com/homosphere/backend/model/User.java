@@ -14,13 +14,14 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @Table(name = "users")
-@NoArgsConstructor 
+@NoArgsConstructor
 public class User {
 
-    
-    @Id 
+
+    @Id
+    @Column(name = "user_id")
     private UUID id;
-    
+
     @Column(name = "email")
     private String email;
 
@@ -77,4 +78,4 @@ public class User {
          this.id=id;
     }
 
-} 
+}

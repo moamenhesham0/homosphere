@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PropertyImageResponse {
-    private UUID propertyImageId;
-    private String imageUrl;
+public class PropertySubmissionRequest {
+    private PropertyListingRequest propertyListingRequest;
+    private String message;
 }

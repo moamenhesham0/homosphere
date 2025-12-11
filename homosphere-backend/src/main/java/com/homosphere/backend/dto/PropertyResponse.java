@@ -8,12 +8,13 @@ import lombok.NoArgsConstructor;
 
 import java.time.Year;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class PropertyResponse {
-    private Long propertyId;
+    private UUID propertyId;
     private Double areaInSquareMeters;
     private Integer bedrooms;
     private Integer bathrooms;

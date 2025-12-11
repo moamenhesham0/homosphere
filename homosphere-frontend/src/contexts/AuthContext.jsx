@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -46,6 +46,19 @@ export const AuthProvider = ({ children }) => {
       if (session) {
         setToken(session.access_token);
         setIsAuthenticated(true);
+
+        // Fetch user profile from backend
+        try {
+          const { api } = await import('../utils/api');
+          const response = await api.login(session.access_token);
+          if (response && response.user) {
+            setUser(response.user);
+          }
+        } catch (backendError) {
+          console.error('Failed to fetch user profile:', backendError);
+          // User is authenticated with Supabase but not in backend
+          // They may need to complete their profile
+        }
       }
     } catch (error) {
       console.error('Session check error:', error);
@@ -68,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     }
   };
-  
+
   const login = async (email, password) => {
     try {
       // First, sign in with Supabase
@@ -81,6 +94,8 @@ export const AuthProvider = ({ children }) => {
 
       // Get the session token
       const session = data.session;
+      const supabaseUser = data.user;
+
       if (session && session.access_token) {
         setToken(session.access_token);
         setIsAuthenticated(true);
@@ -89,15 +104,42 @@ export const AuthProvider = ({ children }) => {
         try {
           const { api } = await import('../utils/api');
           const response = await api.login(session.access_token);
-          
+
           // Set user profile from backend response
           if (response && response.user) {
             setUser(response.user);
           }
         } catch (backendError) {
           console.error('Backend sync error:', backendError);
-          // If user not found in backend, might need to complete signup
-          throw new Error('Please complete your profile setup');
+
+          // If user not found in backend, auto-create them
+          if (backendError.message?.includes('not found')) {
+            try {
+              const { api } = await import('../utils/api');
+
+              // Try to create user in backend with Supabase data
+              const role = supabaseUser.user_metadata?.role || 'BUYER';
+              const signupData = {
+                email: supabaseUser.email,
+                firstName: supabaseUser.user_metadata?.first_name || supabaseUser.email.split('@')[0],
+                lastName: supabaseUser.user_metadata?.last_name || '',
+                role: role.toUpperCase(), // Ensure uppercase for backend validation
+                password: password // Backend expects this but won't use it since Supabase handles auth
+              };
+
+              const signupResponse = await api.signup(signupData, session.access_token);
+
+              if (signupResponse && signupResponse.user) {
+                setUser(signupResponse.user);
+                return { success: true, message: 'Account synced successfully!' };
+              }
+            } catch (syncError) {
+              console.error('Auto-sync failed:', syncError);
+              throw new Error('Failed to sync account. Please contact support.');
+            }
+          } else {
+            throw backendError;
+          }
         }
 
         return { success: true, message: 'Signed in successfully!' };
@@ -144,7 +186,7 @@ export const AuthProvider = ({ children }) => {
 
         const { api } = await import('../utils/api');
         const response = await api.signup(backendData, session.access_token);
-        
+
         // Set user profile from backend response
         if (response && response.user) {
           setUser(response.user);
@@ -155,10 +197,10 @@ export const AuthProvider = ({ children }) => {
         return { success: true, message: 'Account created successfully!' };
       } else {
         // Email verification required - no session yet
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: 'Check your email for the confirmation link!',
-          requiresVerification: true 
+          requiresVerification: true
         };
       }
     } catch (error) {

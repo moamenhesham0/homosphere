@@ -13,6 +13,7 @@ import Layout from './components/Layout.jsx';
 import SubscriptionPage from './pages/SubscriptionPage.jsx';
 import AuthCallback from './pages/AuthCallback.jsx';
 import Profile from './pages/Profile.jsx';
+import PropertyListingForm from './pages/PropertyListingForm.jsx';
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -28,7 +29,9 @@ createRoot(document.getElementById('root')).render(
                     <Route path={ROUTES.HOME} element={<App />} />
                     <Route path="/" element={<App />} />
                     <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
+                    <Route path={ROUTES.PROPERTY_LISTING_FORM} element={<PropertyListingForm />} />
                     <Route path={ROUTES.PROFILE} element={<Profile />} />
+
                 </Route>
             </Routes>
         </BrowserRouter>

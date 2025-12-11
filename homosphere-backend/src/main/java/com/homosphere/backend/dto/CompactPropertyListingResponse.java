@@ -1,5 +1,7 @@
 package com.homosphere.backend.dto;
 
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CompactPropertyListingResponse {
-    private Long id;
+    private UUID propertyListingId;
     private String title;
     private Double price;
     private PropertyImageResponse bannerImage;

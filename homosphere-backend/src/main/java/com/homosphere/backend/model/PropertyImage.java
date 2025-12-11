@@ -1,6 +1,13 @@
 package com.homosphere.backend.model;
 
-import jakarta.persistence.*;
+import java.util.UUID;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,10 +20,13 @@ import lombok.NoArgsConstructor;
 public class PropertyImage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "property_image_id")
-    private Long propertyImageId;
+    private UUID propertyImageId;
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "property_listing_id")
+    private UUID propertyListingId;
 }

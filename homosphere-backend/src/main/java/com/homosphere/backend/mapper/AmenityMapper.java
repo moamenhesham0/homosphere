@@ -1,9 +1,10 @@
 package com.homosphere.backend.mapper;
 
-import com.homosphere.backend.dto.AmenityDTO;
-import com.homosphere.backend.model.Amenity;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
+
+import com.homosphere.backend.dto.AmenityDTO;
+import com.homosphere.backend.model.Amenity;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AmenityMapper {

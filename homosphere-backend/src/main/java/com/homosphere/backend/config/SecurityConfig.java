@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
-    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -33,20 +33,21 @@ public class SecurityConfig {
             .csrf(customizer -> customizer.disable())
             .authorizeHttpRequests(request -> request
                 // public endpoints
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
                 .requestMatchers("/api/auth/**").permitAll() // All auth endpoints (signup, login, google-signup)
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/subscription-tiers/**").permitAll() // Public read-only access to tiers
                 .requestMatchers("/api/subscription-tiers/**").hasRole("ADMIN") // POST, PUT, DELETE require ADMIN
                 .requestMatchers("/api/media/photo").permitAll() // Public photo viewing
                 .requestMatchers("/api/public/**").permitAll() // All public API endpoints (view profiles, etc)
-                
+
                 // authenticated user endpoints (require token)
                 .requestMatchers("/api/user/**").authenticated() // User's own profile/subscriptions
                 .requestMatchers("/api/media/upload").authenticated() // Authenticated upload
-                
+
                 // admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/user-subscriptions").hasRole("ADMIN") // Get all subscriptions
-                
+
                 .anyRequest().authenticated())
             .httpBasic(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -62,7 +63,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
-    
+
     @Bean
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);

@@ -1,11 +1,12 @@
 package com.homosphere.backend.mapper;
 
-import com.homosphere.backend.dto.PropertyRequest;
-import com.homosphere.backend.dto.PropertyResponse;
-import com.homosphere.backend.model.Property;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+
+import com.homosphere.backend.dto.PropertyRequest;
+import com.homosphere.backend.dto.PropertyResponse;
+import com.homosphere.backend.model.Property;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {LocationMapper.class, AmenityMapper.class})
 public interface PropertyMapper {
@@ -16,7 +17,7 @@ public interface PropertyMapper {
     @Mapping(target = "propertyId", ignore = true)
     @Mapping(target = "type", source = "propertyType")
     @Mapping(target = "condition", source = "propertyCondition")
-    @Mapping(target = "location", ignore = true)
+    @Mapping(target = "location", source = "location")
     Property toEntity(PropertyRequest propertyRequest);
 }
 

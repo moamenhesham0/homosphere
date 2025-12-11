@@ -7,6 +7,7 @@ export const ROUTES = {
   FORGET_PASSWORD: '/forget-password',
   AUTH: '/auth',
   SUBSCRIPTION: '/subscription',
+  PROPERTY_LISTING_FORM: '/property-listing-form',
 };
 
 // External links
