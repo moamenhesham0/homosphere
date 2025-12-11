@@ -16,6 +16,7 @@ import Profile from './pages/Profile.jsx';
 import PropertyListingForm from './pages/PropertyListingForm.jsx';
 import AdminPortal from './pages/AdminPortal.jsx';
 import SearchPage from './pages/SearchPage.jsx';
+import PropertyDetailsPage from './pages/PropertyDetailsPage.jsx';
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path={ROUTES.PROFILE} element={<Profile />} />
                     <Route path={ROUTES.ADMIN_PORTAL} element={<AdminPortal />} />
                     <Route path={ROUTES.SEARCH} element={<SearchPage />} />
+                    <Route path="/property/:id" element={<PropertyDetailsPage />} />
                 </Route>
             </Routes>
         </BrowserRouter>

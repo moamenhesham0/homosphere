@@ -7,10 +7,12 @@ import org.mapstruct.MappingConstants;
 import com.homosphere.backend.dto.CompactPropertyListingResponse;
 import com.homosphere.backend.model.PropertyListing;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {PropertyImageMapper.class})
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CompactPropertyListingMapper {
 
-    @Mapping(target = "propertyListingId", source = "propertyListingId")
+    @Mapping(target = "id", source = "propertyListingId")
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "price", source = "price")
     @Mapping(target = "bannerImage", source = "bannerImage")
     @Mapping(target = "bathrooms", source = "property.bathrooms")
     @Mapping(target = "bedrooms", source = "property.bedrooms")
@@ -18,7 +20,8 @@ public interface CompactPropertyListingMapper {
     @Mapping(target = "state", source = "property.location.state")
     CompactPropertyListingResponse toCompactResponse(PropertyListing propertyListing);
 
-    // Note: CompactPropertyListingRequest doesn't exist - this mapper is response-only
-    // If needed, create CompactPropertyListingRequest DTO first
+    default java.util.UUID map(Long value) {
+        return value == null ? null : new java.util.UUID(0L, value);
+    }
 }
 

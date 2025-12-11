@@ -25,6 +25,18 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.homosphere.backend.enums.PropertyCondition;
+import com.homosphere.backend.enums.PropertyType;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.time.Year;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "property")
@@ -65,4 +77,6 @@ public class Property {
     @Enumerated(EnumType.STRING)
     @Column(name = "condition")
     private PropertyCondition condition;
+
+   
 }

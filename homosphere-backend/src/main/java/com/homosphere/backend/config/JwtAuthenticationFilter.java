@@ -48,6 +48,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             return;
         }
         
+        // Skip JWT validation for public GET requests to /api/properties/**
+        if ("GET".equals(request.getMethod()) && requestPath.startsWith("/api/properties")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
         String authHeader = request.getHeader("Authorization");
         String userId = null;
         String token;

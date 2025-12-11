@@ -8,9 +8,8 @@ import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface PropertyImageMapper {
-
+    // MapStruct will automatically map fields with matching names
     PropertyImageResponse toResponse(PropertyImage propertyImage);
-
     PropertyImage toEntity(PropertyImageRequest propertyImageRequest);
 }
 
