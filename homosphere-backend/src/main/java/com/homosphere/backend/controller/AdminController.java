@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.homosphere.backend.mapper.AdminMapper;
 import com.homosphere.backend.model.User;
 import com.homosphere.backend.repository.UserRepository;
 import com.homosphere.backend.service.SupabaseAdminService;
@@ -36,6 +37,9 @@ public class AdminController {
 
     @Autowired
     private SupabaseAdminService supabaseAdminService;
+
+    @Autowired
+    private AdminMapper adminMapper;
 
     /*
      * Check if the authenticated user is an admin
@@ -106,8 +110,6 @@ public class AdminController {
         try {
             String supabaseUserId = request.get("userId");
             String email = request.get("email");
-            String firstName = request.get("firstName");
-            String lastName = request.get("lastName");
             
             if (supabaseUserId == null || supabaseUserId.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("User ID is required");
@@ -128,14 +130,8 @@ public class AdminController {
                         .body("User already exists in the system");
             }
 
-            // Create new admin user in database
-            User newAdmin = new User();
-            newAdmin.setUser_id(userId);
-            newAdmin.setEmail(email);
-            newAdmin.setFirstName(firstName);
-            newAdmin.setLastName(lastName);
-            newAdmin.setRole("ADMIN");
-            newAdmin.setIsVerified(true);
+            // Create new admin user in database using mapper
+            User newAdmin = adminMapper.mapAdminRequestToUser(request, userId);
             
             userRepository.save(newAdmin);
 
