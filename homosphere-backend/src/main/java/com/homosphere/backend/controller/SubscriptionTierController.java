@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.homosphere.backend.model.SubscriptionTier;
 import com.homosphere.backend.repository.SubscriptionTierRepository;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/subscription-tiers")
@@ -28,12 +31,19 @@ public class SubscriptionTierController {
     }
 
     @PostMapping
-    public SubscriptionTier createSubscriptionTier(@RequestBody SubscriptionTier subscriptionTier) {
-        return subscriptionTierRepository.save(subscriptionTier);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SubscriptionTier> createSubscriptionTier(@Valid @RequestBody SubscriptionTier subscriptionTier) {
+        if (subscriptionTier == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(subscriptionTierRepository.save(subscriptionTier));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SubscriptionTier> getSubscriptionTierById(@PathVariable Long id) {
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
         return subscriptionTierRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -51,7 +61,7 @@ public class SubscriptionTierController {
 
     @GetMapping("/{role}-tiers")
     public ResponseEntity<List<SubscriptionTier>> getSubscriptionTiersByRole(@PathVariable String role) {
-        if (role == null) {
+        if (role == null || role.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -71,7 +81,11 @@ public class SubscriptionTierController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SubscriptionTier> updateSubscriptionTier(@PathVariable Long id, @RequestBody SubscriptionTier subscriptionTierDetails) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SubscriptionTier> updateSubscriptionTier(@PathVariable Long id, @Valid @RequestBody SubscriptionTier subscriptionTierDetails) {
+        if (id == null || id <= 0 || subscriptionTierDetails == null) {
+            return ResponseEntity.badRequest().build();
+        }
         return subscriptionTierRepository.findById(id)
                 .map(subscriptionTier -> {
                     subscriptionTier.setName(subscriptionTierDetails.getName());
@@ -89,7 +103,13 @@ public class SubscriptionTierController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteSubscriptionTier(@PathVariable Long id) {
+        System.out.println("Deleting subscription tier with ID: " + id);
+        if (id == null || id <= 0) {
+            System.out.println("Invalid ID provided for deletion.");
+            return ResponseEntity.badRequest().build();
+        }
         return subscriptionTierRepository.findById(id)
                 .map(subscriptionTier -> {
                     subscriptionTierRepository.delete(subscriptionTier);

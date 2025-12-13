@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
+import { getUserFromToken } from '../utils/jwt';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -27,9 +28,15 @@ export const AuthProvider = ({ children }) => {
         if (session) {
           setToken(session.access_token);
           setIsAuthenticated(true);
-          // Don't set user here - let callback fetch from backend
+          // Extract user info from token
+          const userInfo = getUserFromToken(session.access_token);
+          console.log('Auth state change - User from token:', userInfo);
+          if (userInfo) {
+            setUser(userInfo);
+          }
+          // Also fetch full profile from backend
+          await fetchUserProfile(session.access_token);
         } else {
-
           setToken(null);
           setUser(null);
           setIsAuthenticated(false);
@@ -46,11 +53,52 @@ export const AuthProvider = ({ children }) => {
       if (session) {
         setToken(session.access_token);
         setIsAuthenticated(true);
+        // Extract user info from token
+        const userInfo = getUserFromToken(session.access_token);
+        console.log('Check session - User from token:', userInfo);
+        if (userInfo) {
+          setUser(userInfo);
+        }
+        // Also fetch full profile from backend
+        await fetchUserProfile(session.access_token);
       }
     } catch (error) {
       console.error('Session check error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async (accessToken) => {
+    try {
+      const { api } = await import('../utils/api');
+      const response = await api.login(accessToken);
+      
+      console.log('fetchUserProfile - Response:', response);
+      console.log('fetchUserProfile - User data:', response?.user);
+      console.log('fetchUserProfile - User role:', response?.user?.role);
+      
+      if (response && response.user) {
+        // Merge backend data with existing user data from token
+        // Only override with non-null values from backend
+        setUser(prevUser => {
+          const merged = { ...prevUser };
+          Object.keys(response.user).forEach(key => {
+            if (response.user[key] !== null && response.user[key] !== undefined) {
+              merged[key] = response.user[key];
+            }
+          });
+          // Always preserve role from token if backend role is null
+          if (!response.user.role && prevUser?.role) {
+            merged.role = prevUser.role;
+          }
+          console.log('Merged user data:', merged);
+          return merged;
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      // Don't throw - user data from token is already set
     }
   };
 
@@ -66,6 +114,66 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
     } catch (error) {
       console.error('Logout error:', error);
+    }
+  };
+
+  const login = async (email, password) => {
+    try {
+      // First, sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      // Get the session token
+      const session = data.session;
+      const supabaseUser = data.user;
+
+      if (session && session.access_token) {
+        setToken(session.access_token);
+        setIsAuthenticated(true);
+
+        // Extract user info from token immediately
+        const userInfo = getUserFromToken(session.access_token);
+        console.log('Login - User from token:', userInfo);
+        if (userInfo) {
+          setUser(userInfo);
+        }
+
+        // Sync with backend for additional data
+        try {
+          const { api } = await import('../utils/api');
+          const response = await api.login(session.access_token);
+          
+          // Merge backend data with token data, preserving role from token
+          if (response && response.user) {
+            setUser(prevUser => {
+              const merged = { ...prevUser };
+              Object.keys(response.user).forEach(key => {
+                if (response.user[key] !== null && response.user[key] !== undefined) {
+                  merged[key] = response.user[key];
+                }
+              });
+              // Always preserve role from token if backend role is null
+              if (!response.user.role && prevUser?.role) {
+                merged.role = prevUser.role;
+              }
+              console.log('Login - Merged user data:', merged);
+              return merged;
+            });
+          }
+        } catch (backendError) {
+          console.error('Backend sync error:', backendError);
+          // Continue with token data - don't fail login
+        }
+
+        return { success: true, message: 'Signed in successfully!' };
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
   };
 
@@ -105,7 +213,7 @@ export const AuthProvider = ({ children }) => {
 
         const { api } = await import('../utils/api');
         const response = await api.signup(backendData, session.access_token);
-        
+
         // Set user profile from backend response
         if (response && response.user) {
           setUser(response.user);
@@ -116,10 +224,10 @@ export const AuthProvider = ({ children }) => {
         return { success: true, message: 'Account created successfully!' };
       } else {
         // Email verification required - no session yet
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: 'Check your email for the confirmation link!',
-          requiresVerification: true 
+          requiresVerification: true
         };
       }
     } catch (error) {
@@ -135,6 +243,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     setUserProfile,
     logout,
+    signOut: logout, // Alias for compatibility
+    login,
     signup,
   };
 

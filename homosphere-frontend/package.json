@@ -12,13 +12,21 @@
         "prepare": "husky install"
     },
     "dependencies": {
-        "@supabase/supabase-js": "^2.84.0",
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@mui/icons-material": "^7.3.6",
+        "@mui/material": "^7.3.6",
+        "@supabase/supabase-js": "^2.87.1",
         "axios": "^1.13.2",
         "firebase": "^12.6.0",
+        "leaflet": "^1.9.4",
+        "leaflet-control-geocoder": "^3.3.1",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
+        "react-leaflet": "^5.0.0",
         "react-router-dom": "^7.9.6",
-        "zustand": "^5.0.8"
+        "recharts": "^3.5.1",
+        "zustand": "^5.0.9"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.1",
@@ -33,7 +41,7 @@
         "globals": "^16.5.0",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
-        "prettier": "^3.6.2",
+        "prettier": "^3.7.4",
         "vite": "^7.2.2"
     },
     "lint-staged": {

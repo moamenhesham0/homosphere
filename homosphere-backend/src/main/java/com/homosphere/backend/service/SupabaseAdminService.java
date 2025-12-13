@@ -1,7 +1,15 @@
 package com.homosphere.backend.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,6 +26,38 @@ public class SupabaseAdminService {
 
     public SupabaseAdminService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
+    }
+
+    /**
+     * Confirm admin email in Supabase (auto-verify)
+     */
+    public boolean confirmAdminEmail(String userId) {
+        try {
+            String url = supabaseUrl + "/auth/v1/admin/users/" + userId;
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "Bearer " + serviceRoleKey);
+            headers.set("apikey", serviceRoleKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            // Update user to set email_confirmed_at
+            Map<String, Object> body = new HashMap<>();
+            body.put("email_confirm", true);
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.PUT,
+                entity,
+                String.class
+            );
+
+            return response.getStatusCode() == HttpStatus.OK;
+        } catch (Exception e) {
+            System.err.println("Error confirming user email in Supabase: " + e.getMessage());
+            return false;
+        }
     }
 
     public boolean deleteUser(String userId) {

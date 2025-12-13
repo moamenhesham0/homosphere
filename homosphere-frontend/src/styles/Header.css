@@ -131,7 +131,8 @@
 }
 
 .signin-btn,
-.profile-btn {
+.profile-btn,
+.admin-btn {
   color: #00a676;
   background: transparent;
   border: 1.5px solid #00a676;
@@ -148,7 +149,8 @@
 }
 
 .signin-btn:hover,
-.profile-btn:hover {
+.profile-btn:hover,
+.admin-btn:hover {
   background: #00a676;
   color: white;
   box-shadow: 0 4px 15px rgba(0, 166, 118, 0.3);
@@ -178,11 +180,18 @@
 }
 
 .signout-btn {
-  background: linear-gradient(135deg, #ac3737 0%, #d64545 100%);
-  box-shadow: 0 4px 15px rgba(172, 55, 55, 0.25);
+  color: #00a676;
+  background: transparent;
+  box-shadow: 0 0px 0px ;
+  border: 1.5px solid #00a676;
 }
 
 .signout-btn:hover {
+  background: linear-gradient(135deg, #ac3737 0%, #d64545 100%);
+  box-shadow: 0 4px 15px rgba(172, 55, 55, 0.25);
+    border: 1.5px solid #a60000;
+  color: white;
+  background: linear-gradient(135deg, #ac3737 0%, #d64545 100%);
   box-shadow: 0 6px 25px rgba(172, 55, 55, 0.4);
 }
 
@@ -244,6 +253,7 @@
 
   .signin-btn,
   .profile-btn,
+  .admin-btn,
   .signup-btn,
   .signout-btn {
     padding: 0.5rem 1rem;

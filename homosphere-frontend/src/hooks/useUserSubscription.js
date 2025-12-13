@@ -15,7 +15,12 @@ const useUserSubscription = () => {
                 const fetchedUserId = session.user.id;
                 setUserId(fetchedUserId);
 
-                const subRes = await axios.get(`http://localhost:8080/api/user-subscriptions/user/${fetchedUserId}/role-tier`);
+                const subRes = await axios.get(`http://localhost:8080/api/user-subscriptions/my-role-tier`, {
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
                 if (subRes.data && subRes.data.length > 0) {
                     console.log("User subscription data:", subRes.data);
                     setCurrentSubscriptionId(subRes.data[0].subscriptionTierId);

@@ -7,6 +7,11 @@ export const ROUTES = {
   FORGET_PASSWORD: '/forget-password',
   AUTH: '/auth',
   SUBSCRIPTION: '/subscription',
+  PROPERTY_LISTING_FORM: '/property-listing-form',
+  ADMIN_PORTAL: '/admin-portal',
+  SEARCH: '/search',
+  REQUEST_VIEW: '/request-viewing',
+  ANALYTICS: '/analytics',
 };
 
 // External links

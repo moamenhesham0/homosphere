@@ -4,7 +4,7 @@ BACKEND_LINK := "-f homosphere-backend/pom.xml"
 
 # Packages to install
 FE_DEV_PACKAGES := "eslint prettier eslint-plugin-prettier eslint-config-prettier husky lint-staged"
-FE_PACKAGES := "zustand @supabase/supabase-js"
+FE_PACKAGES := "zustand @supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder"
 
 # Run frontend
 run-fe:

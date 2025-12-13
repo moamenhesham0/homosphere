@@ -4,12 +4,11 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.web.multipart.MultipartFile;
 
 import com.homosphere.backend.exception.FileUploadException;
 import com.homosphere.backend.exception.UnsupportedMediaTypeException;
@@ -33,6 +32,9 @@ public class MediaService {
 
     @Value("${cloudflare.r2.endpoint:https://%s.r2.cloudflarestorage.com}")
     private String endpoint;
+
+    @Value("${cloudflare.r2.public-domain}")
+    private String publicDomain;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -69,17 +71,17 @@ public class MediaService {
         } catch (IOException e) {
             throw new FileUploadException("File upload to Cloudflare R2 failed", e);
         }
-        // Build and return the public URL
-        String url = String.format(endpoint, accountId) + "/" + bucket + "/" + key;
+        // Build and return the public URL using R2 public domain
+        String url = publicDomain + "/" + key;
         return url;
     }/*  */
 
     public String getPhotoUrl(String id) {
         // Build the public URL for the photo using its id (key)
-        return String.format(endpoint, accountId) + "/" + bucket + "/" + id;
+        return publicDomain + "/" + id;
     }
 
-    
+
     private String getFileExtension(String original) {
         int extIdx = original.lastIndexOf('.');
         if (extIdx < 0 || extIdx == original.length()-1) {
@@ -88,6 +90,4 @@ public class MediaService {
 
         return original.substring(extIdx+1);
     }
-    //ddddddddddddddddddddddddddddddddddd
-    //dfdfds
 }

@@ -3,12 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import '../styles/Header.css';
 
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, token, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
       navigate('/signin');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -29,21 +29,36 @@ const Header = () => {
 
         <nav className="header-nav">
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="/subscription" className="nav-link">Subscription</Link>
+          {user?.role !== 'ADMIN' && (
+            <Link to="/subscription" className="nav-link">Subscription</Link>
+          )}
+          <Link to="/search" className="nav-link">Search</Link>
           <Link to="/about" className="nav-link">About</Link>
           <Link to="/contact" className="nav-link">Contact</Link>
+          <Link to="/analytics" className="nav-link">Analytics</Link>
         </nav>
 
         <div className="header-actions">
-          {user ? (
+          {isAuthenticated || token ? (
             <>
-              <Link to="/profile" className="profile-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                Profile
-              </Link>
+              {user.role !== 'ADMIN' && (
+                <Link to="/profile" className="profile-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  Profile
+                </Link>
+              )}
+              {user.role === 'ADMIN' && (
+                <Link to="/admin-portal" className="admin-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6m-6-6h6m6 0h-6"></path>
+                  </svg>
+                  Admin Portal
+                </Link>
+              )}
               <button onClick={handleSignOut} className="signout-btn">
                 Sign Out
               </button>

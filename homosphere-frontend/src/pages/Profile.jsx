@@ -75,14 +75,19 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("file", file);
       try {
-        const response = await fetch("http://localhost:8080/api/public/upload", {
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch("http://localhost:8080/api/media/upload", {
           method: "POST",
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`
+          },
           body: formData,
         });
         if (!response.ok) {
           throw new Error(`Upload failed: ${response.status}`);
         }
-        const url = await response.text();
+        const data = await response.json();
+        const url = data.url;
         console.log("Uploaded image URL:", url);
         const filename = url.split("/").pop();
         setTempUser((prev) => ({ ...prev, photo: filename }));
@@ -117,12 +122,14 @@ export default function Profile() {
         failedLoginAttempt: originalData?.failedLoginAttempt || null,
         banExpiredDate: originalData?.banExpiredDate || null
       };
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch(
-        `http://localhost:8080/api/public/editProfile/${tempUser.id}`,
+        `http://localhost:8080/api/user`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            'Authorization': `Bearer ${session?.access_token}`
           },
           body: JSON.stringify(payload),
         }
