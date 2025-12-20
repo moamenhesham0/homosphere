@@ -1,7 +1,8 @@
 package com.homosphere.backend.enums;
 
 public enum PropertyCondition {
-    NEW,
+    BRAND_NEW,
+    EXCELLENT,
     GOOD,
     NEEDS_RENOVATION
 }

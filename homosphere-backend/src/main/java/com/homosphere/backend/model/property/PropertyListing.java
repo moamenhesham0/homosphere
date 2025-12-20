@@ -1,11 +1,13 @@
-package com.homosphere.backend.model;
+package com.homosphere.backend.model.property;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.homosphere.backend.enums.PropertyListingManagementStatus;
 import com.homosphere.backend.enums.PropertyListingStatus;
 
+import com.homosphere.backend.model.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,6 +26,8 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "property_listing")
@@ -51,15 +55,15 @@ public class PropertyListing {
     private User seller;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "brooker_id", referencedColumnName = "user_id", nullable = true)
-    private User brooker;
+    @JoinColumn(name = "broker_id", referencedColumnName = "user_id", nullable = true)
+    private User broker;
 
     @OneToOne (fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "banner_image_id", referencedColumnName = "property_image_id")
     private PropertyImage bannerImage;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "property_listing_id")
+    @OneToMany(mappedBy = "propertyListing", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "property_listing_id", referencedColumnName = "property_listing_id")
     private List<PropertyImage> propertyImages;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -70,14 +74,29 @@ public class PropertyListing {
     private Integer views;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "property_listing_status")
-    private PropertyListingStatus propertyListingStatus;
+    @Column(name = "management_status")
+    private PropertyListingManagementStatus managementStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private PropertyListingStatus status;
+
+    @CreationTimestamp
+    @Column(name = "creation_date")
+    private LocalDateTime creationDate;
+
+    @Column(name = "last_submission_date")
+    private LocalDateTime lastSubmissionDate;
 
     @Column(name = "publication_date")
     private LocalDateTime publicationDate;
 
+    @UpdateTimestamp
     @Column(name = "last_updated_date")
     private LocalDateTime lastUpdatedDate;
+
+    @Column(name = "sold_date")
+    private LocalDateTime soldDate;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -86,4 +105,25 @@ public class PropertyListing {
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> savedByUsers;
+
+    public void setPropertyListingManagementStatusSellerAuthorized() {
+        this.managementStatus = PropertyListingManagementStatus.SELLER_AUTHORIZED;
+    }
+
+    public void setPropertyListingManagementStatusBrokerRequested() {
+        this.managementStatus = PropertyListingManagementStatus.BROKER_REQUESTED;
+    }
+
+    public void setPropertyListingManagementStatusBrokerPendingAuthorization() {
+        this.managementStatus = PropertyListingManagementStatus.BROKER_PENDING_AUTHORIZATION;
+    }
+
+    public void setManagementStatusBrokerAuthorized() {
+        this.managementStatus = PropertyListingManagementStatus.BROKER_AUTHORIZED;
+    }
+
+    public boolean isOpenForBrokerManagement() {
+        return this.managementStatus == PropertyListingManagementStatus.BROKER_PENDING_AUTHORIZATION ||
+               this.managementStatus == PropertyListingManagementStatus.BROKER_REQUESTED;
+    }
 }

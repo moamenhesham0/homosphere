@@ -1,42 +1,20 @@
-package com.homosphere.backend.model;
+package com.homosphere.backend.model.property;
 
 import java.time.Year;
 import java.util.List;
 import java.util.UUID;
 
+import com.homosphere.backend.model.Amenity;
+import com.homosphere.backend.model.Location;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import com.homosphere.backend.enums.PropertyCondition;
 import com.homosphere.backend.enums.PropertyType;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import com.homosphere.backend.enums.PropertyCondition;
-import com.homosphere.backend.enums.PropertyType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import lombok.*;
 
-import java.time.Year;
-import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "property")
@@ -50,8 +28,8 @@ public class Property {
     @Column(name = "property_id")
     private UUID propertyId;
 
-    @Column(name = "area_in_square_meters")
-    private Double areaInSquareMeters;
+    @Column(name = "area_in_square_feet")
+    private Double areaInSquareFeet;
 
     @Column(name = "bedrooms")
     private Integer bedrooms;
@@ -77,6 +55,4 @@ public class Property {
     @Enumerated(EnumType.STRING)
     @Column(name = "condition")
     private PropertyCondition condition;
-
-   
 }

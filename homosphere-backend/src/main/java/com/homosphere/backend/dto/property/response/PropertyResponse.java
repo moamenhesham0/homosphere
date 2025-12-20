@@ -1,5 +1,7 @@
-package com.homosphere.backend.dto;
+package com.homosphere.backend.dto.property.response;
 
+import com.homosphere.backend.dto.LocationResponse;
+import com.homosphere.backend.dto.property.AmenityDTO;
 import com.homosphere.backend.enums.PropertyCondition;
 import com.homosphere.backend.enums.PropertyType;
 import lombok.AllArgsConstructor;

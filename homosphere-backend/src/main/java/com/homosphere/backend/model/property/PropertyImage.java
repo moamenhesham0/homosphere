@@ -1,18 +1,11 @@
-package com.homosphere.backend.model;
+package com.homosphere.backend.model.property;
 
 import java.util.UUID;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Entity
 @Table(name = "property_image")
@@ -29,6 +22,10 @@ public class PropertyImage {
     @Column(name = "image_url")
     private String imageUrl;
 
-    @Column(name = "property_listing_id")
-    private UUID propertyListingId;
+    @Column(name = "order_index")
+    private Integer orderIndex;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "property_listing_id", nullable = false)
+    private PropertyListing propertyListing;
 }

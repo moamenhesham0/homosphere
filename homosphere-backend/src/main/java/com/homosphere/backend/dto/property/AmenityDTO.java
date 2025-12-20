@@ -1,4 +1,4 @@
-package com.homosphere.backend.dto;
+package com.homosphere.backend.dto.property;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

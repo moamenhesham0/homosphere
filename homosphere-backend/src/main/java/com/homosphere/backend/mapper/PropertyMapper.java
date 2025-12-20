@@ -4,9 +4,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
-import com.homosphere.backend.dto.PropertyRequest;
-import com.homosphere.backend.dto.PropertyResponse;
-import com.homosphere.backend.model.Property;
+import com.homosphere.backend.dto.property.request.PropertyRequest;
+import com.homosphere.backend.dto.property.response.PropertyResponse;
+import com.homosphere.backend.model.property.Property;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {LocationMapper.class, AmenityMapper.class})
 public interface PropertyMapper {

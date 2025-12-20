@@ -27,8 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
 import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.PropertyListingRequest;
-import com.homosphere.backend.dto.PropertyListingResponse;
+import com.homosphere.backend.dto.property.request.PropertyListingRequest;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.service.PropertyListingService;
 
 @ExtendWith(MockitoExtension.class)

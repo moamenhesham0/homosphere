@@ -2,6 +2,7 @@ package com.homosphere.backend.dto;
 
 import java.util.UUID;
 
+import com.homosphere.backend.dto.property.response.PropertyImageResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

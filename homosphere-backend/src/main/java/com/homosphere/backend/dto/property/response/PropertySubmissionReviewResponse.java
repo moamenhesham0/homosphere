@@ -1,4 +1,4 @@
-package com.homosphere.backend.dto;
+package com.homosphere.backend.dto.property.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,8 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PropertySubmissionResponse {
+public class PropertySubmissionReviewResponse {
     private PropertyListingResponse propertyListing;
     private String message;
-    private LocalDateTime submissionDate;
 }

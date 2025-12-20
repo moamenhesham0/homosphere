@@ -1,10 +1,10 @@
 package com.homosphere.backend.service;
 
 import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.PropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.mapper.CompactPropertyListingMapper;
 import com.homosphere.backend.mapper.PropertyListingMapper;
-import com.homosphere.backend.model.PropertyListing;
+import com.homosphere.backend.model.property.PropertyListing;
 import com.homosphere.backend.repository.PropertyRepository;
 import com.homosphere.backend.repository.PropertyListingRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.homosphere.backend.mapper;
 
-import com.homosphere.backend.dto.PropertyImageRequest;
-import com.homosphere.backend.dto.PropertyImageResponse;
-import com.homosphere.backend.model.PropertyImage;
+import com.homosphere.backend.dto.property.request.PropertyImageRequest;
+import com.homosphere.backend.dto.property.response.PropertyImageResponse;
+import com.homosphere.backend.model.property.PropertyImage;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 

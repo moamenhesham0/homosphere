@@ -1,4 +1,4 @@
-package com.homosphere.backend.dto;
+package com.homosphere.backend.dto.property.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,8 +20,8 @@ public class PropertyListingResponse {
     private Double price;
     private UUID sellerId;
     private String sellerName;
-    private UUID brookerId;
-    private String brookerName;
+    private UUID brokerId;
+    private String brokerName;
     private PropertyImageResponse bannerImage;
     private List<PropertyImageResponse> propertyImages;
     private PropertyResponse property;

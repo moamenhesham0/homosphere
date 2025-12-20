@@ -5,14 +5,16 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import com.homosphere.backend.model.property.PropertyListing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.homosphere.backend.dto.PropertyImageRequest;
-import com.homosphere.backend.dto.PropertyImageResponse;
-import com.homosphere.backend.model.PropertyImage;
+import com.homosphere.backend.dto.property.request.PropertyImageRequest;
+import com.homosphere.backend.dto.property.response.PropertyImageResponse;
+import com.homosphere.backend.model.property.PropertyImage;
 
 @SpringBootTest
 class PropertyImageMapperTest {
@@ -29,7 +31,7 @@ class PropertyImageMapperTest {
         propertyImage = new PropertyImage();
         propertyImage.setPropertyImageId(UUID.randomUUID());
         propertyImage.setImageUrl("https://example.com/image.jpg");
-        propertyImage.setPropertyListingId(UUID.randomUUID());
+        propertyImage.setPropertyListing(new PropertyListing());
 
         // Setup PropertyImageRequest DTO
         propertyImageRequest = new PropertyImageRequest();

@@ -1,5 +1,7 @@
-package com.homosphere.backend.dto;
+package com.homosphere.backend.dto.property.request;
 
+import com.homosphere.backend.dto.LocationRequest;
+import com.homosphere.backend.dto.property.AmenityDTO;
 import com.homosphere.backend.enums.PropertyCondition;
 import com.homosphere.backend.enums.PropertyType;
 
@@ -9,13 +11,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.Year;
 import java.util.List;
-
-import com.homosphere.backend.enums.PropertyCondition;
-import com.homosphere.backend.enums.PropertyType;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor

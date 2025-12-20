@@ -9,6 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.homosphere.backend.enums.PropertyListingManagementStatus;
+import com.homosphere.backend.model.property.Property;
+import com.homosphere.backend.model.property.PropertyImage;
+import com.homosphere.backend.model.property.PropertyListing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +57,7 @@ class PropertyListingTest {
         propertyListing.setPrice(500000.0);
         propertyListing.setSeller(seller);
         propertyListing.setProperty(property);
-        propertyListing.setPropertyListingStatus(PropertyListingStatus.PUBLISHED);
+        propertyListing.setStatus(PropertyListingStatus.PUBLISHED);
         propertyListing.setViews(0);
         propertyListing.setPublicationDate(LocalDateTime.now());
         propertyListing.setLastUpdatedDate(LocalDateTime.now());
@@ -64,7 +69,7 @@ class PropertyListingTest {
         assertEquals(500000.0, propertyListing.getPrice());
         assertNotNull(propertyListing.getSeller());
         assertNotNull(propertyListing.getProperty());
-        assertEquals(PropertyListingStatus.PUBLISHED, propertyListing.getPropertyListingStatus());
+        assertEquals(PropertyListingStatus.PUBLISHED, propertyListing.getStatus());
         assertEquals(0, propertyListing.getViews());
         assertNotNull(propertyListing.getPublicationDate());
         assertNotNull(propertyListing.getLastUpdatedDate());
@@ -73,11 +78,11 @@ class PropertyListingTest {
     @Test
     void testPropertyListingWithBroker() {
         // Act
-        propertyListing.setBrooker(broker);
+        propertyListing.setBroker(broker);
 
         // Assert
-        assertNotNull(propertyListing.getBrooker());
-        assertEquals(broker.getEmail(), propertyListing.getBrooker().getEmail());
+        assertNotNull(propertyListing.getBroker());
+        assertEquals(broker.getEmail(), propertyListing.getBroker().getEmail());
     }
 
     @Test
@@ -115,17 +120,17 @@ class PropertyListingTest {
     @Test
     void testPropertyListingStatuses() {
         // Test all statuses
-        propertyListing.setPropertyListingStatus(PropertyListingStatus.PENDING);
-        assertEquals(PropertyListingStatus.PENDING, propertyListing.getPropertyListingStatus());
+        propertyListing.setStatus(PropertyListingStatus.PENDING);
+        assertEquals(PropertyListingStatus.PENDING, propertyListing.getStatus());
 
-        propertyListing.setPropertyListingStatus(PropertyListingStatus.PUBLISHED);
-        assertEquals(PropertyListingStatus.PUBLISHED, propertyListing.getPropertyListingStatus());
+        propertyListing.setStatus(PropertyListingStatus.PUBLISHED);
+        assertEquals(PropertyListingStatus.PUBLISHED, propertyListing.getStatus());
 
-        propertyListing.setPropertyListingStatus(PropertyListingStatus.DRAFT);
-        assertEquals(PropertyListingStatus.DRAFT, propertyListing.getPropertyListingStatus());
+        propertyListing.setStatus(PropertyListingStatus.DRAFT);
+        assertEquals(PropertyListingStatus.DRAFT, propertyListing.getStatus());
 
-        propertyListing.setPropertyListingStatus(PropertyListingStatus.UNLISTED);
-        assertEquals(PropertyListingStatus.UNLISTED, propertyListing.getPropertyListingStatus());
+        propertyListing.setStatus(PropertyListingStatus.UNLISTED);
+        assertEquals(PropertyListingStatus.UNLISTED, propertyListing.getStatus());
     }
 
     @Test
@@ -193,6 +198,7 @@ class PropertyListingTest {
             new ArrayList<>(),
             property,
             100,
+            PropertyListingManagementStatus.SELLER_AUTHORIZED,
             PropertyListingStatus.PUBLISHED,
             now,
             now,
@@ -205,11 +211,11 @@ class PropertyListingTest {
         assertEquals("Test Description", newListing.getDescription());
         assertEquals(300000.0, newListing.getPrice());
         assertNotNull(newListing.getSeller());
-        assertNotNull(newListing.getBrooker());
+        assertNotNull(newListing.getBroker());
         assertNotNull(newListing.getBannerImage());
         assertNotNull(newListing.getProperty());
         assertEquals(100, newListing.getViews());
-        assertEquals(PropertyListingStatus.PUBLISHED, newListing.getPropertyListingStatus());
+        assertEquals(PropertyListingStatus.PUBLISHED, newListing.getStatus());
     }
 
     @Test
@@ -246,10 +252,10 @@ class PropertyListingTest {
     @Test
     void testPropertyListingNullBroker() {
         // Act
-        propertyListing.setBrooker(null);
+        propertyListing.setBroker(null);
 
         // Assert
-        assertNull(propertyListing.getBrooker());
+        assertNull(propertyListing.getBroker());
     }
 
     @Test

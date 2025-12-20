@@ -1,4 +1,4 @@
-package com.homosphere.backend.dto;
+package com.homosphere.backend.dto.property.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PropertyImageResponse {
-    private UUID propertyImageId;
-    private String imageUrl;
+public class PropertySubmissionRequest {
+    private UUID propertyListingId;
+    private String message;
 }

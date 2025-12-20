@@ -1,21 +1,19 @@
-package com.homosphere.backend.model;
+package com.homosphere.backend.model.property;
 
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "property_submission")
+@Table(name = "property_submission_review")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PropertySubmission {
+public class PropertySubmissionReview {
 
     @Id
     private UUID propertyListingId;
@@ -28,7 +26,4 @@ public class PropertySubmission {
     @Column(name = "message", length = 255)
     private String message;
 
-    @CreationTimestamp
-    @Column(name = "submission_date")
-    private LocalDateTime submissionDate;
 }

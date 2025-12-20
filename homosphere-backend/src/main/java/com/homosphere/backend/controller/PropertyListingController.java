@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.PropertyListingRequest;
-import com.homosphere.backend.dto.PropertyListingResponse;
+import com.homosphere.backend.dto.property.request.PropertyListingRequest;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.service.PropertyListingService;
 
 @RestController

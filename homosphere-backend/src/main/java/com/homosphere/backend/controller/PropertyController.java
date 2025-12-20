@@ -1,7 +1,7 @@
 package com.homosphere.backend.controller;
 
 import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.PropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.service.PropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.homosphere.backend.model.PropertyListing;
+import com.homosphere.backend.model.property.PropertyListing;
 
 @Repository
 public interface PropertyLeadRepository extends JpaRepository<PropertyListing, UUID> {

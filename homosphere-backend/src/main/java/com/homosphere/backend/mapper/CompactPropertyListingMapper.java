@@ -1,7 +1,7 @@
 package com.homosphere.backend.mapper;
 
 import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.model.PropertyListing;
+import com.homosphere.backend.model.property.PropertyListing;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
