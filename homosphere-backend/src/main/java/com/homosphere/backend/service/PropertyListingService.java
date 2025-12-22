@@ -10,6 +10,7 @@ import com.homosphere.backend.enums.PropertyListingStatus;
 import com.homosphere.backend.mapper.PropertyListingMapper;
 import com.homosphere.backend.model.property.PropertyListing;
 import com.homosphere.backend.repository.PropertyListingRepository;
+import com.homosphere.backend.repository.PropertySubmissionReviewRepository;
 import com.homosphere.backend.updater.PropertyListingUpdater;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,8 @@ public class PropertyListingService {
     private final PropertyListingMapper propertyListingMapper;
 
     private final PropertyListingUpdater propertyListingUpdater;
+
+    private final PropertySubmissionReviewRepository propertySubmissionReviewRepository;
 
     private final PropertySubmissionReviewService propertySubmissionReviewService;
 
@@ -147,10 +150,13 @@ public class PropertyListingService {
 
     @Transactional
     public void deletePropertyListing(UUID id) {
-        propertySubmissionReviewService.deletePropertySubmissionReview(id);
+
+        boolean exists = propertySubmissionReviewRepository.existsById(id);
+        if (exists)
+            propertySubmissionReviewService.deletePropertySubmissionReview(id);
+
         PropertyListing propertyListing = propertyListingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
-
 
         propertyListingRepository.delete(propertyListing);
     }
