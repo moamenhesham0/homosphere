@@ -56,7 +56,7 @@ public class PropertyListing {
     private Property property;
 
     @Column(name = "views")
-    private Integer views;
+    private Integer views = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "management_status")

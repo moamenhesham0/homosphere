@@ -33,4 +33,7 @@ public interface PropertyListingRepository extends JpaRepository<PropertyListing
 
     @Query("SELECT DISTINCT pl.status FROM PropertyListing pl WHERE pl.seller.id = :userId")
     List<PropertyListingStatus> findDistinctStatusesByUserId(@Param("userId") UUID userId);
+
+    @Query("UPDATE PropertyListing pl SET pl.views = pl.views + 1 WHERE pl.propertyListingId = :propertyListingId")
+    void updateViewCount(UUID propertyListingId);
 }

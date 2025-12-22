@@ -1,3 +1,25 @@
+/**
+ * Resubmit a property listing (REQUIRES_CHANGES)
+ * @param {string} id - Property listing ID
+ * @param {Object} draftRequest - Property listing draft data
+ * @returns {Promise<Object>} - Updated property listing
+ */
+export async function resubmitPropertyListing(id, draftRequest) {
+  const payload = { ...draftRequest, propertyListingId: id };
+  const response = await fetch(`${PROPERTY_LISTING_BASE_API_URL}/resubmit`, {
+    method: 'PUT',
+    headers: await getAuthHeaders(),
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.message || `Failed to resubmit property listing: ${response.statusText}`);
+  }
+
+  return response.json();
+}
 import { getAuthHeaders } from '../utils/authUtils';
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -30,6 +52,27 @@ export async function fetchPropertyTypes() {
     return data
   } catch (error) {
     console.error(' Error fetching property types:', error);
+  }
+}
+
+export async function fetchAllConditions() {
+  try {
+    const url = `${PROPERTY_BASE_API_URL}/all-conditions`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: await getAuthHeaders(),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch property conditions');
+    }
+
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error(' Error fetching property conditions:', error);
   }
 }
 

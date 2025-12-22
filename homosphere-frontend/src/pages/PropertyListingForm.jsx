@@ -1,4 +1,4 @@
-import { useState, useMemo, useContext, useCallback, useEffect } from 'react';
+import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { uploadImageToCloudflare, uploadMultipleImages } from '../services/cloudflareUpload';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GeoMap from '../components/GeoMap';
@@ -8,20 +8,27 @@ import {
   getPropertyListingById,
   editPropertyListing,
   updateDraftPropertyListing,
-  fetchPropertyTypes
+  fetchPropertyTypes,
+  resubmitPropertyListing,
+  fetchAllConditions
 } from '../services/apiPropertyListing';
+import { getPropertySubmissionReview } from '../services/apiPropertySubmissionReview';
 import { AuthContext } from '../contexts/AuthContext';
 import { getAmenityIcon } from '../utils/amenityIcons';
 import { groupAmenitiesByType } from '../utils/amenityUtils';
 
 
 const PropertyListingForm = () => {
+  // Ref for scrolling to top on submit
+  const formTopRef = useRef(null);
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editingId = searchParams.get('id');
+  const isResubmitMode = searchParams.get('resubmit') === 'true';
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingListingData, setEditingListingData] = useState(null);
+  const [submissionReviewMessage, setSubmissionReviewMessage] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -32,7 +39,10 @@ const PropertyListingForm = () => {
     bedrooms: '',
     bathrooms: '',
     type: '',
-    seekingBroker : false,
+    seekingBroker: false,
+    yearBuilt: '',
+    condition: '',
+    managementStatus: '',
     street: '',
     city: '',
     state: '',
@@ -51,9 +61,35 @@ const PropertyListingForm = () => {
   const [geocodeFunction, setGeocodeFunction] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
   const [propertyTypes, setPropertyTypes] = useState([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
   const [typesError, setTypesError] = useState(null);
+  const [conditions, setConditions] = useState([]);
+  const [loadingConditions, setLoadingConditions] = useState(false);
+  const [conditionsError, setConditionsError] = useState(null);
+  // Fetch all conditions on mount
+  useEffect(() => {
+    const fetchConditions = async () => {
+      try {
+        setLoadingConditions(true);
+        setConditionsError(null);
+        const conds = await fetchAllConditions();
+        if (Array.isArray(conds)) {
+          setConditions(conds);
+        } else {
+          setConditions([]);
+          setConditionsError('Invalid conditions format');
+        }
+      } catch (error) {
+        setConditionsError(error.message);
+        setConditions([]);
+      } finally {
+        setLoadingConditions(false);
+      }
+    };
+    fetchConditions();
+  }, []);
 
 
   // Fetch property types on component mount
@@ -81,7 +117,7 @@ const PropertyListingForm = () => {
     fetchTypes();
   }, []);
 
-  // Load existing listing data if editing
+  // Load existing listing data if editing or resubmitting
   useEffect(() => {
     const loadListingData = async () => {
       if (editingId) {
@@ -96,16 +132,19 @@ const PropertyListingForm = () => {
             title: listingData.title || '',
             description: listingData.description || '',
             price: listingData.price || '',
-            propertyAreaInSquareFeet: listingData.propertyAreaInSquareFeet || '',
-            lotAreaInSquareFeet: listingData.lotAreaInSquareFeet || '',
+            propertyAreaInSquareFeet: listingData.property?.propertyAreaSqFt || '',
+            lotAreaInSquareFeet: listingData.property?.lotAreaSqFt || '',
             bedrooms: listingData.property?.bedrooms || '',
             bathrooms: listingData.property?.bathrooms || '',
-            type: listingData.property?.propertyType || '',
+            type: listingData.property?.type || '',
             seekingBroker: listingData.seekingBroker || false,
-            street: listingData.property?.location?.address || '',
+            yearBuilt: listingData.property?.yearBuilt || '',
+            condition: listingData.property?.condition || '',
+            managementStatus: listingData.managementStatus || '',
+            street: listingData.property?.location?.street || '',
             city: listingData.property?.location?.city || '',
             state: listingData.property?.location?.state || '',
-            zipCode: listingData.property?.location?.postalCode || '',
+            zipCode: listingData.property?.location?.zipCode || '',
             country: listingData.property?.location?.country || '',
             latitude: listingData.property?.location?.latitude || null,
             longitude: listingData.property?.location?.longitude || null,
@@ -123,6 +162,16 @@ const PropertyListingForm = () => {
           if (listingData.property?.location?.latitude) {
             setLocationFromMap(true);
           }
+
+          // If resubmit mode, fetch submission review message
+          if (isResubmitMode) {
+            try {
+              const review = await getPropertySubmissionReview(editingId);
+              setSubmissionReviewMessage(review?.message || null);
+            } catch (err) {
+              setSubmissionReviewMessage('');
+            }
+          }
         } catch (error) {
           console.error('Error loading listing data:', error);
           setSubmitError('Failed to load listing data');
@@ -132,14 +181,34 @@ const PropertyListingForm = () => {
       }
     };
     loadListingData();
-  }, [editingId]);
+  }, [editingId, isResubmitMode]);
 
+  // Debounce for property/lot area logic
+  const propertyAreaTimeout = useRef();
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => {
+      let updated = { ...prev, [name]: value };
+      // If property area is changed, ensure lot area >= property area after 1s
+      if (name === 'propertyAreaInSquareFeet') {
+        if (propertyAreaTimeout.current) clearTimeout(propertyAreaTimeout.current);
+        propertyAreaTimeout.current = setTimeout(() => {
+          setFormData((curr) => {
+            if (parseFloat(curr.lotAreaInSquareFeet) < parseFloat(value)) {
+              return { ...curr, lotAreaInSquareFeet: value };
+            }
+            return curr;
+          });
+        }, 1000);
+      }
+      // If lot area is changed and now less than property area, update property area immediately
+      if (name === 'lotAreaInSquareFeet') {
+        if (parseFloat(value) < parseFloat(prev.propertyAreaInSquareFeet)) {
+          updated.propertyAreaInSquareFeet = value;
+        }
+      }
+      return updated;
+    });
   };
 
   const handleRadioChange = (e) => {
@@ -243,6 +312,12 @@ const PropertyListingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Scroll to top for message visibility
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (formTopRef.current) {
+      formTopRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+
     // Validation
     if (!isEditMode && !bannerImage) {
       setSubmitError('Please upload a banner image');
@@ -290,6 +365,8 @@ const PropertyListingForm = () => {
           bedrooms: parseInt(formData.bedrooms),
           bathrooms: parseInt(formData.bathrooms),
           type: formData.type,
+          yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : undefined,
+          condition: formData.condition || undefined,
           amenities: formData.amenities,
           location: {
             street: formData.street,
@@ -300,11 +377,15 @@ const PropertyListingForm = () => {
             longitude: formData.longitude,
           },
         },
-        managementStatus: null, // Set if needed
+        managementStatus: formData.managementStatus || (formData.seekingBroker ? 'BROKER_REQUESTED' : 'SELLER_AUTHORIZED'),
       };
 
       let response;
-      if (isEditMode && editingId) {
+      if (isResubmitMode && isEditMode && editingId) {
+        // Use /resubmit endpoint
+        response = await resubmitPropertyListing(editingId, listingData);
+        setSuccessMessage('Property listing resubmitted successfully!');
+      } else if (isEditMode && editingId) {
         const status = editingListingData?.status;
         if (status === 'DRAFT' || status === 'REQUIRES_CHANGES') {
           response = await updateDraftPropertyListing(
@@ -321,17 +402,20 @@ const PropertyListingForm = () => {
             propertyImages
           );
         }
-        alert('Property listing updated successfully!');
+        setSuccessMessage('Property listing updated successfully!');
       } else {
         response = await submitPropertyListing(
           listingData,
           bannerImage,
           propertyImages
         );
-        alert('Property listing created successfully!');
+        setSuccessMessage('Property listing created successfully!');
       }
 
-      navigate('/profile');
+      setTimeout(() => {
+        setSuccessMessage("");
+        navigate('/profile');
+      }, 1500);
     } catch (error) {
       setSubmitError(error.message || 'Failed to submit property listing. Please try again.');
     } finally {
@@ -340,9 +424,36 @@ const PropertyListingForm = () => {
   };
 
   return (
-    <div className="property-listing-form-container">
+    <div className="property-listing-form-container" ref={formTopRef}>
       <form onSubmit={handleSubmit} className="property-listing-form">
-        <h1>{isEditMode ? 'Edit Property Listing' : 'Create Property Listing'}</h1>
+        <h1>{isResubmitMode ? 'Resubmit Property Listing' : isEditMode ? 'Edit Property Listing' : 'Create Property Listing'}</h1>
+
+        {successMessage && (
+          <div className="success-message" style={{
+            padding: '12px',
+            backgroundColor: '#e6ffed',
+            border: '1px solid #b7eb8f',
+            borderRadius: '4px',
+            color: '#135200',
+            marginBottom: '20px',
+            fontWeight: 500
+          }}>
+            {successMessage}
+          </div>
+        )}
+
+        {isResubmitMode && submissionReviewMessage && (
+          <div className="review-message" style={{
+            padding: '12px',
+            backgroundColor: '#e6f7ff',
+            border: '1px solid #14cf9aff',
+            borderRadius: '4px',
+            color: '#00a676',
+            marginBottom: '20px'
+          }}>
+            <strong>Review Message:</strong> {submissionReviewMessage}
+          </div>
+        )}
 
         {submitError && (
           <div className="error-message" style={{
@@ -387,6 +498,8 @@ const PropertyListingForm = () => {
             />
           </div>
 
+
+
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="type">Property Type *</label>
@@ -417,6 +530,51 @@ const PropertyListingForm = () => {
             </div>
 
             <div className="form-group">
+              <label htmlFor="condition">Condition *</label>
+              <select
+                id="condition"
+                name="condition"
+                value={formData.condition}
+                onChange={handleInputChange}
+                required
+                disabled={loadingConditions}
+              >
+                <option value="">
+                  {loadingConditions ? 'Loading conditions...' : conditionsError ? 'Error loading conditions' : 'Select a condition'}
+                </option>
+                {conditions && conditions.length > 0 ? (
+                  conditions.map((cond) => (
+                    <option key={cond} value={cond}>
+                      {cond.replace(/_/g, ' ').toLowerCase().replace(/^./, c => c.toUpperCase())}
+                    </option>
+                  ))
+                ) : (
+                  !loadingConditions && !conditionsError && (
+                    <option disabled>No conditions available</option>
+                  )
+                )}
+              </select>
+              {conditionsError && <span className="error-text">{conditionsError}</span>}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="yearBuilt">Year Built *</label>
+              <select
+                id="yearBuilt"
+                name="yearBuilt"
+                value={formData.yearBuilt}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Select year</option>
+                {Array.from({length: 150}, (_, i) => {
+                  const year = new Date().getFullYear() - i;
+                  return <option key={year} value={year}>{year}</option>;
+                })}
+              </select>
+            </div>
+
+            <div className="form-group">
               <label htmlFor="price">Price ($) *</label>
               <input
                 type="number"
@@ -434,6 +592,21 @@ const PropertyListingForm = () => {
 
           <div className="form-row">
             <div className="form-group">
+              <label htmlFor="lotAreaInSquareFeet">Lot Area (sq ft) *</label>
+              <input
+                type="number"
+                id="lotAreaInSquareFeet"
+                name="lotAreaInSquareFeet"
+                value={formData.lotAreaInSquareFeet}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div className="form-group">
               <label htmlFor="propertyAreaInSquareFeet">Property Area (sq ft) *</label>
               <input
                 type="number"
@@ -448,20 +621,7 @@ const PropertyListingForm = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="lotAreaInSquareFeet">Lot Area (sq ft) *</label>
-              <input
-                type="number"
-                id="lotAreaInSquareFeet"
-                name="lotAreaInSquareFeet"
-                value={formData.lotAreaInSquareFeet}
-                onChange={handleInputChange}
-                required
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-              />
-            </div>
+
           </div>
 
           <div className="form-row">

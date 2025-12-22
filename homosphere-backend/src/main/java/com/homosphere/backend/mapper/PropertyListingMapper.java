@@ -34,6 +34,8 @@ public interface PropertyListingMapper {
     @Mapping(target = "propertyAreaSqFt", source = "property.propertyAreaSqFt")
     @Mapping(target = "city", source = "property.location.city")
     @Mapping(target = "state", source = "property.location.state")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "condition", source = "property.condition")
     CompactPropertyListingResponse toCompactResponse(PropertyListing propertyListing);
 
 

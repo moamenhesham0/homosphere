@@ -38,15 +38,9 @@ public class PropertyListingController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PostMapping("/draft")
-    public ResponseEntity<PropertyListingResponse> savePropertyListingDraft(@RequestBody PropertyListingRequest request) {
-        PropertyListingResponse response = propertyListingService.saveDraftPropertyListing(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/update-draft")
+    @PutMapping("/resubmit")
     public ResponseEntity<PropertyListingResponse> updatePropertyListingDraft(@RequestBody PropertyListingDraftRequest draftRequest) {
-        PropertyListingResponse response = propertyListingService.updatePropertyListingDraft(draftRequest);
+        PropertyListingResponse response = propertyListingService.resubmitPropertyListing(draftRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

@@ -1,23 +1,24 @@
 import { useState, useEffect, useMemo } from "react";
+import ProfileTabs from "../components/profile/ProfileTabs";
+import "../styles/ProfileSidebar.css";
+import ProfileInfo from "../components/profile/ProfileInfo";
+import Security from "../components/profile/Security";
+import Inquiries from "../components/profile/Inquiries";
+import ManagementRequests from "../components/profile/ManagementRequests";
+import PropertyDashboard from "../components/profile/PropertyDashboard";
 import { useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
 import { fetchUserData } from "../services/userApi";
 import {
-  getAllPropertyListings,
   getUserPropertyListings,
   getUserPropertyListingTabs,
-  getPropertyListingById,
-  submitPropertyListing,
-  saveDraftPropertyListing,
-  updateDraftPropertyListing,
-  editPropertyListing,
   deletePropertyListing
 } from "../services/apiPropertyListing";
 import EnterPasswordWindow from "../components/enterPasswordWindow";
 import useDeleteUser from "../hooks/useDeleteUser";
 import { supabase } from "../utils/supabase";
 import PasswordChangeWindow from "../components/passwordChangeWindow";
-import { uploadImageToCloudflare, uploadMultipleImages } from "../services/cloudflareUpload";
+
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -57,8 +58,15 @@ export default function Profile() {
   const [listingsLoading, setListingsLoading] = useState(false);
   const [listingsError, setListingsError] = useState(null);
 
-  // Track which listing is being edited
-  const [editingListingId, setEditingListingId] = useState(null);
+  // Tab state for profile sections
+  const [tab, setTab] = useState(0);
+  const tabLabels = [
+    "Profile",
+    "Security",
+    "Properties",
+    "Inquiries",
+    "Management Requests"
+  ];
 
   // Fetch user data from API
   useEffect(() => {
@@ -270,12 +278,15 @@ export default function Profile() {
     navigate(`/property-listing-form?id=${listing.id}`);
   };
 
-  const handleDeleteListing = async (listingId) => {
-    if (!confirm("Are you sure you want to delete this listing?")) return;
 
+  const handleDeleteListing = async (listingId) => {
     try {
       await deletePropertyListing(listingId);
-      setUserListings(prev => prev.filter(l => l.id !== listingId));
+      // Reload listings from backend after successful deletion
+      if (user?.id) {
+        const listings = await getUserPropertyListings(user.id);
+        setUserListings(listings || []);
+      }
       setSuccessMessage("Listing deleted successfully");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
@@ -295,314 +306,69 @@ export default function Profile() {
     );
   }
   return (
-    <div className="profile-page">
-      <div className="left-panel">
-        <div className="photo-container">
-          <img
-            src={tempUser.photo ? `https://pub-5fe480d20f5b4a3e9d119df2e1376fbc.r2.dev/${tempUser.photo}` : "https://via.placeholder.com/200"}
-            alt="User"
-            className="profile-photo"
-          />
-          {editMode && (
-            <>
-              <label className="upload-btn">
-                Upload Photo
-                <input type="file" accept="image/*" onChange={handlePhotoChange} />
-              </label>
-              <button className="delete-photo-btn" onClick={() => {
-                setTempUser((prev) => ({ ...prev, photo: "" }));
-                setUser((prev) => ({ ...prev, photo: "" }));
-              }}>
-                Delete Photo
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="right-panel">
-        <div className="section">
-          <h3>Profile Information</h3>
-          <div className="field-row">
-            <div className="field">
-              <label>Username</label>
-              <input
-                name="username"
-                value={tempUser.username}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-            <div className="field">
-              <label>First Name</label>
-              <input
-                name="firstname"
-                value={tempUser.firstname}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-
-          <div className="field-row">
-            <div className="field">
-              <label>Last Name</label>
-              <input
-                name="lastname"
-                value={tempUser.lastname}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-            <div className="field">
-              <label>Role</label>
-              <input
-                name="role"
-                value={tempUser.role}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-
-          <div className="field-row">
-            <div className="field">
-              <label>Location</label>
-              <input
-                name="location"
-                value={tempUser.location}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="section">
-          <h3>Contact Info</h3>
-          <div className="field-row">
-            <div className="field">
-              <label>Email</label>
-              <input
-                name="email"
-                value={tempUser.email}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-            <div className="field">
-              <label>WhatsApp</label>
-              <input
-                name="whatsapp"
-                value={tempUser.whatsapp}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-          <div className="field-row">
-            <div className="field">
-              <label>Telegram</label>
-              <input
-                name="telegram"
-                value={tempUser.telegram}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="section">
-          <h3>About the User</h3>
-          <textarea
-            name="bio"
-            value={tempUser.bio}
-            onChange={handleChange}
-            disabled={!editMode}
-          />
-        </div>
-
-        <div className="section">
-          <h3>Property Dashboard</h3>
-
-          <div className="property-dashboard-header">
-            <div className="property-tabs">
-              {propertyTabs.filter(tab => tab != null).map((tab) => (
-                <button
-                  key={tab}
-                  className={`property-tab ${selectedTab === tab ? "active" : ""}`}
-                  onClick={() => setSelectedTab(tab)}
-                >
-                  {String(tab).replace(/_/g, " ")}
-                </button>
-              ))}
-            </div>
-            <button className="create-listing-btn" onClick={handleCreateListing}>
-              + Create Listing
-            </button>
-          </div>
-
-          {listingsLoading && (
-            <div className="loading">Loading your listings...</div>
-          )}
-          {listingsError && (
-            <div className="error-message">{listingsError}</div>
-          )}
-
-          {!listingsLoading && !listingsError && (
-            <div className="property-list">
-              {filteredListings.length === 0 ? (
-                <div className="empty-state">No listings found in {selectedTab} status.</div>
+    <div className="profile-page" style={{ display: 'flex', minHeight: '100vh', background: '#f5f5dc' }}>
+      <ProfileTabs tab={tab} setTab={setTab} tabLabels={tabLabels} />
+      <div className="profile-main-content">
+        {tab === 0 && (
+          <>
+            <ProfileInfo tempUser={tempUser} editMode={editMode} handleChange={handleChange} />
+            <div className="profile-buttons">
+              {!editMode ? (
+                <>
+                  <button className="edit-btn" onClick={() => setEditMode(true)}>
+                    Edit Profile
+                  </button>
+                </>
               ) : (
-                <div className="properties-grid">
-                  {filteredListings.map((l) => {
-                    const bannerUrl = l?.bannerImage?.imageUrl;
-                    const title = l?.title || "Untitled";
-                    const description = l?.description || "";
-                    const price = typeof l?.price === "number" ? l.price : parseFloat(l?.price || 0);
-                    const bedrooms = l?.property?.bedrooms || l?.bedrooms || 0;
-                    const bathrooms = l?.property?.bathrooms || l?.bathrooms || 0;
-                    const area = l?.property?.areaInSquareMeters || l?.propertyAreaInSquareFeet || 0;
-                    const type = l?.property?.propertyType || l?.propertyType || "";
-                    const city = l?.property?.location?.city || l?.city || "";
-                    const status = l?.status || "UNKNOWN";
-
-                    // Determine if can edit based on status
-                    const canEdit = ["PUBLISHED"].includes(status);
-                    const canEditDraft = ["DRAFT", "REQUIRES_CHANGES"].includes(status);
-
-                    return (
-                      <div className="property-card" key={l?.id}>
-                        {bannerUrl && (
-                          <div className="property-image">
-                            <img src={bannerUrl} alt={title} />
-                            <span className={`status-badge status-${status.toLowerCase()}`}>
-                              {status.replace(/_/g, " ")}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="property-content">
-                          <div className="property-price">${price.toLocaleString()}</div>
-                          <h3 className="property-title">{title}</h3>
-                          <p className="property-location">{city || "Location TBA"}</p>
-                          <p className="property-type">{type}</p>
-
-                          {description && (
-                            <p className="property-description">{description.substring(0, 100)}...</p>
-                          )}
-
-                          <div className="property-features">
-                            {bedrooms > 0 && (
-                              <span className="feature">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                </svg>
-                                {bedrooms} beds
-                              </span>
-                            )}
-                            {bathrooms > 0 && (
-                              <span className="feature">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M2 7h20M4 11h1v8c0 1-1 2-2 2s-2-1-2-2v-8zm14 0h1v8c0 1-1 2-2 2s-2-1-2-2v-8z"></path>
-                                </svg>
-                                {bathrooms} baths
-                              </span>
-                            )}
-                            {area > 0 && (
-                              <span className="feature">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <rect x="3" y="3" width="18" height="18"></rect>
-                                </svg>
-                                {area.toLocaleString()} sqft
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="property-actions">
-                            <button
-                              className="action-btn view-btn"
-                              onClick={() => navigate(`/property/${l?.id}`)}
-                            >
-                              View Details
-                            </button>
-                            {canEdit && (
-                              <button
-                                className="action-btn edit-btn"
-                                onClick={() => handleEditListing(l)}
-                              >
-                                Edit
-                              </button>
-                            )}
-                            {canEditDraft && (
-                              <button
-                                className="action-btn edit-draft-btn"
-                                onClick={() => handleEditListing(l)}
-                              >
-                                Edit Draft
-                              </button>
-                            )}
-                            <button
-                              className="action-btn delete-btn"
-                              onClick={() => handleDeleteListing(l?.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <>
+                  <button className="save-btn" onClick={saveChanges} disabled={saving}>
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                  <button className="cancel-btn" onClick={cancelChanges} disabled={saving}>
+                    Cancel
+                  </button>
+                </>
               )}
             </div>
-          )}
-        </div>
-
+          </>
+        )}
+        {tab === 1 && (
+          <Security
+            onChangePassword={() => setShowPasswordModal(true)}
+            onDeleteAccount={() => setShowDeleteModal(true)}
+          />
+        )}
+        {tab === 2 && (
+          <PropertyDashboard
+            propertyTabs={propertyTabs}
+            selectedTab={selectedTab}
+            setSelectedTab={setSelectedTab}
+            handleCreateListing={handleCreateListing}
+            listingsLoading={listingsLoading}
+            listingsError={listingsError}
+            filteredListings={filteredListings}
+            navigate={navigate}
+            handleEditListing={handleEditListing}
+            handleDeleteListing={handleDeleteListing}
+          />
+        )}
+        {tab === 3 && <Inquiries />}
+        {tab === 4 && <ManagementRequests />}
         {error && <div className="error-message">{error}</div>}
         {successMessage && <div className="success-message">{successMessage}</div>}
-
-        <div className="profile-buttons">
-          {!editMode ? (
-            <>
-              <button className="edit-btn" onClick={() => setEditMode(true)}>
-                Edit Profile
-              </button>
-              <button className="change-password-btn" onClick={() => setShowPasswordModal(true)}>
-                Change Password
-              </button>
-              <button className="delete-account-btn" onClick={() => setShowDeleteModal(true)}>
-                Delete Account
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="save-btn" onClick={saveChanges} disabled={saving}>
-                {saving ? "Saving..." : "Save"}
-              </button>
-              <button className="cancel-btn" onClick={cancelChanges} disabled={saving}>
-                Cancel
-              </button>
-            </>
-          )}
-        </div>
+        {showDeleteModal && (
+          <EnterPasswordWindow
+            onClose={() => setShowDeleteModal(false)}
+            onSubmit={handleDeleteAccount}
+          />
+        )}
+        {showPasswordModal && (
+          <PasswordChangeWindow
+            onClose={() => setShowPasswordModal(false)}
+            onSubmit={handlePasswordChange}
+          />
+        )}
       </div>
-
-      {showDeleteModal && (
-        <EnterPasswordWindow
-          onClose={() => setShowDeleteModal(false)}
-          onSubmit={handleDeleteAccount}
-        />
-      )}
-
-      {showPasswordModal && (
-        <PasswordChangeWindow
-          onClose={() => setShowPasswordModal(false)}
-          onSubmit={handlePasswordChange}
-        />
-      )}
     </div>
   );
 }

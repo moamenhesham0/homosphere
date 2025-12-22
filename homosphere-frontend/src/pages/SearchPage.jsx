@@ -3,16 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/SearchPage.css';
 
 
-const API_BASE_URL = 'http://localhost:8080/api/properties'; 
+const API_BASE_URL = 'http://localhost:8080/api/properties';
 
 // Utility function to format price from number to string (assuming USD/EGP formatting as required)
 const formatPrice = (price) => {
     if (price === null || price === undefined) return 'Price N/A';
     // Format as a currency string. Adjust 'USD' to 'EGP' if your data is Egyptian Pounds
-    return new Intl.NumberFormat('en-US', { 
-        style: 'currency', 
-        currency: 'USD', 
-        minimumFractionDigits: 0 
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0
     }).format(price);
 };
 
@@ -56,7 +56,7 @@ const SearchPage = () => {
         try {
             let url;
             const params = new URLSearchParams({ page: page.toString(), size: itemsPerPage.toString() });
-            
+
             // --- 1. Determine Endpoint and Parameters ---
             const activeFilters = bedrooms || bathrooms || priceRange.min || priceRange.max || location || age;
             const isSimpleSearch = searchQuery.trim() !== '' && !activeFilters;
@@ -74,14 +74,14 @@ const SearchPage = () => {
                 const maxP = priceRange.max;
                 if (minP && !isNaN(Number(minP))) params.append('minPrice', minP);
                 if (maxP && !isNaN(Number(maxP))) params.append('maxPrice', maxP);
-                
+
                 // Bedrooms/Bathrooms
                 if (bedrooms) params.append('bedrooms', bedrooms);
                 if (bathrooms) params.append('bathrooms', bathrooms);
-                
+
                 // Age
                 if (age && !isNaN(Number(age))) params.append('age', age);
-                
+
                 // Location (Assuming location input is "City, State")
                 if (location) {
                     const parts = location.split(',').map(p => p.trim());
@@ -89,7 +89,7 @@ const SearchPage = () => {
                     if (parts[1]) params.append('state', parts[1]);
                 }
             }
-            
+
             // --- 2. Fetch Data ---
             const response = await fetch(`${url}?${params.toString()}`);
 
@@ -100,7 +100,7 @@ const SearchPage = () => {
                 throw new Error(`Server responded with status ${response.status}. Check backend logs.`);
             }
 
-            const data = await response.json(); 
+            const data = await response.json();
             console.log('Fetched properties from backend:', data);
             // --- 3. Map DTO to Frontend State (Handling missing mock data fields) ---
             const mappedProperties = (data.content || []).map(p => ({
@@ -114,10 +114,10 @@ const SearchPage = () => {
                 baths: p.bathrooms,
                 // --- Use imageUrl from bannerImage object if present ---
                 image: (p.bannerImage && p.bannerImage.imageUrl) ? p.bannerImage.imageUrl : 'https://via.placeholder.com/400x300?text=Image+Missing',
-                badge: p.badge || '', 
-                description: p.description || p.title, 
-                sqft: p.sqft || 'N/A', 
-                type: p.type || 'House', 
+                badge: p.badge || '',
+                description: p.description || p.title,
+                sqft: p.propertyAreaSqFt || 'N/A',
+                type: p.type || 'House',
             }));
 
             setProperties(mappedProperties);
@@ -134,11 +134,11 @@ const SearchPage = () => {
             setLoading(false);
         }
     }, [searchQuery, priceRange, bedrooms, bathrooms, location, age]);
-    
+
     // Trigger fetch on initial load and when filters/search change
     useEffect(() => {
         // Set page to 0 and trigger a new search/filter run
-        fetchProperties(0); 
+        fetchProperties(0);
     }, [fetchProperties]);
 
 
@@ -171,7 +171,7 @@ const SearchPage = () => {
             }
         });
     };
-    
+
     // Pagination handlers
     const handlePageChange = (pageNumber) => {
         // pageNumber is 1-based, convert to 0-based for the backend
@@ -237,8 +237,8 @@ const SearchPage = () => {
                                 </svg>
                             </button>
                         </div>
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={() => setShowFilters(!showFilters)}
                             className="filter-toggle-btn"
                         >
@@ -255,7 +255,7 @@ const SearchPage = () => {
                     <div className="search-filters">
                         <form onSubmit={handleSearch} className="search-form">
                             <div className="filters-grid">
-                                
+
                                 {/* Location Filter (Used for City/State filter) */}
                                 <div className="filter-group">
                                     <label>Location</label>
@@ -266,7 +266,7 @@ const SearchPage = () => {
                                         onChange={(e) => setLocation(e.target.value)}
                                     />
                                 </div>
-                                
+
                                 {/* Property Type Filter (Requires DTO/Controller support) */}
                                 <div className="filter-group">
                                     <label>Property Type</label>
@@ -374,7 +374,7 @@ const SearchPage = () => {
                     </div>
 
                     {loading && <div className="loading-spinner">Loading properties...</div>}
-                    
+
                     {error && <div className="error-message">{error}</div>}
 
                     {!loading && properties.length === 0 && !error && (
@@ -385,10 +385,10 @@ const SearchPage = () => {
                         {properties.map(property => (
                             <div key={property.id} className="property-card" onClick={() => handlePropertyClick(property)}>
                                 {property.badge && <span className={`property-badge ${property.badge.toLowerCase()}`}>{property.badge}</span>}
-                                
+
                                 <div className="property-image">
                                     <img src={property.image} alt={property.title} />
-                                    <button 
+                                    <button
                                         className={`favorite-btn ${favorites.includes(property.id) ? 'favorited' : ''}`}
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -406,7 +406,7 @@ const SearchPage = () => {
                                     <h3 className="property-title">{property.title}</h3>
                                     <p className="property-location">{property.location}</p>
                                     <p className="property-description">{property.description}</p>
-                                    
+
                                     <div className="property-features">
                                         <span className="feature">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -438,8 +438,8 @@ const SearchPage = () => {
                     {/* Pagination */}
                     {totalPages > 1 && (
                         <div className="pagination">
-                            <button 
-                                onClick={handlePrevPage} 
+                            <button
+                                onClick={handlePrevPage}
                                 disabled={currentPage === 0}
                                 className="pagination-btn"
                             >
@@ -453,8 +453,8 @@ const SearchPage = () => {
                                 {renderPageNumbers()}
                             </div>
 
-                            <button 
-                                onClick={handleNextPage} 
+                            <button
+                                onClick={handleNextPage}
                                 disabled={currentPage === totalPages - 1}
                                 className="pagination-btn"
                             >
@@ -523,8 +523,8 @@ const SearchPage = () => {
                                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                                             </svg>
                                             <div>
-                                                <span className="modal-feature-value">{selectedProperty.property?.areaInSquareMeters ?? 'N/A'}</span>
-                                                <span className="modal-feature-label">Area (sqm)</span>
+                                                <span className="modal-feature-value">{selectedProperty.property?.propertyAreaSqFt ?? 'N/A'}</span>
+                                                <span className="modal-feature-label">Area (sqft)</span>
                                             </div>
                                         </div>
                                         <div className="modal-feature-item">

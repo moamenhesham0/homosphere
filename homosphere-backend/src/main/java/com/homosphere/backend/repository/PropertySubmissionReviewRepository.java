@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface PropertySubmissionRepository extends JpaRepository<PropertySubmissionReview, UUID> {
+public interface PropertySubmissionReviewRepository extends JpaRepository<PropertySubmissionReview, UUID> {
 
 }

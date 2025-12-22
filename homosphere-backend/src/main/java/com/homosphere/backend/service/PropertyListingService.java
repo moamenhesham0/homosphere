@@ -10,7 +10,6 @@ import com.homosphere.backend.enums.PropertyListingStatus;
 import com.homosphere.backend.mapper.PropertyListingMapper;
 import com.homosphere.backend.model.property.PropertyListing;
 import com.homosphere.backend.repository.PropertyListingRepository;
-import com.homosphere.backend.repository.UserRepository;
 import com.homosphere.backend.updater.PropertyListingUpdater;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +29,8 @@ public class PropertyListingService {
     private final PropertyListingMapper propertyListingMapper;
 
     private final PropertyListingUpdater propertyListingUpdater;
+
+    private final PropertySubmissionReviewService propertySubmissionReviewService;
 
     @Transactional
     protected PropertyListing createPropertyListing(PropertyListingRequest request) {
@@ -56,7 +57,7 @@ public class PropertyListingService {
     }
 
     @Transactional
-    public PropertyListingResponse updatePropertyListingDraft(PropertyListingDraftRequest draftRequest) {
+    public PropertyListingResponse resubmitPropertyListing(PropertyListingDraftRequest draftRequest) {
         final UUID propertyListingId = draftRequest.getPropertyListingId();
         PropertyListing propertyListing = propertyListingRepository.findById(propertyListingId)
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + propertyListingId));
@@ -66,7 +67,7 @@ public class PropertyListingService {
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
-
+        propertyListing.setStatusPending();
         return propertyListingMapper.toResponse(propertyListing);
     }
 
@@ -94,12 +95,14 @@ public class PropertyListingService {
     public PropertyListingPublicResponse getPropertyListingPublicById(UUID id) {
         PropertyListing propertyListing = propertyListingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
+        propertyListingRepository.updateViewCount(id);
         return propertyListingMapper.toPublicResponse(propertyListing);
     }
 
     public PropertyListingPublicResponse getPublicPropertyListingById(UUID id) {
         PropertyListing propertyListing = propertyListingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
+        propertyListingRepository.updateViewCount(id);
         return propertyListingMapper.toPublicResponse(propertyListing);
     }
 
@@ -144,8 +147,11 @@ public class PropertyListingService {
 
     @Transactional
     public void deletePropertyListing(UUID id) {
+        propertySubmissionReviewService.deletePropertySubmissionReview(id);
         PropertyListing propertyListing = propertyListingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
+
+
         propertyListingRepository.delete(propertyListing);
     }
 

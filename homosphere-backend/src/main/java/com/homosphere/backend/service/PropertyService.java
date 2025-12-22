@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.homosphere.backend.enums.PropertyCondition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -66,6 +67,12 @@ public class PropertyService {
     public List<String> getAllPropertyTypes() {
         return Arrays.stream(PropertyType.values())
                 .map(PropertyType::name)
+                .toList();
+    }
+
+    public List<String> getAllConditions() {
+        return Arrays.stream(PropertyCondition.values())
+                .map(PropertyCondition::name)
                 .toList();
     }
 

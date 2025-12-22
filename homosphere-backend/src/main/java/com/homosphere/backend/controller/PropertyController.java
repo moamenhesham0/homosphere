@@ -58,4 +58,10 @@ public class PropertyController {
         List<String> propertyTypes = propertyService.getAllPropertyTypes();
         return new ResponseEntity<>(propertyTypes, HttpStatus.OK);
     }
+    
+    @GetMapping("/all-conditions")
+    public ResponseEntity<List<String>> getAllConditions() {
+        List<String> propertyConditions = propertyService.getAllConditions();
+        return new ResponseEntity<>(propertyConditions, HttpStatus.OK);
+    }
 }
