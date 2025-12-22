@@ -1,32 +1,84 @@
 package com.homosphere.backend.service;
 
-import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
-import com.homosphere.backend.mapper.PropertyListingMapper;
-import com.homosphere.backend.model.Location;
-import com.homosphere.backend.model.property.Property;
-import com.homosphere.backend.model.property.PropertyListing;
-import com.homosphere.backend.repository.PropertyRepository;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
+import com.homosphere.backend.mapper.PropertyListingMapper;
+import com.homosphere.backend.model.Location;
+import com.homosphere.backend.model.property.Property;
+import com.homosphere.backend.model.property.PropertyListing;
+import com.homosphere.backend.repository.PropertyListingRepository;
+import com.homosphere.backend.repository.PropertyRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PropertyServiceTest {
+    @Test
+    void getPropertyListingDetails_ReturnsResponse_WhenFound() {
+        UUID id = UUID.randomUUID();
+        PropertyListing propertyListing = new PropertyListing();
+        PropertyListingResponse response = mock(com.homosphere.backend.dto.property.response.PropertyListingResponse.class);
+        PropertyListingRepository propertyListingRepository = mock(com.homosphere.backend.repository.PropertyListingRepository.class);
+        PropertyListingMapper propertyListingMapper = mock(PropertyListingMapper.class);
+        PropertyService service = new PropertyService(propertyRepository, propertyListingRepository, propertyListingMapper);
+        when(propertyListingRepository.findById(id)).thenReturn(java.util.Optional.of(propertyListing));
+        when(propertyListingMapper.toResponse(propertyListing)).thenReturn(response);
+        assertEquals(response, service.getPropertyListingDetails(id));
+    }
+
+    @Test
+    void getPropertyListingDetails_Throws_WhenNotFound() {
+        UUID id = UUID.randomUUID();
+        PropertyListingRepository propertyListingRepository = mock(com.homosphere.backend.repository.PropertyListingRepository.class);
+        PropertyListingMapper propertyListingMapper = mock(PropertyListingMapper.class);
+        PropertyService service = new PropertyService(propertyRepository, propertyListingRepository, propertyListingMapper);
+        when(propertyListingRepository.findById(id)).thenReturn(java.util.Optional.empty());
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.getPropertyListingDetails(id));
+    }
+
+    @Test
+    void getAllPropertyTypes_ReturnsAllEnumNames() {
+        List<String> types = propertyService.getAllPropertyTypes();
+        for (com.homosphere.backend.enums.PropertyType type : com.homosphere.backend.enums.PropertyType.values()) {
+            assertTrue(types.contains(type.name()));
+        }
+    }
+
+    @Test
+    void getAllConditions_ReturnsAllEnumNames() {
+        List<String> conditions = propertyService.getAllConditions();
+        for (com.homosphere.backend.enums.PropertyCondition cond : com.homosphere.backend.enums.PropertyCondition.values()) {
+            assertTrue(conditions.contains(cond.name()));
+        }
+    }
 
     @Mock
     private PropertyRepository propertyRepository;
@@ -78,7 +130,7 @@ class PropertyServiceTest {
         // Arrange
         String query = "New York";
         Page<PropertyListing> propertyPage = new PageImpl<>(List.of(propertyListing));
-        
+
         when(propertyRepository.searchPropertyListings(eq(query), any(Pageable.class)))
             .thenReturn(propertyPage);
         when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
@@ -133,7 +185,7 @@ class PropertyServiceTest {
         // Arrange
         String query = "NonExistentCity";
         Page<PropertyListing> emptyPage = new PageImpl<>(Collections.emptyList());
-        
+
         when(propertyRepository.searchPropertyListings(eq(query), any(Pageable.class)))
             .thenReturn(emptyPage);
 
@@ -153,9 +205,9 @@ class PropertyServiceTest {
         PropertyListing listing2 = new PropertyListing();
         listing2.setPropertyListingId(UUID.randomUUID());
         listing2.setTitle("4 Bed Apartment");
-        
+
         Page<PropertyListing> propertyPage = new PageImpl<>(List.of(propertyListing, listing2));
-        
+
         when(propertyRepository.searchPropertyListings(eq(query), any(Pageable.class)))
             .thenReturn(propertyPage);
         when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
@@ -183,9 +235,9 @@ class PropertyServiceTest {
         String state = "NY";
 
         Page<PropertyListing> propertyPage = new PageImpl<>(List.of(propertyListing));
-        
+
         when(propertyRepository.filterPropertyListings(
-            anyInt(), anyInt(), anyDouble(), anyDouble(), 
+            anyInt(), anyInt(), anyDouble(), anyDouble(),
             anyInt(), anyInt(), anyString(), anyString(), any(Pageable.class)))
             .thenReturn(propertyPage);
         when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
@@ -199,7 +251,7 @@ class PropertyServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(propertyRepository, times(1)).filterPropertyListings(
-            eq(bedrooms), eq(bathrooms), eq(minPrice), eq(maxPrice), 
+            eq(bedrooms), eq(bathrooms), eq(minPrice), eq(maxPrice),
             anyInt(), anyInt(), eq(city), eq(state), eq(pageable));
     }
 
@@ -207,9 +259,9 @@ class PropertyServiceTest {
     void filterProperties_WithNullParameters_CallsRepositoryWithNulls() {
         // Arrange
         Page<PropertyListing> propertyPage = new PageImpl<>(List.of(propertyListing));
-        
+
         when(propertyRepository.filterPropertyListings(
-            isNull(), isNull(), isNull(), isNull(), 
+            isNull(), isNull(), isNull(), isNull(),
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
         when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
@@ -223,7 +275,7 @@ class PropertyServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(propertyRepository, times(1)).filterPropertyListings(
-            isNull(), isNull(), isNull(), isNull(), 
+            isNull(), isNull(), isNull(), isNull(),
             isNull(), isNull(), isNull(), isNull(), eq(pageable));
     }
 
@@ -232,7 +284,7 @@ class PropertyServiceTest {
         // Arrange
         Integer age = 10;
         Page<PropertyListing> propertyPage = new PageImpl<>(List.of(propertyListing));
-        
+
         when(propertyRepository.filterPropertyListings(
             any(), any(), any(), any(), anyInt(), anyInt(), any(), any(), any(Pageable.class)))
             .thenReturn(propertyPage);
@@ -253,7 +305,7 @@ class PropertyServiceTest {
     void filterProperties_WithNoResults_ReturnsEmptyPage() {
         // Arrange
         Page<PropertyListing> emptyPage = new PageImpl<>(Collections.emptyList());
-        
+
         when(propertyRepository.filterPropertyListings(
             any(), any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
             .thenReturn(emptyPage);
@@ -274,9 +326,9 @@ class PropertyServiceTest {
         // Arrange
         Integer bedrooms = 3;
         Page<PropertyListing> propertyPage = new PageImpl<>(List.of(propertyListing));
-        
+
         when(propertyRepository.filterPropertyListings(
-            eq(bedrooms), isNull(), isNull(), isNull(), 
+            eq(bedrooms), isNull(), isNull(), isNull(),
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
         when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
@@ -290,7 +342,7 @@ class PropertyServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(propertyRepository, times(1)).filterPropertyListings(
-            eq(bedrooms), isNull(), isNull(), isNull(), 
+            eq(bedrooms), isNull(), isNull(), isNull(),
             isNull(), isNull(), isNull(), isNull(), eq(pageable));
     }
 
@@ -300,9 +352,9 @@ class PropertyServiceTest {
         Double minPrice = 500000.0;
         Double maxPrice = 1000000.0;
         Page<PropertyListing> propertyPage = new PageImpl<>(List.of(propertyListing));
-        
+
         when(propertyRepository.filterPropertyListings(
-            isNull(), isNull(), eq(minPrice), eq(maxPrice), 
+            isNull(), isNull(), eq(minPrice), eq(maxPrice),
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
         when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
@@ -316,7 +368,7 @@ class PropertyServiceTest {
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         verify(propertyRepository, times(1)).filterPropertyListings(
-            isNull(), isNull(), eq(minPrice), eq(maxPrice), 
+            isNull(), isNull(), eq(minPrice), eq(maxPrice),
             isNull(), isNull(), isNull(), isNull(), eq(pageable));
     }
 }
