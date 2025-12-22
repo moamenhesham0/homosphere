@@ -17,7 +17,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PropertyResponse {
     private UUID propertyId;
-    private Double areaInSquareMeters;
+    private Double propertyAreaSqFt;
+    private Double lotAreaSqFt;
     private Integer bedrooms;
     private Integer bathrooms;
     private PropertyType type;

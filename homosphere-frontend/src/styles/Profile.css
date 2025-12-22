@@ -176,3 +176,713 @@
   margin-top: 10px;
   border-left: 4px solid #2e7d32;
 }
+
+/* Property Dashboard */
+.property-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.property-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.property-tab {
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #99BC85;
+  background-color: #FDFAF6;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.property-tab:hover {
+  background-color: #e8f5e3;
+}
+
+.property-tab.active {
+  background-color: #99BC85;
+  color: #fff;
+}
+
+.create-listing-btn {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.create-listing-btn:hover {
+  background-color: #45a049;
+}
+
+.property-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.property-card {
+  background-color: #FDFAF6;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+}
+
+.property-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.property-card-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.property-card-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.property-card-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+}
+
+.property-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #666;
+}
+
+.property-card-type {
+  text-transform: capitalize;
+}
+
+.property-card-price {
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+.property-card-status {
+  display: flex;
+  gap: 6px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-draft {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-pending {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-published {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.status-requires_changes {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-rejected {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-unlisted {
+  background-color: #f5f5f5;
+  color: #616161;
+}
+
+.status-sold {
+  background-color: #e0e0e0;
+  color: #424242;
+}
+
+.property-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.property-card-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 60px;
+}
+
+.view-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.view-btn:hover {
+  background-color: #0b7dda;
+}
+
+.edit-btn {
+  background-color: #FF9800;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #e68900;
+}
+
+.edit-draft-btn {
+  background-color: #9C27B0;
+  color: white;
+}
+
+.edit-draft-btn:hover {
+  background-color: #7b1fa2;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+.empty-state {
+  padding: 40px 12px;
+  color: #666;
+  text-align: center;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .property-dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .create-listing-btn {
+    width: 100%;
+  }
+
+  .property-list {
+    grid-template-columns: 1fr;
+  }
+
+  .property-card-actions {
+    flex-direction: column;
+  }
+
+  .property-card-btn {
+    width: 100%;
+  }
+}
+
+/* Modal Styles for Property Listing Form */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  border-radius: 8px 8px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.modal-close-btn:hover {
+  color: #000;
+}
+
+.property-form {
+  padding: 24px;
+}
+
+.property-form .form-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.property-form .form-section:last-of-type {
+  border-bottom: none;
+}
+
+.property-form .form-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.property-form .form-field {
+  margin-bottom: 16px;
+}
+
+.property-form .form-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.property-form .form-field input,
+.property-form .form-field select,
+.property-form .form-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.property-form .form-field input:focus,
+.property-form .form-field select:focus,
+.property-form .form-field textarea:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.property-form .form-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.property-form .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.property-form .image-preview {
+  margin-top: 12px;
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 300px;
+}
+
+.property-form .image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.property-form .images-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.property-form .image-preview-item {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  aspect-ratio: 1;
+}
+
+.property-form .image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.property-form .remove-image-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.property-form .remove-image-btn:hover {
+  background: rgba(255, 0, 0, 1);
+}
+
+.property-form .form-error {
+  background: #fee;
+  color: #c33;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.property-form .form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  justify-content: flex-end;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  margin: 0 -24px -24px;
+  padding: 20px 24px;
+}
+
+.property-form .form-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.property-form .submit-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.property-form .submit-btn:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.property-form .draft-btn {
+  background: #2196F3;
+  color: white;
+}
+
+.property-form .draft-btn:hover:not(:disabled) {
+  background: #0b7dda;
+}
+
+.property-form .cancel-btn {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.property-form .cancel-btn:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.property-form .form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .property-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .property-form .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .property-form .form-actions button {
+    width: 100%;
+  }
+}
+
+/* Property Grid Styles */
+.properties-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.property-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.property-card .property-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.property-card .property-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.property-card .status-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+}
+
+.status-badge.status-draft {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.status-badge.status-published {
+  background-color: #28a745;
+}
+
+.status-badge.status-pending {
+  background-color: #17a2b8;
+}
+
+.status-badge.status-requires_changes {
+  background-color: #dc3545;
+}
+
+.property-card .property-content {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.property-price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #00a676;
+  margin-bottom: 0.5rem;
+}
+
+.property-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
+.property-location {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0.5rem 0;
+}
+
+.property-type {
+  color: #00a676;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.property-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0.75rem 0;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.property-features {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.property-features .feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.property-features svg {
+  color: #00a676;
+}
+
+.property-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.action-btn.view-btn {
+  background-color: #00a676;
+  color: white;
+}
+
+.action-btn.view-btn:hover {
+  background-color: #008c63;
+}
+
+.action-btn.edit-btn {
+  background-color: #0056b3;
+  color: white;
+}
+
+.action-btn.edit-btn:hover {
+  background-color: #004085;
+}
+
+.action-btn.edit-draft-btn {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.action-btn.edit-draft-btn:hover {
+  background-color: #e0a800;
+}
+
+.action-btn.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.action-btn.delete-btn:hover {
+  background-color: #c82333;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .properties-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .property-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+    min-width: unset;
+  }
+}

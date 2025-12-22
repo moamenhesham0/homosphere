@@ -126,8 +126,8 @@ class PropertyListingTest {
         propertyListing.setStatus(PropertyListingStatus.PUBLISHED);
         assertEquals(PropertyListingStatus.PUBLISHED, propertyListing.getStatus());
 
-        propertyListing.setStatus(PropertyListingStatus.DRAFT);
-        assertEquals(PropertyListingStatus.DRAFT, propertyListing.getStatus());
+        propertyListing.setStatus(PropertyListingStatus.PENDING);
+        assertEquals(PropertyListingStatus.PENDING, propertyListing.getStatus());
 
         propertyListing.setStatus(PropertyListingStatus.UNLISTED);
         assertEquals(PropertyListingStatus.UNLISTED, propertyListing.getStatus());
@@ -181,42 +181,6 @@ class PropertyListingTest {
         assertTrue(propertyListing.getLastUpdatedDate().isAfter(propertyListing.getPublicationDate()));
     }
 
-    @Test
-    void testPropertyListingAllArgsConstructor() {
-        // Arrange & Act
-        UUID listingId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
-
-        PropertyListing newListing = new PropertyListing(
-            listingId,
-            "Test Title",
-            "Test Description",
-            300000.0,
-            seller,
-            broker,
-            bannerImage,
-            new ArrayList<>(),
-            property,
-            100,
-            PropertyListingManagementStatus.SELLER_AUTHORIZED,
-            PropertyListingStatus.PUBLISHED,
-            now,
-            now,
-            new ArrayList<>()
-        );
-
-        // Assert
-        assertEquals(listingId, newListing.getPropertyListingId());
-        assertEquals("Test Title", newListing.getTitle());
-        assertEquals("Test Description", newListing.getDescription());
-        assertEquals(300000.0, newListing.getPrice());
-        assertNotNull(newListing.getSeller());
-        assertNotNull(newListing.getBroker());
-        assertNotNull(newListing.getBannerImage());
-        assertNotNull(newListing.getProperty());
-        assertEquals(100, newListing.getViews());
-        assertEquals(PropertyListingStatus.PUBLISHED, newListing.getStatus());
-    }
 
     @Test
     void testPropertyListingEquality() {

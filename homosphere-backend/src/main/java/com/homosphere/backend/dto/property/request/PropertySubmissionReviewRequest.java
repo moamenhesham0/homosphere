@@ -1,15 +1,15 @@
 package com.homosphere.backend.dto.property.request;
 
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PropertySubmissionRequest {
+public class PropertySubmissionReviewRequest {
     private UUID propertyListingId;
     private String message;
 }

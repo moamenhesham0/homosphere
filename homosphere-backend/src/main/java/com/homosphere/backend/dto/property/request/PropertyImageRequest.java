@@ -11,4 +11,5 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PropertyImageRequest {
     private String imageUrl;
+    UUID propertyListingId;
 }

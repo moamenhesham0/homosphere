@@ -15,9 +15,6 @@ public interface PropertyMapper {
     PropertyResponse toResponse(Property property);
 
     @Mapping(target = "propertyId", ignore = true)
-    @Mapping(target = "type", source = "propertyType")
-    @Mapping(target = "condition", source = "propertyCondition")
-    @Mapping(target = "location", source = "location")
     Property toEntity(PropertyRequest propertyRequest);
 }
 

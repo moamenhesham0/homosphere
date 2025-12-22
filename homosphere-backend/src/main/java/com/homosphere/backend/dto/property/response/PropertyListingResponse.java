@@ -26,7 +26,10 @@ public class PropertyListingResponse {
     private List<PropertyImageResponse> propertyImages;
     private PropertyResponse property;
     private Integer views;
-    private PropertyListingStatus propertyListingStatus;
+    private PropertyListingStatus status;
     private LocalDateTime publicationDate;
+    private LocalDateTime soldDate;
     private LocalDateTime lastUpdatedDate;
+    private LocalDateTime creationData;
+    private LocalDateTime lastSubmissionData;
 }

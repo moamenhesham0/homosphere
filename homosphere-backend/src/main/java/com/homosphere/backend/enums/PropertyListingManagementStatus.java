@@ -1,5 +1,9 @@
 package com.homosphere.backend.enums;
 
+import org.springframework.security.core.parameters.P;
+
+import java.util.Map;
+
 /**
  * Enum representing the management status of a property listing.
  * <ul>
@@ -13,5 +17,12 @@ public enum PropertyListingManagementStatus {
     SELLER_AUTHORIZED,
     BROKER_REQUESTED,
     BROKER_PENDING_AUTHORIZATION,
-    BROKER_AUTHORIZED,
+    BROKER_AUTHORIZED;
+
+    private static final Map<Boolean, PropertyListingManagementStatus> FROM_BOOLEAN =
+            Map.of(true, BROKER_REQUESTED, false, SELLER_AUTHORIZED);
+
+    public static PropertyListingManagementStatus fromBoolean(boolean value) {
+        return FROM_BOOLEAN.get(value);
+    }
 }

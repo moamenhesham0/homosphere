@@ -1,8 +1,7 @@
-package com.homosphere.backend.dto;
+package com.homosphere.backend.dto.property.response;
 
 import java.util.UUID;
 
-import com.homosphere.backend.dto.property.response.PropertyImageResponse;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +14,8 @@ public class CompactPropertyListingResponse {
     private String title;
     private Double price;
     private PropertyImageResponse bannerImage;
+    private Double propertyAreaSqFt;
+    private Double lotAreaSqFt;
     private Integer bathrooms;
     private Integer bedrooms;
     private String city;

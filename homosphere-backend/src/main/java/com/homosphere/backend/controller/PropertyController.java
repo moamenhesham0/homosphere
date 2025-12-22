@@ -1,13 +1,17 @@
 package com.homosphere.backend.controller;
 
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
+import com.homosphere.backend.enums.PropertyType;
 import com.homosphere.backend.service.PropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -47,5 +51,11 @@ public class PropertyController {
     @GetMapping("/{id}")
     public PropertyListingResponse getPropertyListingDetails(@PathVariable("id") UUID propertyListingId) {
         return propertyService.getPropertyListingDetails(propertyListingId);
+    }
+
+    @GetMapping("/all-types")
+    public ResponseEntity<List<String>> getAllTypes() {
+        List<String> propertyTypes = propertyService.getAllPropertyTypes();
+        return new ResponseEntity<>(propertyTypes, HttpStatus.OK);
     }
 }

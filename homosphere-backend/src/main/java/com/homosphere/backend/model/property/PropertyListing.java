@@ -1,33 +1,19 @@
 package com.homosphere.backend.model.property;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
 import com.homosphere.backend.enums.PropertyListingManagementStatus;
 import com.homosphere.backend.enums.PropertyListingStatus;
-
 import com.homosphere.backend.model.User;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "property_listing")
@@ -58,13 +44,12 @@ public class PropertyListing {
     @JoinColumn(name = "broker_id", referencedColumnName = "user_id", nullable = true)
     private User broker;
 
-    @OneToOne (fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "banner_image_id", referencedColumnName = "property_image_id")
     private PropertyImage bannerImage;
 
     @OneToMany(mappedBy = "propertyListing", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "property_listing_id", referencedColumnName = "property_listing_id")
-    private List<PropertyImage> propertyImages;
+    private List<PropertyImage> propertyImages = new ArrayList<>() ;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "property_id", referencedColumnName = "property_id")
@@ -79,7 +64,7 @@ public class PropertyListing {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private PropertyListingStatus status;
+    private PropertyListingStatus status = PropertyListingStatus.PENDING;
 
     @CreationTimestamp
     @Column(name = "creation_date")
@@ -100,9 +85,9 @@ public class PropertyListing {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "property_listing_saved",
-        joinColumns = @JoinColumn(name = "property_listing_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
+            name = "property_listing_saved",
+            joinColumns = @JoinColumn(name = "property_listing_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> savedByUsers;
 
@@ -124,6 +109,36 @@ public class PropertyListing {
 
     public boolean isOpenForBrokerManagement() {
         return this.managementStatus == PropertyListingManagementStatus.BROKER_PENDING_AUTHORIZATION ||
-               this.managementStatus == PropertyListingManagementStatus.BROKER_REQUESTED;
+                this.managementStatus == PropertyListingManagementStatus.BROKER_REQUESTED;
+    }
+
+    public void setStatusPending() {
+        this.status = PropertyListingStatus.PENDING;
+        this.lastSubmissionDate = LocalDateTime.now();
+    }
+
+    public void setStatusRequiresChanges() {
+        this.status = PropertyListingStatus.REQUIRES_CHANGES;
+    }
+
+    public void setStatusPublished() {
+        this.status = PropertyListingStatus.PUBLISHED;
+        this.publicationDate = LocalDateTime.now();
+    }
+
+    public void setStatusSold() {
+        this.status = PropertyListingStatus.SOLD;
+        this.soldDate = LocalDateTime.now();
+    }
+
+    public User getCurrentManager() {
+        if (this.managementStatus == PropertyListingManagementStatus.BROKER_AUTHORIZED)
+            return this.broker;
+        return this.seller;
+    }
+
+    public void addPropertyImage(PropertyImage image) {
+        this.propertyImages.add(image);
+        image.setPropertyListing(this);
     }
 }

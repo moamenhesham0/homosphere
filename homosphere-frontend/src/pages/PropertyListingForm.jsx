@@ -1,83 +1,38 @@
-import { useState, useMemo, useContext, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useContext, useCallback, useEffect } from 'react';
+import { uploadImageToCloudflare, uploadMultipleImages } from '../services/cloudflareUpload';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import GeoMap from '../components/GeoMap';
 import '../styles/PropertyListingForm.css';
-import { createPropertyListing } from '../services/apiPropertyListing';
+import {
+  submitPropertyListing,
+  getPropertyListingById,
+  editPropertyListing,
+  updateDraftPropertyListing,
+  fetchPropertyTypes
+} from '../services/apiPropertyListing';
 import { AuthContext } from '../contexts/AuthContext';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import LocalCafeIcon from '@mui/icons-material/LocalCafe';
-import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import SchoolIcon from '@mui/icons-material/School';
-import LocalGasStationIcon from '@mui/icons-material/LocalGasStation';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy';
-import ParkIcon from '@mui/icons-material/Park';
-import TheaterComedyIcon from '@mui/icons-material/TheaterComedy';
-import PlaceIcon from '@mui/icons-material/Place';
+import { getAmenityIcon } from '../utils/amenityIcons';
+import { groupAmenitiesByType } from '../utils/amenityUtils';
 
-// Helper function to get icon for nearby place type
-const getAmenityIcon = (type) => {
-  const iconProps = { style: { fontSize: '20px', color: '#00a676' } };
-
-  switch (type) {
-    case 'restaurant':
-      return <RestaurantIcon {...iconProps} />;
-    case 'cafe':
-      return <LocalCafeIcon {...iconProps} />;
-    case 'hospital':
-    case 'clinic':
-    case 'doctors':
-      return <LocalHospitalIcon {...iconProps} />;
-    case 'school':
-    case 'college':
-    case 'university':
-    case 'kindergarten':
-      return <SchoolIcon {...iconProps} />;
-    case 'fuel':
-      return <LocalGasStationIcon {...iconProps} />;
-    case 'bank':
-    case 'atm':
-      return <AccountBalanceIcon {...iconProps} />;
-    case 'pharmacy':
-      return <LocalPharmacyIcon {...iconProps} />;
-    case 'park':
-      return <ParkIcon {...iconProps} />;
-    case 'theatre':
-    case 'cinema':
-      return <TheaterComedyIcon {...iconProps} />;
-    case 'marketplace':
-    case 'supermarket':
-      return <ShoppingCartIcon {...iconProps} />;
-    default:
-      return <PlaceIcon {...iconProps} />;
-  }
-};
-
-// Group amenities by type
-const groupAmenitiesByType = (amenities) => {
-  const grouped = {};
-  amenities.forEach((amenity) => {
-    if (!grouped[amenity.type]) {
-      grouped[amenity.type] = [];
-    }
-    grouped[amenity.type].push(amenity);
-  });
-  return grouped;
-};
 
 const PropertyListingForm = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editingId = searchParams.get('id');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingListingData, setEditingListingData] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     price: '',
-    areaInSquareMeters: '',
+    propertyAreaInSquareFeet: '',
+    lotAreaInSquareFeet: '',
     bedrooms: '',
     bathrooms: '',
-    type: 'APARTMENT',
+    type: '',
+    seekingBroker : false,
     street: '',
     city: '',
     state: '',
@@ -96,23 +51,102 @@ const PropertyListingForm = () => {
   const [geocodeFunction, setGeocodeFunction] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [propertyTypes, setPropertyTypes] = useState([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
+  const [typesError, setTypesError] = useState(null);
 
-  const propertyTypes = [
-    'APARTMENT',
-    'HOUSE',
-    'CONDO',
-    'TOWNHOUSE',
-    'VILLA',
-    'STUDIO',
-    'PENTHOUSE',
-    'LAND',
-  ];
+
+  // Fetch property types on component mount
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        setLoadingTypes(true);
+        setTypesError(null);
+        const types = await fetchPropertyTypes();
+        console.log('Fetched property types:', types);
+        if (Array.isArray(types)) {
+          setPropertyTypes(types);
+        } else {
+          setPropertyTypes([]);
+          setTypesError('Invalid property types format');
+        }
+      } catch (error) {
+        console.error('Error fetching property types:', error);
+        setTypesError(error.message);
+        setPropertyTypes([]);
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+    fetchTypes();
+  }, []);
+
+  // Load existing listing data if editing
+  useEffect(() => {
+    const loadListingData = async () => {
+      if (editingId) {
+        try {
+          setIsSubmitting(true);
+          const listingData = await getPropertyListingById(editingId);
+          setEditingListingData(listingData);
+          setIsEditMode(true);
+
+          // Populate form with existing data
+          setFormData({
+            title: listingData.title || '',
+            description: listingData.description || '',
+            price: listingData.price || '',
+            propertyAreaInSquareFeet: listingData.propertyAreaInSquareFeet || '',
+            lotAreaInSquareFeet: listingData.lotAreaInSquareFeet || '',
+            bedrooms: listingData.property?.bedrooms || '',
+            bathrooms: listingData.property?.bathrooms || '',
+            type: listingData.property?.propertyType || '',
+            seekingBroker: listingData.seekingBroker || false,
+            street: listingData.property?.location?.address || '',
+            city: listingData.property?.location?.city || '',
+            state: listingData.property?.location?.state || '',
+            zipCode: listingData.property?.location?.postalCode || '',
+            country: listingData.property?.location?.country || '',
+            latitude: listingData.property?.location?.latitude || null,
+            longitude: listingData.property?.location?.longitude || null,
+            amenities: listingData.property?.amenities || [],
+          });
+
+          // Set image previews
+          if (listingData.bannerImage?.imageUrl) {
+            setBannerImagePreview(listingData.bannerImage.imageUrl);
+          }
+          if (listingData.propertyImages?.length > 0) {
+            setPropertyImagePreviews(listingData.propertyImages.map(img => img.imageUrl));
+          }
+
+          if (listingData.property?.location?.latitude) {
+            setLocationFromMap(true);
+          }
+        } catch (error) {
+          console.error('Error loading listing data:', error);
+          setSubmitError('Failed to load listing data');
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+    };
+    loadListingData();
+  }, [editingId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleRadioChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === 'true',
     }));
   };
 
@@ -151,6 +185,7 @@ const PropertyListingForm = () => {
     const file = e.target.files[0];
     if (file) {
       setBannerImage(file);
+      // Show local preview for UI, but do not use for submission
       const reader = new FileReader();
       reader.onloadend = () => {
         setBannerImagePreview(reader.result);
@@ -163,7 +198,7 @@ const PropertyListingForm = () => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
       setPropertyImages((prev) => [...prev, ...files]);
-
+      // Show local previews for UI, but do not use for submission
       files.forEach((file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -208,29 +243,19 @@ const PropertyListingForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('Submit button clicked');
-    console.log('User:', user);
-    console.log('listerData:', formData.token);
-    console.log('Banner image:', bannerImage);
-    console.log('Property images:', propertyImages);
-    console.log('Form data:', formData);
-
     // Validation
-    if (!bannerImage) {
+    if (!isEditMode && !bannerImage) {
       setSubmitError('Please upload a banner image');
       return;
     }
-
-    if (propertyImages.length === 0) {
+    if (!isEditMode && propertyImages.length === 0) {
       setSubmitError('Please upload at least one property image');
       return;
     }
-
     if (!formData.latitude || !formData.longitude) {
       setSubmitError('Please select a location on the map');
       return;
     }
-
     if (!user?.id) {
       setSubmitError('You must be logged in to create a property listing');
       return;
@@ -240,46 +265,75 @@ const PropertyListingForm = () => {
     setSubmitError(null);
 
     try {
-      // Prepare listing data for API
+      // Upload images to Cloudflare and get URLs
+      let bannerImageUrl = bannerImagePreview;
+      let propertyImageUrls = propertyImagePreviews;
+
+      if (bannerImage && typeof bannerImage !== 'string') {
+        bannerImageUrl = await uploadImageToCloudflare(bannerImage);
+      }
+      if (propertyImages.length > 0 && typeof propertyImages[0] !== 'string') {
+        propertyImageUrls = await uploadMultipleImages(propertyImages);
+      }
+
+      // Prepare listing data for API (match backend DTO)
       const listingData = {
         title: formData.title,
         description: formData.description,
-        price: formData.price,
-        area: formData.areaInSquareMeters,
-        bedrooms: formData.bedrooms,
-        bathrooms: formData.bathrooms,
-        propertyType: formData.type,
+        price: parseFloat(formData.price),
         sellerId: user.id,
-        location: {
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-          address: formData.street,
-          city: formData.city,
-          state: formData.state,
-          country: formData.country,
-          postalCode: formData.zipCode,
+        bannerImage: bannerImageUrl ? { imageUrl: bannerImageUrl } : null,
+        propertyImages: propertyImageUrls.map(img => ({ imageUrl: img })),
+        property: {
+          propertyAreaSqFt: parseFloat(formData.propertyAreaInSquareFeet),
+          lotAreaSqFt: parseFloat(formData.lotAreaInSquareFeet),
+          bedrooms: parseInt(formData.bedrooms),
+          bathrooms: parseInt(formData.bathrooms),
+          type: formData.type,
+          amenities: formData.amenities,
+          location: {
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+          },
         },
-        amenities: formData.amenities,
+        managementStatus: null, // Set if needed
       };
 
-      console.log('Calling createPropertyListing with:', listingData);
+      let response;
+      if (isEditMode && editingId) {
+        const status = editingListingData?.status;
+        if (status === 'DRAFT' || status === 'REQUIRES_CHANGES') {
+          response = await updateDraftPropertyListing(
+            editingId,
+            listingData,
+            bannerImage,
+            propertyImages
+          );
+        } else if (status === 'PUBLISHED') {
+          response = await editPropertyListing(
+            editingId,
+            listingData,
+            bannerImage,
+            propertyImages
+          );
+        }
+        alert('Property listing updated successfully!');
+      } else {
+        response = await submitPropertyListing(
+          listingData,
+          bannerImage,
+          propertyImages
+        );
+        alert('Property listing created successfully!');
+      }
 
-      // Call API to create property listing (images will be uploaded first)
-      const response = await createPropertyListing(
-        listingData,
-        bannerImage,
-        propertyImages
-      );
-
-      console.log('Property listing created successfully:', response);
-
-      // Navigate to success page or property details
-      alert('Property submission created successfully!');
-      navigate('/'); // Or navigate to the property details page
-
+      navigate('/profile');
     } catch (error) {
-      console.error('Error submitting property listing:', error);
-      setSubmitError(error.message || 'Failed to create property listing. Please try again.');
+      setSubmitError(error.message || 'Failed to submit property listing. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -288,7 +342,7 @@ const PropertyListingForm = () => {
   return (
     <div className="property-listing-form-container">
       <form onSubmit={handleSubmit} className="property-listing-form">
-        <h1>Create Property Listing</h1>
+        <h1>{isEditMode ? 'Edit Property Listing' : 'Create Property Listing'}</h1>
 
         {submitError && (
           <div className="error-message" style={{
@@ -342,13 +396,24 @@ const PropertyListingForm = () => {
                 value={formData.type}
                 onChange={handleInputChange}
                 required
+                disabled={loadingTypes}
               >
-                {propertyTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
+                <option value="">
+                  {loadingTypes ? 'Loading types...' : typesError ? 'Error loading types' : 'Select a property type'}
+                </option>
+                {propertyTypes && propertyTypes.length > 0 ? (
+                  propertyTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))
+                ) : (
+                  !loadingTypes && !typesError && (
+                    <option disabled>No property types available</option>
+                  )
+                )}
               </select>
+              {typesError && <span className="error-text">{typesError}</span>}
             </div>
 
             <div className="form-group">
@@ -369,12 +434,12 @@ const PropertyListingForm = () => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="areaInSquareMeters">Area (sq m) *</label>
+              <label htmlFor="propertyAreaInSquareFeet">Property Area (sq ft) *</label>
               <input
                 type="number"
-                id="areaInSquareMeters"
-                name="areaInSquareMeters"
-                value={formData.areaInSquareMeters}
+                id="propertyAreaInSquareFeet"
+                name="propertyAreaInSquareFeet"
+                value={formData.propertyAreaInSquareFeet}
                 onChange={handleInputChange}
                 required
                 min="0"
@@ -383,6 +448,23 @@ const PropertyListingForm = () => {
               />
             </div>
 
+            <div className="form-group">
+              <label htmlFor="lotAreaInSquareFeet">Lot Area (sq ft) *</label>
+              <input
+                type="number"
+                id="lotAreaInSquareFeet"
+                name="lotAreaInSquareFeet"
+                value={formData.lotAreaInSquareFeet}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="bedrooms">Bedrooms *</label>
               <input
@@ -409,6 +491,33 @@ const PropertyListingForm = () => {
                 min="0"
                 placeholder="0"
               />
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Seeking Broker *</label>
+            <div className="radio-group">
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="seekingBroker"
+                  value="true"
+                  checked={formData.seekingBroker === true}
+                  onChange={handleRadioChange}
+                  required
+                />
+                <span>Yes</span>
+              </label>
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="seekingBroker"
+                  value="false"
+                  checked={formData.seekingBroker === false}
+                  onChange={handleRadioChange}
+                  required
+                />
+                <span>No</span>
+              </label>
             </div>
           </div>
         </section>
@@ -606,9 +715,19 @@ const PropertyListingForm = () => {
           </div>
         </section>
 
-        <button type="submit" className="submit-btn" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating Property Listing...' : 'Submit Property Listing'}
-        </button>
+        <div className="form-buttons">
+          <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            {isSubmitting ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Property Listing' : 'Submit Property Listing')}
+          </button>
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={() => navigate('/profile')}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

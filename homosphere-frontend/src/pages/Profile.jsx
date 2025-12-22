@@ -1,15 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Profile.css";
 import { fetchUserData } from "../services/userApi";
+import {
+  getAllPropertyListings,
+  getUserPropertyListings,
+  getUserPropertyListingTabs,
+  getPropertyListingById,
+  submitPropertyListing,
+  saveDraftPropertyListing,
+  updateDraftPropertyListing,
+  editPropertyListing,
+  deletePropertyListing
+} from "../services/apiPropertyListing";
 import EnterPasswordWindow from "../components/enterPasswordWindow";
 import useDeleteUser from "../hooks/useDeleteUser";
 import { supabase } from "../utils/supabase";
-import PasswordChangeWindow  from "../components/passwordChangeWindow";
+import PasswordChangeWindow from "../components/passwordChangeWindow";
+import { uploadImageToCloudflare, uploadMultipleImages } from "../services/cloudflareUpload";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { deleteUser, loading: deleteLoading, error: deleteError } = useDeleteUser();
+  const { deleteUser, loading: deleteLoading } = useDeleteUser();
 
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -38,6 +50,16 @@ export default function Profile() {
 
   const [tempUser, setTempUser] = useState({ ...user });
 
+  // Property Dashboard state
+  const [propertyTabs, setPropertyTabs] = useState(["ALL"]);
+  const [userListings, setUserListings] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("ALL");
+  const [listingsLoading, setListingsLoading] = useState(false);
+  const [listingsError, setListingsError] = useState(null);
+
+  // Track which listing is being edited
+  const [editingListingId, setEditingListingId] = useState(null);
+
   // Fetch user data from API
   useEffect(() => {
     const getUser = async () => {
@@ -64,6 +86,53 @@ export default function Profile() {
     };
     getUser();
   }, [navigate]);
+
+  // Fetch property tabs once user id is known
+  useEffect(() => {
+    const loadTabs = async () => {
+      if (!user?.id) return;
+      try {
+        const tabs = await getUserPropertyListingTabs(user.id);
+        // Filter out null/undefined values and ensure we have valid strings
+        const validTabs = Array.isArray(tabs) ? tabs.filter(tab => tab != null && tab !== '') : [];
+        console.log('Loaded property tabs:', validTabs);
+        setPropertyTabs(["ALL", ...validTabs]);
+      } catch (err) {
+        console.error("Error fetching property tabs:", err);
+        setPropertyTabs(["ALL"]); // fallback to ALL only
+      }
+    };
+    loadTabs();
+  }, [user?.id]);
+
+  // Fetch user's property listings once user id is known
+  useEffect(() => {
+    const loadListings = async () => {
+      if (!user?.id) return;
+      try {
+        setListingsLoading(true);
+        setListingsError(null);
+        // Fetch all listings for this user (including drafts)
+        const listings = await getUserPropertyListings(user.id);
+        console.log('User property listings fetched:', listings);
+        setUserListings(listings || []);
+      } catch (err) {
+        console.error("Error fetching property listings:", err);
+        setListingsError(err.message || "Failed to load listings");
+        setUserListings([]);
+      } finally {
+        setListingsLoading(false);
+      }
+    };
+    loadListings();
+  }, [user?.id]);
+
+  const filteredListings = useMemo(() => {
+    if (selectedTab === "ALL") return userListings;
+    return userListings.filter((l) => {
+      return l?.status === selectedTab;
+    });
+  }, [userListings, selectedTab]);
 
   const handleChange = (e) => {
     setTempUser({ ...tempUser, [e.target.name]: e.target.value });
@@ -158,7 +227,7 @@ export default function Profile() {
     setSuccessMessage("");
   };
 
-  const handleDeleteAccount = async (password) => {
+  const handleDeleteAccount = async () => {
     try {
       const result = await deleteUser();
 
@@ -169,7 +238,7 @@ export default function Profile() {
         setError(result.error || 'Failed to delete account');
         setShowDeleteModal(false);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to delete account');
       setShowDeleteModal(false);
     }
@@ -177,20 +246,46 @@ export default function Profile() {
 
   const handlePasswordChange = async (newPassword) => {
     try {
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password: newPassword,  // New password
       });
       if (error) {
-        setPasswordError(error.message);
+        setError(error.message);
         return;
       }
       setError(null);
       setSuccessMessage('Password changed successfully!');
       setShowPasswordModal(false);
-    } catch (err) {
+    } catch {
       setError('Failed to change password');
     }
-  }
+  };
+
+  // Property listing handlers
+  const handleCreateListing = () => {
+    navigate('/property-listing-form');
+  };
+
+  const handleEditListing = (listing) => {
+    navigate(`/property-listing-form?id=${listing.id}`);
+  };
+
+  const handleDeleteListing = async (listingId) => {
+    if (!confirm("Are you sure you want to delete this listing?")) return;
+
+    try {
+      await deletePropertyListing(listingId);
+      setUserListings(prev => prev.filter(l => l.id !== listingId));
+      setSuccessMessage("Listing deleted successfully");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      setError(`Failed to delete listing: ${err.message}`);
+    }
+  };
+
+
+
+
 
   if (loading || deleteLoading) {
     return (
@@ -328,6 +423,144 @@ export default function Profile() {
           />
         </div>
 
+        <div className="section">
+          <h3>Property Dashboard</h3>
+
+          <div className="property-dashboard-header">
+            <div className="property-tabs">
+              {propertyTabs.filter(tab => tab != null).map((tab) => (
+                <button
+                  key={tab}
+                  className={`property-tab ${selectedTab === tab ? "active" : ""}`}
+                  onClick={() => setSelectedTab(tab)}
+                >
+                  {String(tab).replace(/_/g, " ")}
+                </button>
+              ))}
+            </div>
+            <button className="create-listing-btn" onClick={handleCreateListing}>
+              + Create Listing
+            </button>
+          </div>
+
+          {listingsLoading && (
+            <div className="loading">Loading your listings...</div>
+          )}
+          {listingsError && (
+            <div className="error-message">{listingsError}</div>
+          )}
+
+          {!listingsLoading && !listingsError && (
+            <div className="property-list">
+              {filteredListings.length === 0 ? (
+                <div className="empty-state">No listings found in {selectedTab} status.</div>
+              ) : (
+                <div className="properties-grid">
+                  {filteredListings.map((l) => {
+                    const bannerUrl = l?.bannerImage?.imageUrl;
+                    const title = l?.title || "Untitled";
+                    const description = l?.description || "";
+                    const price = typeof l?.price === "number" ? l.price : parseFloat(l?.price || 0);
+                    const bedrooms = l?.property?.bedrooms || l?.bedrooms || 0;
+                    const bathrooms = l?.property?.bathrooms || l?.bathrooms || 0;
+                    const area = l?.property?.areaInSquareMeters || l?.propertyAreaInSquareFeet || 0;
+                    const type = l?.property?.propertyType || l?.propertyType || "";
+                    const city = l?.property?.location?.city || l?.city || "";
+                    const status = l?.status || "UNKNOWN";
+
+                    // Determine if can edit based on status
+                    const canEdit = ["PUBLISHED"].includes(status);
+                    const canEditDraft = ["DRAFT", "REQUIRES_CHANGES"].includes(status);
+
+                    return (
+                      <div className="property-card" key={l?.id}>
+                        {bannerUrl && (
+                          <div className="property-image">
+                            <img src={bannerUrl} alt={title} />
+                            <span className={`status-badge status-${status.toLowerCase()}`}>
+                              {status.replace(/_/g, " ")}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="property-content">
+                          <div className="property-price">${price.toLocaleString()}</div>
+                          <h3 className="property-title">{title}</h3>
+                          <p className="property-location">{city || "Location TBA"}</p>
+                          <p className="property-type">{type}</p>
+
+                          {description && (
+                            <p className="property-description">{description.substring(0, 100)}...</p>
+                          )}
+
+                          <div className="property-features">
+                            {bedrooms > 0 && (
+                              <span className="feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                {bedrooms} beds
+                              </span>
+                            )}
+                            {bathrooms > 0 && (
+                              <span className="feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M2 7h20M4 11h1v8c0 1-1 2-2 2s-2-1-2-2v-8zm14 0h1v8c0 1-1 2-2 2s-2-1-2-2v-8z"></path>
+                                </svg>
+                                {bathrooms} baths
+                              </span>
+                            )}
+                            {area > 0 && (
+                              <span className="feature">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="3" y="3" width="18" height="18"></rect>
+                                </svg>
+                                {area.toLocaleString()} sqft
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="property-actions">
+                            <button
+                              className="action-btn view-btn"
+                              onClick={() => navigate(`/property/${l?.id}`)}
+                            >
+                              View Details
+                            </button>
+                            {canEdit && (
+                              <button
+                                className="action-btn edit-btn"
+                                onClick={() => handleEditListing(l)}
+                              >
+                                Edit
+                              </button>
+                            )}
+                            {canEditDraft && (
+                              <button
+                                className="action-btn edit-draft-btn"
+                                onClick={() => handleEditListing(l)}
+                              >
+                                Edit Draft
+                              </button>
+                            )}
+                            <button
+                              className="action-btn delete-btn"
+                              onClick={() => handleDeleteListing(l?.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {error && <div className="error-message">{error}</div>}
         {successMessage && <div className="success-message">{successMessage}</div>}
 
@@ -346,10 +579,10 @@ export default function Profile() {
             </>
           ) : (
             <>
-              <button className="save-btn" onClick={saveChanges}>
-                Save
+              <button className="save-btn" onClick={saveChanges} disabled={saving}>
+                {saving ? "Saving..." : "Save"}
               </button>
-              <button className="cancel-btn" onClick={cancelChanges}>
+              <button className="cancel-btn" onClick={cancelChanges} disabled={saving}>
                 Cancel
               </button>
             </>
@@ -369,9 +602,7 @@ export default function Profile() {
           onClose={() => setShowPasswordModal(false)}
           onSubmit={handlePasswordChange}
         />
-
       )}
     </div>
   );
 }
-

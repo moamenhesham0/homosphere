@@ -1,19 +1,19 @@
 package com.homosphere.backend.model.property;
 
-import java.time.Year;
-import java.util.List;
-import java.util.UUID;
-
+import com.homosphere.backend.enums.PropertyCondition;
+import com.homosphere.backend.enums.PropertyType;
 import com.homosphere.backend.model.Amenity;
 import com.homosphere.backend.model.Location;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import com.homosphere.backend.enums.PropertyCondition;
-import com.homosphere.backend.enums.PropertyType;
-
-import jakarta.persistence.*;
-import lombok.*;
+import java.time.Year;
+import java.util.List;
+import java.util.UUID;
 
 
 @Entity
@@ -28,8 +28,11 @@ public class Property {
     @Column(name = "property_id")
     private UUID propertyId;
 
-    @Column(name = "area_in_square_feet")
-    private Double areaInSquareFeet;
+    @Column(name = "property_area_sq_ft")
+    private Double propertyAreaSqFt;
+
+    @Column(name = "lot_area_sq_ft")
+    private Double lotAreaSqFt;
 
     @Column(name = "bedrooms")
     private Integer bedrooms;

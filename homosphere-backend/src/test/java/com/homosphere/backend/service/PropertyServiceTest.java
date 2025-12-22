@@ -1,7 +1,7 @@
 package com.homosphere.backend.service;
 
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.mapper.CompactPropertyListingMapper;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.mapper.PropertyListingMapper;
 import com.homosphere.backend.model.Location;
 import com.homosphere.backend.model.property.Property;
 import com.homosphere.backend.model.property.PropertyListing;
@@ -32,7 +32,7 @@ class PropertyServiceTest {
     private PropertyRepository propertyRepository;
 
     @Mock
-    private CompactPropertyListingMapper compactPropertyListingMapper;
+    private PropertyListingMapper propertyListingMapper;
 
     @InjectMocks
     private PropertyService propertyService;
@@ -81,7 +81,7 @@ class PropertyServiceTest {
         
         when(propertyRepository.searchPropertyListings(eq(query), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -92,7 +92,7 @@ class PropertyServiceTest {
         assertEquals(1, result.getContent().size());
         assertEquals("3 Bed Apartment", result.getContent().get(0).getTitle());
         verify(propertyRepository, times(1)).searchPropertyListings(query, pageable);
-        verify(compactPropertyListingMapper, times(1)).toCompactResponse(propertyListing);
+        verify(propertyListingMapper, times(1)).toCompactResponse(propertyListing);
     }
 
     @Test
@@ -158,7 +158,7 @@ class PropertyServiceTest {
         
         when(propertyRepository.searchPropertyListings(eq(query), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -168,7 +168,7 @@ class PropertyServiceTest {
         assertNotNull(result);
         assertEquals(2, result.getContent().size());
         verify(propertyRepository, times(1)).searchPropertyListings(query, pageable);
-        verify(compactPropertyListingMapper, times(2)).toCompactResponse(any(PropertyListing.class));
+        verify(propertyListingMapper, times(2)).toCompactResponse(any(PropertyListing.class));
     }
 
     @Test
@@ -188,7 +188,7 @@ class PropertyServiceTest {
             anyInt(), anyInt(), anyDouble(), anyDouble(), 
             anyInt(), anyInt(), anyString(), anyString(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -212,7 +212,7 @@ class PropertyServiceTest {
             isNull(), isNull(), isNull(), isNull(), 
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -236,7 +236,7 @@ class PropertyServiceTest {
         when(propertyRepository.filterPropertyListings(
             any(), any(), any(), any(), anyInt(), anyInt(), any(), any(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -279,7 +279,7 @@ class PropertyServiceTest {
             eq(bedrooms), isNull(), isNull(), isNull(), 
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -305,7 +305,7 @@ class PropertyServiceTest {
             isNull(), isNull(), eq(minPrice), eq(maxPrice), 
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act

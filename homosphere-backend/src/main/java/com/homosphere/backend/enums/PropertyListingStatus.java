@@ -14,7 +14,6 @@ package com.homosphere.backend.enums;
  * </ul>
  */
 public enum PropertyListingStatus {
-    DRAFT,
     PENDING,
     REJECTED,
     REQUIRES_CHANGES,

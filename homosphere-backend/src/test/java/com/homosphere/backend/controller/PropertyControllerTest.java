@@ -1,6 +1,6 @@
 package com.homosphere.backend.controller;
 
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.service.PropertyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 

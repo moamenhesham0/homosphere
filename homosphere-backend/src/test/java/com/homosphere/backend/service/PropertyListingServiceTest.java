@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.dto.LocationRequest;
 import com.homosphere.backend.dto.property.request.PropertyImageRequest;
 import com.homosphere.backend.dto.property.request.PropertyListingRequest;
@@ -34,7 +34,6 @@ import com.homosphere.backend.dto.property.request.PropertyRequest;
 import com.homosphere.backend.enums.PropertyCondition;
 import com.homosphere.backend.enums.PropertyListingStatus;
 import com.homosphere.backend.enums.PropertyType;
-import com.homosphere.backend.mapper.CompactPropertyListingMapper;
 import com.homosphere.backend.mapper.LocationMapper;
 import com.homosphere.backend.mapper.PropertyImageMapper;
 import com.homosphere.backend.mapper.PropertyListingMapper;
@@ -66,9 +65,6 @@ class PropertyListingServiceTest {
 
     @Mock
     private PropertyListingMapper propertyListingMapper;
-
-    @Mock
-    private CompactPropertyListingMapper compactPropertyListingMapper;
 
     @Mock
     private PropertyMapper propertyMapper;
@@ -125,18 +121,20 @@ class PropertyListingServiceTest {
 
         // Create property DTO
         PropertyRequest propertyRequest = new PropertyRequest();
-        propertyRequest.setAreaInSquareMeters(100.0);
+        propertyRequest.setPropertyAreaSqFt(100.0);
+        propertyRequest.setLotAreaSqFt(200.0);
         propertyRequest.setBedrooms(3);
         propertyRequest.setBathrooms(2);
-        propertyRequest.setPropertyType(PropertyType.APARTMENT);
-        propertyRequest.setPropertyCondition(PropertyCondition.GOOD);
+        propertyRequest.setType(PropertyType.APARTMENT);
+        propertyRequest.setCondition(PropertyCondition.GOOD);
         propertyRequest.setLocation(locationRequest);
         propertyRequest.setAmenities(new ArrayList<>());
 
         // Create property entity
         property = new Property();
         property.setPropertyId(propertyId);
-        property.setAreaInSquareMeters(100.0);
+        property.setPropertyAreaSqFt(100.0);
+        property.setLotAreaSqFt(200.0);
         property.setBedrooms(3);
         property.setBathrooms(2);
         property.setType(PropertyType.APARTMENT);
@@ -163,7 +161,6 @@ class PropertyListingServiceTest {
         propertyListingRequest.setProperty(propertyRequest);
         propertyListingRequest.setBannerImage(bannerImageRequest);
         propertyListingRequest.setPropertyImages(propertyImageRequests);
-        propertyListingRequest.setPropertyListingStatus(PropertyListingStatus.PUBLISHED);
 
         // Create property listing entity
         propertyListing = new PropertyListing();
@@ -173,7 +170,7 @@ class PropertyListingServiceTest {
         propertyListing.setPrice(500000.0);
         propertyListing.setSeller(seller);
         propertyListing.setProperty(property);
-        propertyListing.setPropertyListingStatus(PropertyListingStatus.PUBLISHED);
+        propertyListing.setStatus(PropertyListingStatus.PUBLISHED);
         propertyListing.setViews(0);
         propertyListing.setPublicationDate(LocalDateTime.now());
         propertyListing.setLastUpdatedDate(LocalDateTime.now());
@@ -200,7 +197,7 @@ class PropertyListingServiceTest {
         when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
 
         // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
+        PropertyListingResponse result = propertyListingService.submitPropertyListing(propertyListingRequest);
 
         // Assert
         assertNotNull(result);
@@ -219,7 +216,7 @@ class PropertyListingServiceTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () ->
-            propertyListingService.createPropertyListing(propertyListingRequest)
+            propertyListingService.submitPropertyListing(propertyListingRequest)
         );
         verify(propertyListingRepository, never()).save(any());
     }
@@ -235,7 +232,7 @@ class PropertyListingServiceTest {
         when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
 
         // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
+        PropertyListingResponse result = propertyListingService.submitPropertyListing(propertyListingRequest);
 
         // Assert
         assertNotNull(result);
@@ -256,7 +253,7 @@ class PropertyListingServiceTest {
         when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
 
         // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
+        PropertyListingResponse result = propertyListingService.submitPropertyListing(propertyListingRequest);
 
         // Assert
         assertNotNull(result);
@@ -278,7 +275,7 @@ class PropertyListingServiceTest {
         when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
 
         // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
+        PropertyListingResponse result = propertyListingService.submitPropertyListing(propertyListingRequest);
 
         // Assert
         assertNotNull(result);
@@ -287,7 +284,6 @@ class PropertyListingServiceTest {
     @Test
     void createPropertyListing_DefaultStatus_Success() {
         // Arrange
-        propertyListingRequest.setPropertyListingStatus(null);
         when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
         when(propertyMapper.toEntity(any())).thenReturn(property);
         when(locationMapper.toEntity(any())).thenReturn(location);
@@ -297,7 +293,7 @@ class PropertyListingServiceTest {
         when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
 
         // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
+        PropertyListingResponse result = propertyListingService.submitPropertyListing(propertyListingRequest);
 
         // Assert
         assertNotNull(result);
@@ -339,7 +335,7 @@ class PropertyListingServiceTest {
         compactResponse.setTitle("Beautiful Apartment");
 
         when(propertyListingRepository.findAll()).thenReturn(listings);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
                 .thenReturn(compactResponse);
 
         // Act
@@ -362,77 +358,6 @@ class PropertyListingServiceTest {
         // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void updatePropertyListing_Success() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.updatePropertyListing(listingId, propertyListingRequest);
-
-        // Assert
-        assertNotNull(result);
-        verify(propertyListingRepository, times(1)).findById(listingId);
-        verify(propertyListingRepository, times(1)).save(any(PropertyListing.class));
-    }
-
-    @Test
-    void updatePropertyListing_NotFound_ThrowsException() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () ->
-            propertyListingService.updatePropertyListing(listingId, propertyListingRequest)
-        );
-    }
-
-    @Test
-    void updatePropertyListing_WithNewLocation_Success() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        propertyListing.getProperty().setLocation(null);
-
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        when(locationMapper.toEntity(any())).thenReturn(location);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.updatePropertyListing(listingId, propertyListingRequest);
-
-        // Assert
-        assertNotNull(result);
-        verify(locationRepository, times(1)).save(any(Location.class));
-    }
-
-    @Test
-    void updatePropertyListing_WithPropertyImages_Success() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyImageMapper.toEntity(any(PropertyImageRequest.class))).thenReturn(new PropertyImage());
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.updatePropertyListing(listingId, propertyListingRequest);
-
-        // Assert
-        assertNotNull(result);
-        verify(propertyImageMapper, atLeastOnce()).toEntity(any(PropertyImageRequest.class));
     }
 
     @Test

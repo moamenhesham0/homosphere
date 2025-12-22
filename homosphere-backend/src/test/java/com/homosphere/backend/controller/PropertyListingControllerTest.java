@@ -26,7 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.dto.property.request.PropertyListingRequest;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.service.PropertyListingService;
@@ -69,44 +69,44 @@ class PropertyListingControllerTest {
     }
 
     @Test
-    void createPropertyListing_WithValidRequest_ReturnsCreated() {
+    void submitPropertyListing_WithValidRequest_ReturnsCreated() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.createPropertyListing(any(PropertyListingRequest.class)))
+        when(propertyListingService.submitPropertyListing(any(PropertyListingRequest.class)))
             .thenReturn(response);
 
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
+        ResponseEntity<?> result = propertyListingController.submitPropertyListing(request);
 
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         assertNotNull(result.getBody());
         assertTrue(result.getBody() instanceof PropertyListingResponse);
-        verify(propertyListingService, times(1)).createPropertyListing(request);
+        verify(propertyListingService, times(1)).submitPropertyListing(request);
     }
 
     @Test
-    void createPropertyListing_WithUnauthenticated_ReturnsUnauthorized() {
+    void submitPropertyListing_WithUnauthenticated_ReturnsUnauthorized() {
         when(authentication.isAuthenticated()).thenReturn(false);
 
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
+        ResponseEntity<?> result = propertyListingController.submitPropertyListing(request);
 
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-        verify(propertyListingService, never()).createPropertyListing(any());
+        verify(propertyListingService, never()).submitPropertyListing(any());
     }
 
     @Test
-    void createPropertyListing_WithNullAuthentication_ReturnsUnauthorized() {
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, null);
+    void submitPropertyListing_WithNullAuthentication_ReturnsUnauthorized() {
+        ResponseEntity<?> result = propertyListingController.submitPropertyListing(request);
 
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-        verify(propertyListingService, never()).createPropertyListing(any());
+        verify(propertyListingService, never()).submitPropertyListing(any());
     }
 
     @Test
-    void createPropertyListing_WithIllegalArgument_ReturnsBadRequest() {
+    void submitPropertyListing_WithIllegalArgument_ReturnsBadRequest() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.createPropertyListing(any(PropertyListingRequest.class)))
+        when(propertyListingService.submitPropertyListing(any(PropertyListingRequest.class)))
             .thenThrow(new IllegalArgumentException("Invalid request"));
 
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
+        ResponseEntity<?> result = propertyListingController.submitPropertyListing(request);
 
         assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
         Map<String, Object> body = (Map<String, Object>) result.getBody();
@@ -114,12 +114,12 @@ class PropertyListingControllerTest {
     }
 
     @Test
-    void createPropertyListing_WithException_ReturnsInternalServerError() {
+    void submitPropertyListing_WithException_ReturnsInternalServerError() {
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.createPropertyListing(any(PropertyListingRequest.class)))
+        when(propertyListingService.submitPropertyListing(any(PropertyListingRequest.class)))
             .thenThrow(new RuntimeException("Database error"));
 
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
+        ResponseEntity<?> result = propertyListingController.submitPropertyListing(request);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         Map<String, Object> body = (Map<String, Object>) result.getBody();
@@ -131,7 +131,7 @@ class PropertyListingControllerTest {
         List<CompactPropertyListingResponse> listings = Arrays.asList(compactResponse);
         when(propertyListingService.getAllPropertyListings()).thenReturn(listings);
 
-        ResponseEntity<?> result = propertyListingController.getAllPropertyListings();
+        ResponseEntity<?> result = propertyListingController.getPropertyListingStore();
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertNotNull(result.getBody());
@@ -144,7 +144,7 @@ class PropertyListingControllerTest {
         when(propertyListingService.getAllPropertyListings())
             .thenThrow(new RuntimeException("Database error"));
 
-        ResponseEntity<?> result = propertyListingController.getAllPropertyListings();
+        ResponseEntity<?> result = propertyListingController.getPropertyListingStore();
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
         Map<String, Object> body = (Map<String, Object>) result.getBody();
@@ -185,57 +185,13 @@ class PropertyListingControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
     }
 
-    @Test
-    void updatePropertyListing_WithValidRequest_ReturnsUpdatedProperty() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.updatePropertyListing(eq(propertyListingId), any(PropertyListingRequest.class)))
-            .thenReturn(response);
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertNotNull(result.getBody());
-        verify(propertyListingService, times(1)).updatePropertyListing(propertyListingId, request);
-    }
-
-    @Test
-    void updatePropertyListing_WithUnauthenticated_ReturnsUnauthorized() {
-        when(authentication.isAuthenticated()).thenReturn(false);
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-        verify(propertyListingService, never()).updatePropertyListing(any(), any());
-    }
-
-    @Test
-    void updatePropertyListing_WithInvalidId_ReturnsNotFound() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.updatePropertyListing(eq(propertyListingId), any(PropertyListingRequest.class)))
-            .thenThrow(new IllegalArgumentException("Property not found"));
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-    }
-
-    @Test
-    void updatePropertyListing_WithException_ReturnsInternalServerError() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.updatePropertyListing(eq(propertyListingId), any(PropertyListingRequest.class)))
-            .thenThrow(new RuntimeException("Database error"));
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-    }
 
     @Test
     void deletePropertyListing_WithValidId_ReturnsOk() {
         when(authentication.isAuthenticated()).thenReturn(true);
         doNothing().when(propertyListingService).deletePropertyListing(propertyListingId);
 
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
+        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         Map<String, Object> body = (Map<String, Object>) result.getBody();
@@ -247,7 +203,7 @@ class PropertyListingControllerTest {
     void deletePropertyListing_WithUnauthenticated_ReturnsUnauthorized() {
         when(authentication.isAuthenticated()).thenReturn(false);
 
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
+        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId);
 
         assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
         verify(propertyListingService, never()).deletePropertyListing(any());
@@ -259,7 +215,7 @@ class PropertyListingControllerTest {
         doThrow(new IllegalArgumentException("Property not found"))
             .when(propertyListingService).deletePropertyListing(propertyListingId);
 
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
+        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId);
 
         assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
     }
@@ -270,7 +226,7 @@ class PropertyListingControllerTest {
         doThrow(new RuntimeException("Database error"))
             .when(propertyListingService).deletePropertyListing(propertyListingId);
 
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
+        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
     }

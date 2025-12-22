@@ -16,12 +16,13 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PropertyRequest {
-    private Double areaInSquareMeters;
+    private Double propertyAreaSqFt;
+    private Double lotAreaSqFt;
     private Integer bedrooms;
     private Integer bathrooms;
-    private PropertyType propertyType;
+    private PropertyType type;
     private LocationRequest location;
     private Year yearBuilt;
-    private PropertyCondition propertyCondition;
+    private PropertyCondition condition;
     private List<AmenityDTO> amenities;
 }
