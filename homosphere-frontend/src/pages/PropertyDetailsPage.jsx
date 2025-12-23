@@ -7,10 +7,10 @@ const API_BASE_URL = 'http://localhost:8080/api/properties';
 
 const formatPrice = (price) => {
     if (price === null || price === undefined) return 'Price N/A';
-    return new Intl.NumberFormat('en-US', { 
-        style: 'currency', 
-        currency: 'USD', 
-        minimumFractionDigits: 0 
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0
     }).format(price);
 };
 
@@ -49,13 +49,13 @@ const PropertyDetailsPage = () => {
             <div className="loading-spinner">Loading property...</div>
         </div>
     );
-    
+
     if (error) return (
         <div className="property-details-page">
             <div className="error-message">{error}</div>
         </div>
     );
-    
+
     if (!property) return (
         <div className="property-details-page">
             <div className="no-results">Property not found.</div>
@@ -70,20 +70,20 @@ const PropertyDetailsPage = () => {
 
     // Combine banner image with property images for the gallery
     const allImages = [];
-    
+
     // Add banner image first if it exists
     if (bannerImage.imageUrl) {
-        allImages.push({ 
-            imageUrl: bannerImage.imageUrl, 
+        allImages.push({
+            imageUrl: bannerImage.imageUrl,
             isBanner: true,
             alt: 'Banner Image'
         });
     }
-    
+
     // Add all property images
     propertyImages.forEach((img, index) => {
-        allImages.push({ 
-            imageUrl: img.imageUrl, 
+        allImages.push({
+            imageUrl: img.imageUrl,
             isBanner: false,
             alt: `Property Image ${index + 1}`
         });
@@ -122,16 +122,16 @@ const PropertyDetailsPage = () => {
                     <div className="main-image-container">
                         {hasImages ? (
                             <>
-                                <img 
-                                    src={currentImage.imageUrl} 
+                                <img
+                                    src={currentImage.imageUrl}
                                     alt={currentImage.alt}
                                     className="main-property-image"
                                 />
-                                
+
                                 {/* Image Navigation Arrows */}
                                 {allImages.length > 1 && (
                                     <>
-                                        <button 
+                                        <button
                                             className="image-nav-btn prev-btn"
                                             onClick={handlePrevImage}
                                             disabled={selectedImageIndex === 0}
@@ -140,7 +140,7 @@ const PropertyDetailsPage = () => {
                                                 <polyline points="15 18 9 12 15 6"></polyline>
                                             </svg>
                                         </button>
-                                        <button 
+                                        <button
                                             className="image-nav-btn next-btn"
                                             onClick={handleNextImage}
                                             disabled={selectedImageIndex === allImages.length - 1}
@@ -181,13 +181,13 @@ const PropertyDetailsPage = () => {
                         <div className="image-gallery-container">
                             <div className="image-gallery-scroll">
                                 {allImages.map((img, index) => (
-                                    <div 
+                                    <div
                                         key={index}
                                         className={`gallery-thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
                                         onClick={() => handleImageSelect(index)}
                                     >
-                                        <img 
-                                            src={img.imageUrl} 
+                                        <img
+                                            src={img.imageUrl}
                                             alt={img.alt}
                                         />
                                         {img.isBanner && (
@@ -263,9 +263,21 @@ const PropertyDetailsPage = () => {
                             </svg>
                             <div>
                                 <span className="property-feature-value">
-                                    {propertyData.areaInSquareMeters ?? 'N/A'}
+                                    {property?.property?.propertyAreaSqFt ?? 'N/A'}
                                 </span>
-                                <span className="property-feature-label">Area (m²)</span>
+                                <span className="property-feature-label">Property Area (sq ft)</span>
+                            </div>
+                        </div>
+
+                        <div className="property-feature-item">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            </svg>
+                            <div>
+                                <span className="property-feature-value">
+                                    {property?.property?.lotAreaSqFt ?? 'N/A'}
+                                </span>
+                                <span className="property-feature-label">Lot Area (sq ft)</span>
                             </div>
                         </div>
 
@@ -318,10 +330,6 @@ const PropertyDetailsPage = () => {
                         <table className="property-attributes-table">
                             <tbody>
                                 <tr>
-                                    <td>Listing Status</td>
-                                    <td>{property.propertyListingStatus || 'N/A'}</td>
-                                </tr>
-                                <tr>
                                     <td>Address</td>
                                     <td>
                                         {location.street && `${location.street}, `}
@@ -347,8 +355,12 @@ const PropertyDetailsPage = () => {
                                     <td>{propertyData.bathrooms ?? 'N/A'}</td>
                                 </tr>
                                 <tr>
-                                    <td>Area</td>
-                                    <td>{propertyData.areaInSquareMeters ? `${propertyData.areaInSquareMeters} m²` : 'N/A'}</td>
+                                    <td>Property Area</td>
+                                    <td>{property?.property?.propertyAreaSqFt ? `${property.property.propertyAreaSqFt} sq ft` : 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Lot Area</td>
+                                    <td>{property?.property?.lotAreaSqFt ? `${property.property.lotAreaSqFt} sq ft` : 'N/A'}</td>
                                 </tr>
                                 <tr>
                                     <td>Condition</td>
@@ -419,9 +431,9 @@ const PropertyDetailsPage = () => {
             {/* Viewing Request Form Modal */}
             {showRequestForm && (
                 <div className="modal-overlay" onClick={() => setShowRequestForm(false)}>
-                    <RequestViewForm 
-                        propertyId={id} 
-                        onClose={() => setShowRequestForm(false)} 
+                    <RequestViewForm
+                        propertyId={id}
+                        onClose={() => setShowRequestForm(false)}
                     />
                 </div>
             )}

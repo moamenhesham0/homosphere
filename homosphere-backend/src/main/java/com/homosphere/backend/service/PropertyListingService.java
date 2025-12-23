@@ -1,122 +1,92 @@
 package com.homosphere.backend.service;
 
-import java.time.LocalDateTime;
+import com.homosphere.backend.dto.property.request.PropertyListingDraftRequest;
+import com.homosphere.backend.dto.property.request.PropertyListingEditRequest;
+import com.homosphere.backend.dto.property.request.PropertyListingRequest;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingPublicResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
+import com.homosphere.backend.enums.PropertyListingStatus;
+import com.homosphere.backend.mapper.PropertyListingMapper;
+import com.homosphere.backend.model.property.PropertyListing;
+import com.homosphere.backend.repository.PropertyListingRepository;
+import com.homosphere.backend.repository.PropertySubmissionReviewRepository;
+import com.homosphere.backend.updater.PropertyListingUpdater;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.PropertyListingRequest;
-import com.homosphere.backend.dto.PropertyListingResponse;
-import com.homosphere.backend.enums.PropertyListingStatus;
-import com.homosphere.backend.mapper.CompactPropertyListingMapper;
-import com.homosphere.backend.mapper.LocationMapper;
-import com.homosphere.backend.mapper.PropertyImageMapper;
-import com.homosphere.backend.mapper.PropertyListingMapper;
-import com.homosphere.backend.mapper.PropertyMapper;
-import com.homosphere.backend.model.Location;
-import com.homosphere.backend.model.Property;
-import com.homosphere.backend.model.PropertyImage;
-import com.homosphere.backend.model.PropertyListing;
-import com.homosphere.backend.model.User;
-import com.homosphere.backend.repository.LocationRepository;
-import com.homosphere.backend.repository.PropertyListingRepository;
-import com.homosphere.backend.repository.PropertyRepository;
-import com.homosphere.backend.repository.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 public class PropertyListingService {
 
-    @Autowired
-    private PropertyService propertyService;
+    private final PropertyListingRepository propertyListingRepository;
 
-    @Autowired
-    private PropertyListingRepository propertyListingRepository;
+    private final PropertyListingMapper propertyListingMapper;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final PropertyListingUpdater propertyListingUpdater;
 
-    @Autowired
-    private PropertyRepository propertyRepository;
+    private final PropertySubmissionReviewRepository propertySubmissionReviewRepository;
 
-    @Autowired
-    private LocationRepository locationRepository;
-
-    @Autowired
-    private PropertyListingMapper propertyListingMapper;
-
-    @Autowired
-    private CompactPropertyListingMapper compactPropertyListingMapper;
-
-    @Autowired
-    private PropertyMapper propertyMapper;
-
-    @Autowired
-    private LocationMapper locationMapper;
-
-    @Autowired
-    private PropertyImageMapper propertyImageMapper;
+    private final PropertySubmissionReviewService propertySubmissionReviewService;
 
     @Transactional
-    public PropertyListingResponse createPropertyListing(PropertyListingRequest request) {
-        // Validate seller exists
-        User seller = userRepository.findById(request.getSellerId())
-                .orElseThrow(() -> new IllegalArgumentException("Seller not found with ID: " + request.getSellerId()));
+    protected PropertyListing createPropertyListing(PropertyListingRequest request) {
+        PropertyListing propertyListing;
+        try {
+            propertyListing = propertyListingUpdater.createWithRelationLinks(request);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        return propertyListingRepository.save(propertyListing);
+    }
 
-        // Create Property entity
-        Property property = propertyMapper.toEntity(request.getProperty());
+    @Transactional
+    public PropertyListingResponse submitPropertyListing(PropertyListingRequest request) {
+        PropertyListing propertyListing = createPropertyListing(request);
+        propertyListing.setStatusPending();
+        return propertyListingMapper.toResponse(propertyListingRepository.save(propertyListing));
+    }
 
-        // Create and save Location
-        if (request.getProperty().getLocation() != null) {
-            Location location = locationMapper.toEntity(request.getProperty().getLocation());
-            location = locationRepository.save(location);
-            property.setLocation(location);
+    @Transactional
+    public PropertyListingResponse saveDraftPropertyListing(PropertyListingRequest request) {
+        PropertyListing propertyListing = createPropertyListing(request);
+        return propertyListingMapper.toResponse(propertyListingRepository.save(propertyListing));
+    }
+
+    @Transactional
+    public PropertyListingResponse resubmitPropertyListing(PropertyListingDraftRequest draftRequest) {
+        final UUID propertyListingId = draftRequest.getPropertyListingId();
+        PropertyListing propertyListing = propertyListingRepository.findById(propertyListingId)
+                .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + propertyListingId));
+
+        try {
+            propertyListingUpdater.applyDraft(propertyListing, draftRequest);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        propertyListing.setStatusPending();
+        return propertyListingMapper.toResponse(propertyListing);
+    }
+
+    @Transactional
+    public PropertyListingResponse editPropertyListing(PropertyListingEditRequest editRequest) {
+        final UUID propertyListingId = editRequest.getPropertyListingId();
+        PropertyListing propertyListing = propertyListingRepository.findById(propertyListingId)
+                .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + propertyListingId));
+
+        try {
+            propertyListingUpdater.applyEdit(propertyListing, editRequest);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
         }
 
-        // Save Property
-        property = propertyRepository.save(property);
-
-        // Create PropertyListing entity (without images first to avoid FK issues)
-        PropertyListing propertyListing = new PropertyListing();
-        propertyListing.setTitle(request.getTitle());
-        propertyListing.setDescription(request.getDescription());
-        propertyListing.setPrice(request.getPrice());
-        propertyListing.setSeller(seller);
-        propertyListing.setProperty(property);
-        propertyListing.setPropertyListingStatus(request.getPropertyListingStatus() != null ?
-            request.getPropertyListingStatus() : PropertyListingStatus.PENDING);
-        propertyListing.setViews(0);
-        propertyListing.setPublicationDate(LocalDateTime.now());
-        propertyListing.setLastUpdatedDate(LocalDateTime.now());
-
-        // Handle banner image if provided
-        if (request.getBannerImage() != null) {
-            PropertyImage bannerImage = propertyImageMapper.toEntity(request.getBannerImage());
-            propertyListing.setBannerImage(bannerImage);
-        }
-
-        // Save PropertyListing first (without property images to get the ID)
-        PropertyListing savedListing = propertyListingRepository.save(propertyListing);
-
-        // Handle property images if provided - set listing ID after save
-        if (request.getPropertyImages() != null && !request.getPropertyImages().isEmpty()) {
-            final UUID listingId = savedListing.getPropertyListingId();
-            List<PropertyImage> propertyImages = request.getPropertyImages().stream()
-                .map(propertyImageMapper::toEntity)
-                .filter(image -> image != null)  // Filter out any null images
-                .peek(image -> image.setPropertyListingId(listingId))
-                .collect(java.util.stream.Collectors.toList());
-            savedListing.setPropertyImages(propertyImages);
-            // Save again with images
-            savedListing = propertyListingRepository.save(savedListing);
-        }
-
-        // Map to response DTO
-        return propertyListingMapper.toResponse(savedListing);
+        return propertyListingMapper.toResponse(propertyListing);
     }
 
     public PropertyListingResponse getPropertyListingById(UUID id) {
@@ -125,82 +95,70 @@ public class PropertyListingService {
         return propertyListingMapper.toResponse(propertyListing);
     }
 
+    public PropertyListingPublicResponse getPropertyListingPublicById(UUID id) {
+        PropertyListing propertyListing = propertyListingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
+        propertyListingRepository.updateViewCount(id);
+        return propertyListingMapper.toPublicResponse(propertyListing);
+    }
+
+    public PropertyListingPublicResponse getPublicPropertyListingById(UUID id) {
+        PropertyListing propertyListing = propertyListingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
+        propertyListingRepository.updateViewCount(id);
+        return propertyListingMapper.toPublicResponse(propertyListing);
+    }
+
     public List<CompactPropertyListingResponse> getAllPropertyListings() {
         List<PropertyListing> listings = propertyListingRepository.findAll();
         return listings.stream()
-                .map(compactPropertyListingMapper::toCompactResponse)
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllPublishedPropertyListings() {
+        List<PropertyListing> listings = propertyListingRepository.findAllPublishedListings();
+        return listings.stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllPropertyListingsBySellerAndStatus(UUID sellerId, PropertyListingStatus status) {
+        List<PropertyListing> listings = propertyListingRepository.findAllBySellerAndStatus(sellerId, status);
+        return listings.stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllPropertyListingsByStatus(PropertyListingStatus status) {
+        List<PropertyListing> listings = propertyListingRepository.findByStatus(status);
+        return listings.stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<PropertyListingStatus> getUserPropertyListingStatuses(UUID userId) {
+        return propertyListingRepository.findDistinctStatusesByUserId(userId);
+    }
+
+    public List<CompactPropertyListingResponse> getUserPropertyListings(UUID userId) {
+        List<PropertyListing> listings = propertyListingRepository.findBySeller_Id(userId);
+        return listings.stream()
+                .map(propertyListingMapper::toCompactResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public PropertyListingResponse updatePropertyListing(UUID id, PropertyListingRequest request) {
-        PropertyListing existingListing = propertyListingRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
-
-        // Update basic fields
-        existingListing.setTitle(request.getTitle());
-        existingListing.setDescription(request.getDescription());
-        existingListing.setPrice(request.getPrice());
-        existingListing.setLastUpdatedDate(LocalDateTime.now());
-
-        // Update property if provided
-        if (request.getProperty() != null) {
-            Property property = existingListing.getProperty();
-            if (property == null) {
-                property = propertyMapper.toEntity(request.getProperty());
-            } else {
-                // Update existing property fields
-                property.setAreaInSquareMeters(request.getProperty().getAreaInSquareMeters());
-                property.setBedrooms(request.getProperty().getBedrooms());
-                property.setBathrooms(request.getProperty().getBathrooms());
-                property.setType(request.getProperty().getPropertyType());
-                property.setYearBuilt(request.getProperty().getYearBuilt());
-                property.setCondition(request.getProperty().getPropertyCondition());
-
-                // Update location
-                if (request.getProperty().getLocation() != null) {
-                    Location location = property.getLocation();
-                    if (location == null) {
-                        location = locationMapper.toEntity(request.getProperty().getLocation());
-                    } else {
-                        location.setLatitude(request.getProperty().getLocation().getLatitude());
-                        location.setLongitude(request.getProperty().getLocation().getLongitude());
-                        location.setCity(request.getProperty().getLocation().getCity());
-                        location.setState(request.getProperty().getLocation().getState());
-                    }
-                    location = locationRepository.save(location);
-                    property.setLocation(location);
-                }
-            }
-            property = propertyRepository.save(property);
-            existingListing.setProperty(property);
-        }
-
-        // Update banner image if provided
-        if (request.getBannerImage() != null) {
-            PropertyImage bannerImage = propertyImageMapper.toEntity(request.getBannerImage());
-            existingListing.setBannerImage(bannerImage);
-        }
-
-        // Update property images if provided
-        if (request.getPropertyImages() != null && !request.getPropertyImages().isEmpty()) {
-            final UUID listingId = existingListing.getPropertyListingId();
-            List<PropertyImage> images = request.getPropertyImages().stream()
-                    .map(propertyImageMapper::toEntity)
-                    .filter(image -> image != null)  // Filter out any null images
-                    .peek(image -> image.setPropertyListingId(listingId))
-                    .collect(Collectors.toList());
-            existingListing.setPropertyImages(images);
-        }
-
-        PropertyListing updatedListing = propertyListingRepository.save(existingListing);
-        return propertyListingMapper.toResponse(updatedListing);
-    }
-
-    @Transactional
     public void deletePropertyListing(UUID id) {
+
+        boolean exists = propertySubmissionReviewRepository.existsById(id);
+        if (exists)
+            propertySubmissionReviewService.deletePropertySubmissionReview(id);
+
         PropertyListing propertyListing = propertyListingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
+
         propertyListingRepository.delete(propertyListing);
     }
+
 }

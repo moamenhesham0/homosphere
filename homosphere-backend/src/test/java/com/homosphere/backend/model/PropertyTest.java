@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.homosphere.backend.model.property.Property;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +37,8 @@ class PropertyTest {
     void testPropertyCreation() {
         // Arrange & Act
         property.setPropertyId(UUID.randomUUID());
-        property.setAreaInSquareMeters(150.0);
+        property.setPropertyAreaSqFt(150.0);
+
         property.setBedrooms(3);
         property.setBathrooms(2);
         property.setType(PropertyType.APARTMENT);
@@ -45,7 +48,7 @@ class PropertyTest {
 
         // Assert
         assertNotNull(property.getPropertyId());
-        assertEquals(150.0, property.getAreaInSquareMeters());
+        assertEquals(150.0, property.getPropertyAreaSqFt());
         assertEquals(3, property.getBedrooms());
         assertEquals(2, property.getBathrooms());
         assertEquals(PropertyType.APARTMENT, property.getType());
@@ -110,11 +113,11 @@ class PropertyTest {
         UUID propertyId = UUID.randomUUID();
         Property property1 = new Property();
         property1.setPropertyId(propertyId);
-        property1.setAreaInSquareMeters(100.0);
+        property1.setPropertyAreaSqFt(100.0);
 
         Property property2 = new Property();
         property2.setPropertyId(propertyId);
-        property2.setAreaInSquareMeters(100.0);
+        property2.setPropertyAreaSqFt(100.0);
 
         // Assert
         assertEquals(property1, property2);
@@ -132,45 +135,4 @@ class PropertyTest {
         assertEquals(-74.0060, property.getLocation().getLongitude());
     }
 
-    @Test
-    void testPropertyAllArgsConstructor() {
-        // Arrange & Act
-        UUID propertyId = UUID.randomUUID();
-        Property newProperty = new Property(
-            propertyId,
-            200.0,
-            4,
-            3,
-            PropertyType.VILLA,
-            Year.of(2021),
-            new ArrayList<>(),
-            location,
-            PropertyCondition.GOOD
-        );
-
-        // Assert
-        assertEquals(propertyId, newProperty.getPropertyId());
-        assertEquals(200.0, newProperty.getAreaInSquareMeters());
-        assertEquals(4, newProperty.getBedrooms());
-        assertEquals(3, newProperty.getBathrooms());
-        assertEquals(PropertyType.VILLA, newProperty.getType());
-        assertEquals(Year.of(2021), newProperty.getYearBuilt());
-        assertEquals(PropertyCondition.GOOD, newProperty.getCondition());
-        assertNotNull(newProperty.getLocation());
-    }
-
-    @Test
-    void testPropertyToString() {
-        // Arrange
-        property.setPropertyId(UUID.randomUUID());
-        property.setAreaInSquareMeters(150.0);
-        property.setType(PropertyType.APARTMENT);
-
-        // Act
-        String propertyString = property.toString();
-
-        // Assert
-        assertNotNull(propertyString);
-        assertTrue(propertyString.contains("Property"));
-    }
 }

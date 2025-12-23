@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PropertyStatsDTO {
-
     private int impressions;
     private int leads;
     private int clicks;

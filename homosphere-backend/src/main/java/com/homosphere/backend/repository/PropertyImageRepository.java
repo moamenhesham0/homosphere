@@ -1,6 +1,6 @@
 package com.homosphere.backend.repository;
 
-import com.homosphere.backend.model.PropertyImage;
+import com.homosphere.backend.model.property.PropertyImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
