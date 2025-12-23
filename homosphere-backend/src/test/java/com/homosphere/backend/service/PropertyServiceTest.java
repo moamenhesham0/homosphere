@@ -389,7 +389,12 @@ class PropertyServiceTest {
         PropertyListing listing3 = new PropertyListing();
         listing3.setStatus(PropertyListingStatus.REJECTED);
         List<PropertyListing> allListings = List.of(listing1, listing2, listing3);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class))).thenReturn(compactResponse);
+        CompactPropertyListingResponse response1 = new CompactPropertyListingResponse();
+        CompactPropertyListingResponse response2 = new CompactPropertyListingResponse();
+        CompactPropertyListingResponse response3 = new CompactPropertyListingResponse();
+        when(propertyListingMapper.toCompactResponse(listing1)).thenReturn(response1);
+        when(propertyListingMapper.toCompactResponse(listing2)).thenReturn(response2);
+        when(propertyListingMapper.toCompactResponse(listing3)).thenReturn(response3);
         when(propertyListingRepository.findAll()).thenReturn(allListings);
 
         // Act
