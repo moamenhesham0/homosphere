@@ -39,14 +39,10 @@ public class PropertyService {
             return Page.empty(pageable);
         }
         Page<PropertyListing> propertyListings = propertyRepository.searchPropertyListings(userInput.trim(), pageable);
-        // Only include PUBLISHED listings
-        List<PropertyListing> publishedList = propertyListings.getContent().stream()
-            .filter(pl -> pl.getStatus() == PropertyListingStatus.PUBLISHED)
-            .toList();
-        List<CompactPropertyListingResponse> mapped = publishedList.stream()
+        List<CompactPropertyListingResponse> responses = propertyListings.getContent().stream()
             .map(propertyListingMapper::toCompactResponse)
             .toList();
-        return new PageImpl<>(mapped, pageable, publishedList.size());
+        return new PageImpl<>(responses, pageable, propertyListings.getTotalElements());
     }
 
     public Page<CompactPropertyListingResponse> filterProperties(
@@ -67,14 +63,10 @@ public class PropertyService {
         }
         Page<PropertyListing> propertyListings = propertyRepository.filterPropertyListings(
             bedrooms, bathrooms, minPrice, maxPrice, minYear, maxYear, city, state, pageable);
-        // Only include PUBLISHED listings
-        List<PropertyListing> publishedList = propertyListings.getContent().stream()
-            .filter(pl -> pl.getStatus() == PropertyListingStatus.PUBLISHED)
-            .toList();
-        List<CompactPropertyListingResponse> mapped = publishedList.stream()
+        List<CompactPropertyListingResponse> responses = propertyListings.getContent().stream()
             .map(propertyListingMapper::toCompactResponse)
             .toList();
-        return new PageImpl<>(mapped, pageable, publishedList.size());
+        return new PageImpl<>(responses, pageable, propertyListings.getTotalElements());
     }
 
     public PropertyListingResponse getPropertyListingDetails(UUID propertyListingId) {
