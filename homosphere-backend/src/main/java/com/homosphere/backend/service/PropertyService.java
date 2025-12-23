@@ -2,18 +2,23 @@ package com.homosphere.backend.service;
 
 import java.time.Year;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.homosphere.backend.enums.PropertyCondition;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
+import com.homosphere.backend.enums.PropertyListingStatus;
 import com.homosphere.backend.enums.PropertyType;
 import com.homosphere.backend.mapper.PropertyListingMapper;
 import com.homosphere.backend.model.property.PropertyListing;
@@ -34,7 +39,14 @@ public class PropertyService {
             return Page.empty(pageable);
         }
         Page<PropertyListing> propertyListings = propertyRepository.searchPropertyListings(userInput.trim(), pageable);
-        return propertyListings.map(propertyListingMapper::toCompactResponse);
+        // Only include PUBLISHED listings
+        List<PropertyListing> publishedList = propertyListings.getContent().stream()
+            .filter(pl -> pl.getStatus() == PropertyListingStatus.PUBLISHED)
+            .toList();
+        List<CompactPropertyListingResponse> mapped = publishedList.stream()
+            .map(propertyListingMapper::toCompactResponse)
+            .toList();
+        return new PageImpl<>(mapped, pageable, publishedList.size());
     }
 
     public Page<CompactPropertyListingResponse> filterProperties(
@@ -55,7 +67,14 @@ public class PropertyService {
         }
         Page<PropertyListing> propertyListings = propertyRepository.filterPropertyListings(
             bedrooms, bathrooms, minPrice, maxPrice, minYear, maxYear, city, state, pageable);
-        return propertyListings.map(propertyListingMapper::toCompactResponse);
+        // Only include PUBLISHED listings
+        List<PropertyListing> publishedList = propertyListings.getContent().stream()
+            .filter(pl -> pl.getStatus() == PropertyListingStatus.PUBLISHED)
+            .toList();
+        List<CompactPropertyListingResponse> mapped = publishedList.stream()
+            .map(propertyListingMapper::toCompactResponse)
+            .toList();
+        return new PageImpl<>(mapped, pageable, publishedList.size());
     }
 
     public PropertyListingResponse getPropertyListingDetails(UUID propertyListingId) {
@@ -74,6 +93,68 @@ public class PropertyService {
         return Arrays.stream(PropertyCondition.values())
                 .map(PropertyCondition::name)
                 .toList();
+    }
+
+    public PropertyAdminResponse getAllPropertiesPartitionedByStatus() {
+        List<PropertyListing> allListings = propertyListingRepository.findAll();
+        EnumMap<PropertyListingStatus, List<CompactPropertyListingResponse>> partitioned = new EnumMap<>(PropertyListingStatus.class);
+        for (PropertyListingStatus status : PropertyListingStatus.values()) {
+            List<CompactPropertyListingResponse> list = allListings.stream()
+                .filter(pl -> pl.getStatus() == status)
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+            partitioned.put(status, list);
+        }
+        return new PropertyAdminResponse(partitioned);
+    }
+
+    public List<CompactPropertyListingResponse> getAllPendingProperties() {
+        return propertyListingRepository.findByStatus(PropertyListingStatus.PENDING)
+                .stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllPublishedProperties() {
+        return propertyListingRepository.findByStatus(PropertyListingStatus.PUBLISHED)
+                .stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllRejectedProperties() {
+        return propertyListingRepository.findByStatus(PropertyListingStatus.REJECTED)
+                .stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllRequiresChangesProperties() {
+        return propertyListingRepository.findByStatus(PropertyListingStatus.REQUIRES_CHANGES)
+                .stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllUnlistedProperties() {
+        return propertyListingRepository.findByStatus(PropertyListingStatus.UNLISTED)
+                .stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<CompactPropertyListingResponse> getAllSoldProperties() {
+        return propertyListingRepository.findByStatus(PropertyListingStatus.SOLD)
+                .stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
+    public void updatePropertyListingStatus(UUID propertyListingId, PropertyListingStatus status) {
+        PropertyListing propertyListing = propertyListingRepository.findById(propertyListingId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Property listing not found"));
+        propertyListing.setStatus(status);
+        propertyListingRepository.save(propertyListing);
     }
 
 }
