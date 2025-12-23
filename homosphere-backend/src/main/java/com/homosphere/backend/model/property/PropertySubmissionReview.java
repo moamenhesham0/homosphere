@@ -26,6 +26,9 @@ public class PropertySubmissionReview {
     @Column(name = "message", length = 255)
     private String message;
 
+    @Version
+    private Long version;
+
     public void updatePropertyListing() {
         this.propertyListing.setStatusRequiresChanges();
     }
