@@ -2,6 +2,7 @@ import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'r
 import { uploadImageToCloudflare, uploadMultipleImages } from '../services/cloudflareUpload';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GeoMap from '../components/GeoMap';
+import AIPredictionButton from '../components/AIPredictionButton';
 import '../styles/PropertyListingForm.css';
 import {
   submitPropertyListing,
@@ -680,6 +681,7 @@ const PropertyListingForm = () => {
               </label>
             </div>
           </div>
+
         </section>
 
         {/* Location */}
@@ -775,6 +777,20 @@ const PropertyListingForm = () => {
                 ))}
               </div>
             )}
+          </div>
+          {/* AI Prediction Section */}
+          <div className="form-group">
+            <AIPredictionButton
+              propertyData={{
+                bedrooms: formData.bedrooms,
+                bathrooms: formData.bathrooms,
+                propertyAreaInSquareFeet: formData.propertyAreaInSquareFeet,
+                lotAreaInSquareFeet: formData.lotAreaInSquareFeet,
+                city: formData.city,
+                state: formData.state,
+                zipCode: formData.zipCode,
+              }}
+            />
           </div>
         </section>
 

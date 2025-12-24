@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import RequestViewForm from '../components/RequestViewForm';
+import AIPredictionButton from '../components/AIPredictionButton';
 import '../styles/PropertyDetailsPage.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/properties';
@@ -401,6 +402,19 @@ const PropertyDetailsPage = () => {
                             </tbody>
                         </table>
                     </div>
+
+                    {/* AI Prediction Section */}
+                    <AIPredictionButton
+                        propertyData={{
+                            bedrooms: propertyData.bedrooms,
+                            bathrooms: propertyData.bathrooms,
+                            propertyAreaSqFt: propertyData.propertyAreaSqFt,
+                            lotAreaSqFt: propertyData.lotAreaSqFt,
+                            city: location.city,
+                            state: location.state,
+                            zipCode: location.zipCode,
+                        }}
+                    />
 
                     {/* Action Buttons */}
                     <div className="property-actions">

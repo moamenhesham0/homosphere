@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from repository import ModelRepository, TrendRepository
@@ -12,6 +13,16 @@ MODEL_PATH = os.path.join(BASE_DIR, 'house_price_model.cbm')
 
 # Initialize the FastAPI application
 app = FastAPI(title="House Price Predictor API")
+
+# Configure CORS
+# This is temporary and should be restricted in production
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Initialize repositories
 model_repository = ModelRepository(MODEL_PATH)
