@@ -432,7 +432,8 @@ const PropertyDetailsPage = () => {
             {showRequestForm && (
                 <div className="modal-overlay" onClick={() => setShowRequestForm(false)}>
                     <RequestViewForm
-                        propertyId={id}
+                        propertyId={property?.property?.propertyId || id}
+                        propertyTitle={property?.title || property?.property?.title || 'Untitled Property'}
                         onClose={() => setShowRequestForm(false)}
                     />
                 </div>

@@ -17,6 +17,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 
+import com.homosphere.backend.dto.PublicUserDto;
 import com.homosphere.backend.model.RegisterUser;
 import com.homosphere.backend.model.User;
 import com.homosphere.backend.repository.UserRepository;
@@ -228,5 +229,38 @@ class UserServiceTest {
         // Assert
         assertEquals("Fail", result);
         verify(userRepository, times(1)).findById(nonExistentId);
+    }
+
+    // Tests for getPublicUserDto method
+    @Test
+    void getPublicUserDto_ShouldReturnDto_WhenUserExists() {
+        // Arrange
+        when(userRepository.findById(testId)).thenReturn(Optional.of(testProfile));
+
+        // Act
+        PublicUserDto dto = userService.getPublicUserDto(testId);
+
+        // Assert
+        assertNotNull(dto);
+        assertEquals(testProfile.getFirstName(), dto.getFirstName());
+        assertEquals(testProfile.getLastName(), dto.getLastName());
+        assertEquals(testProfile.getPhoto(), dto.getPhoto());
+        assertEquals(testProfile.getBio(), dto.getBio());
+        assertEquals(testProfile.getPhone(), dto.getPhone());
+        assertEquals(testProfile.getLocation(), dto.getLocation());
+        assertEquals(testProfile.getUserName(), dto.getUserName());
+    }
+
+    @Test
+    void getPublicUserDto_ShouldReturnNull_WhenUserDoesNotExist() {
+        // Arrange
+        UUID nonExistentId = UUID.randomUUID();
+        when(userRepository.findById(nonExistentId)).thenReturn(Optional.empty());
+
+        // Act
+        PublicUserDto dto = userService.getPublicUserDto(nonExistentId);
+
+        // Assert
+        assertNull(dto);
     }
 }

@@ -19,7 +19,7 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     SELECT pl.* FROM property_listing pl
     JOIN property p ON pl.property_id = p.property_id 
     LEFT JOIN location l ON p.location_id = l.location_id
-    WHERE (
+    WHERE pl.status = 'PUBLISHED' AND (
         to_tsvector('english', 
               COALESCE(l.city, '') || ' ' ||
               COALESCE(l.state, '') || ' ' ||
@@ -63,7 +63,8 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     SELECT pl.* FROM property_listing pl
     JOIN property p ON pl.property_id = p.property_id
     LEFT JOIN location l ON p.location_id = l.location_id
-    WHERE (:bedrooms IS NULL OR p.bedrooms = :bedrooms)
+    WHERE pl.status = 'PUBLISHED'
+      AND (:bedrooms IS NULL OR p.bedrooms = :bedrooms)
       AND (:bathrooms IS NULL OR p.bathrooms = :bathrooms)
       AND (:minPrice IS NULL OR pl.price >= :minPrice)
       AND (:maxPrice IS NULL OR pl.price <= :maxPrice)

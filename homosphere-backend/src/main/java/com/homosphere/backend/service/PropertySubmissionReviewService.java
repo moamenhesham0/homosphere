@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -67,5 +68,12 @@ public class PropertySubmissionReviewService {
         PropertySubmissionReview propertySubmissionReview = propertySubmissionReviewRepository.findById(propertyListingId)
                 .orElseThrow(() -> new RuntimeException("PropertySubmissionReview with ID " + propertyListingId + " not found."));
         return propertySubmissionReviewMapper.toResponse(propertySubmissionReview);
+    }
+
+    public List<PropertySubmissionReviewResponse> getAllPropertySubmissionReviews() {
+        List<PropertySubmissionReview> reviews = propertySubmissionReviewRepository.findAll();
+        return reviews.stream()
+                .map(propertySubmissionReviewMapper::toResponse)
+                .toList();
     }
 }

@@ -58,18 +58,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         String userId = null;
         String token;
 
+        // Debug: Log the incoming Authorization header
+        logger.info("Incoming Authorization header: {}", authHeader);
+
         /*
          * Extract JWT token from Authorization header
          */
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
             // Allow requests without auth header to pass through (for public endpoints)
+            logger.warn("Missing or invalid Authorization header");
             filterChain.doFilter(request, response);
             return;
         }
 
-          token = authHeader.replaceFirst("Bearer ", "");
-          try {
+        token = authHeader.replaceFirst("Bearer ", "");
+        try {
+            logger.info("Validating JWT token: {}", token);
             userId = jwtService.extractUserId(token);
+            logger.info("Extracted userId from token: {}", userId);
         } catch (Exception e) {
             logger.warn("Token extraction failed: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
@@ -83,6 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         if(userId != null && SecurityContextHolder.getContext().getAuthentication() == null){
 
             if (!jwtService.validateToken(token)) {
+                logger.warn("Token validation failed for userId: {}", userId);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
                 return;
             }
@@ -98,6 +105,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
             Optional<User> userOpt = userRepository.findById(userUuid);
             if (userOpt.isEmpty()) {
+                logger.warn("User not found in database for userId: {}", userId);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
                 return;
             }

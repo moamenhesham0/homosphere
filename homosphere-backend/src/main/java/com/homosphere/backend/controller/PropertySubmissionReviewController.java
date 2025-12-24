@@ -2,13 +2,14 @@ package com.homosphere.backend.controller;
 
 import com.homosphere.backend.dto.property.request.PropertySubmissionReviewRequest;
 import com.homosphere.backend.dto.property.response.PropertySubmissionReviewResponse;
-import com.homosphere.backend.model.property.PropertySubmissionReview;
+
 import com.homosphere.backend.service.PropertySubmissionReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,5 +35,11 @@ public class PropertySubmissionReviewController {
     public ResponseEntity<PropertySubmissionReviewResponse> getPropertySubmissionReview(@PathVariable("id") UUID id) {
         PropertySubmissionReviewResponse response = propertySubmissionReviewService.getPropertySubmissionReview(id);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<PropertySubmissionReviewResponse>> getAllPropertySubmissionReviews() {
+        List<PropertySubmissionReviewResponse> reviews = propertySubmissionReviewService.getAllPropertySubmissionReviews();
+        return new ResponseEntity<>(reviews, HttpStatus.OK);
     }
 }

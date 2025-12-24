@@ -6,7 +6,7 @@ import MessageDisplay from './MessageDisplay';
 import { getFieldError, getInputClass } from '../utils/validators';
 import '../styles/RequestViewForm.css';
 
-const RequestViewForm = ({ propertyId, onClose }) => {
+const RequestViewForm = ({ propertyId, propertyTitle, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -110,6 +110,7 @@ const RequestViewForm = ({ propertyId, onClose }) => {
   
       const requestData = {
         propertyId: propertyId,
+        propertyTitle: propertyTitle,
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
