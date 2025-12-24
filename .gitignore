@@ -33,6 +33,9 @@ application.properties
 # frontend
 node_modules/
 
+# ai
+__pycache__/
+
 #ide
 .vscode
 .idea

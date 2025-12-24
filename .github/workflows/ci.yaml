@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-  pull_request:
 
 jobs:
   test:
@@ -20,3 +19,11 @@ jobs:
       - name: Run tests
         run: mvn test
         working-directory: homosphere-backend
+
+      - name: Run AI tests
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pytest test_trend_api.py
+        working-directory: homosphere-ai
