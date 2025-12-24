@@ -3,13 +3,13 @@ import DeclineModal from './DeclineModal';
 import RescheduleModal from './RescheduleModal';
 import '../styles/ViewingRequestCard.css';
 
-const ViewingRequestCard = ({ request, onStatusUpdate }) => {
+const ViewingRequestCard = ({ request, onStatusUpdate, userRole }) => {
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-
   const formatDate = (dateString) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
   };
@@ -23,44 +23,50 @@ const ViewingRequestCard = ({ request, onStatusUpdate }) => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
- 
+
   const getStatusClass = (status) => {
-    const normalizedStatus = (status || 'PENDING').toUpperCase();
-    
-    if (normalizedStatus === 'APPROVED') return 'status-badge status-confirmed';
-    if (normalizedStatus === 'REJECTED') return 'status-badge status-declined';
-    if (normalizedStatus === 'RESCHEDULED') return 'status-badge status-reschedule';
-    
+    const normalized = (status || 'PENDING').toUpperCase();
+    if (normalized === 'APPROVED') return 'status-badge status-confirmed';
+    if (normalized === 'REJECTED') return 'status-badge status-declined';
+    if (normalized === 'RESCHEDULED') return 'status-badge status-reschedule';
+    if (normalized === 'WITHDRAWN') return 'status-badge status-declined';
     return 'status-badge status-pending';
   };
 
-
   const getStatusText = (status) => {
-    const normalizedStatus = (status || 'PENDING').toUpperCase();
-    const statusMap = {
+    const normalized = (status || 'PENDING').toUpperCase();
+    const map = {
       'PENDING': 'Pending',
       'APPROVED': 'Confirmed',
       'REJECTED': 'Declined',
-      'RESCHEDULED': 'Reschedule Requested'
+      'RESCHEDULED': 'Reschedule Requested',
+      'WITHDRAWN': 'Withdrawn'
     };
-    return statusMap[normalizedStatus] || 'Pending';
+    return map[normalized] || 'Pending';
   };
 
-  const handleConfirm = async () => {
+ 
+  const handleConfirm = async () => handleAction('confirmed');
+  const handleWithdraw = async () => handleAction('withdrawn');
+  
+  const handleAction = async (status) => {
     if (isProcessing) return;
-    const confirmed = window.confirm('Are you sure you want to confirm this viewing request?');
-    if (!confirmed) return;
+    
+    const message = status === 'withdrawn' 
+      ? 'Are you sure you want to withdraw this request?' 
+      : 'Are you sure you want to accept this appointment?';
+
+    if (!window.confirm(message)) return;
 
     setIsProcessing(true);
     try {
-      await onStatusUpdate(request.id, 'confirmed', {});
+      await onStatusUpdate(request.id, status, {});
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleDecline = async (message) => {
-    if (isProcessing) return;
     setIsProcessing(true);
     try {
       await onStatusUpdate(request.id, 'declined', { agentMessage: message });
@@ -71,7 +77,6 @@ const ViewingRequestCard = ({ request, onStatusUpdate }) => {
   };
 
   const handleReschedule = async (newDateTime) => {
-    if (isProcessing) return;
     setIsProcessing(true);
     try {
       await onStatusUpdate(request.id, 'reschedule', {
@@ -87,7 +92,11 @@ const ViewingRequestCard = ({ request, onStatusUpdate }) => {
   };
 
   const currentStatus = (request.status || 'PENDING').toUpperCase();
-  const isPending = currentStatus === 'PENDING';
+  const isBuyer = (userRole || '').toUpperCase() === 'BUYER';
+  const isSeller = !isBuyer; 
+
+  // Access the joined data safely
+  const processedData = request.processedRequest || {};
 
   return (
     <>
@@ -102,141 +111,88 @@ const ViewingRequestCard = ({ request, onStatusUpdate }) => {
         <div className="card-body">
           <div className="info-section">
             <div className="info-group">
-              <label>Buyer Name</label>
-              <div className="info-value">
-                <i className="icon-user">👤</i>
-                {request.name || request.buyerName || 'N/A'}
-              </div>
-            </div>
-
-            <div className="info-group">
-              <label>Contact Info</label>
-              <div className="contact-details">
-                <div className="info-value">
-                  <i className="icon-email">✉️</i>
-                  <a href={`mailto:${request.email || request.buyerEmail}`}>
-                    {request.email || request.buyerEmail || 'No Email'}
-                  </a>
-                </div>
-                <div className="info-value">
-                  <i className="icon-phone">📞</i>
-                  <a href={`tel:${request.phone || request.buyerPhone}`}>
-                    {request.phone || request.buyerPhone || 'No Phone'}
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="info-group">
               <label>Property</label>
               <div className="info-value">
                 <i className="icon-property">🏠</i>
-                {/* --- FIX 3: Display nested Property Title correctly --- */}
-                {request.property?.propertyListing?.title || 
-                 request.propertyTitle || 
-                 'Unknown Property'}
+                {request.property?.propertyListing?.title || request.propertyTitle || 'Unknown Property'}
               </div>
             </div>
+            
+            {isSeller && (
+              <div className="info-group">
+                <label>Buyer Name</label>
+                <div className="info-value">
+                  <i className="icon-user">👤</i>
+                  {request.name || request.buyerName}
+                </div>
+              </div>
+            )}
 
             <div className="info-group">
-              <label>Requested Date & Time</label>
+              <label>Requested Date</label>
               <div className="datetime-info">
                 <div className="info-value">
-                  <i className="icon-calendar">📅</i>
-                  {formatDate(request.preferredDate)}
+                  <i className="icon-calendar">📅</i> {formatDate(request.preferredDate)}
                 </div>
                 <div className="info-value">
-                  <i className="icon-clock">🕐</i>
-                  {formatTime(request.startTime)} - {formatTime(request.endTime)}
+                  <i className="icon-clock">🕐</i> {formatTime(request.startTime)} - {formatTime(request.endTime)}
                 </div>
-              </div>
-            </div>
-
-            {request.message && (
-              <div className="info-group">
-                <label>Message</label>
-                <div className="info-value message-text">
-                  {request.message}
-                </div>
-              </div>
-            )}
-            
-            <div className="info-group">
-              <label>Submitted</label>
-              <div className="info-value">
-                {formatDate(request.submittedAt)}
               </div>
             </div>
           </div>
 
-          {isPending && (
-            <div className="actions-section">
-              <button 
-                className="action-btn confirm-btn"
-                onClick={handleConfirm}
-                disabled={isProcessing}
-              >
-                <span className="btn-icon">✓</span>
-                Confirm
-              </button>
-              
-              <button 
-                className="action-btn reschedule-btn"
-                onClick={() => setShowRescheduleModal(true)}
-                disabled={isProcessing}
-              >
-                <span className="btn-icon">📅</span>
-                Propose New Time
-              </button>
-              
-              <button 
-                className="action-btn decline-btn"
-                onClick={() => setShowDeclineModal(true)}
-                disabled={isProcessing}
-              >
-                <span className="btn-icon">✗</span>
-                Decline
-              </button>
-            </div>
-          )}
+          <div className="actions-section">
+            {isSeller && currentStatus === 'PENDING' && (
+              <>
+                <button className="action-btn confirm-btn" onClick={handleConfirm} disabled={isProcessing}>
+                  <span className="btn-icon">✓</span> Confirm
+                </button>
+                <button className="action-btn reschedule-btn" onClick={() => setShowRescheduleModal(true)} disabled={isProcessing}>
+                  <span className="btn-icon">📅</span> Propose New Time
+                </button>
+                <button className="action-btn decline-btn" onClick={() => setShowDeclineModal(true)} disabled={isProcessing}>
+                  <span className="btn-icon">✗</span> Decline
+                </button>
+              </>
+            )}
 
-          {request.processedRequest?.agentMessage && (
+            {isBuyer && currentStatus === 'PENDING' && (
+               <button className="action-btn decline-btn" onClick={handleWithdraw} disabled={isProcessing}>
+                  <span className="btn-icon">✗</span> Withdraw Request
+               </button>
+            )}
+
+            {isBuyer && currentStatus === 'RESCHEDULED' && (
+              <>
+                <button className="action-btn confirm-btn" onClick={handleConfirm} disabled={isProcessing}>
+                  <span className="btn-icon">✓</span> Accept New Time
+                </button>
+                <button className="action-btn decline-btn" onClick={handleWithdraw} disabled={isProcessing}>
+                  <span className="btn-icon">✗</span> Withdraw Request
+                </button>
+              </>
+            )}
+          </div>
+
+          {processedData.agentMessage && (
             <div className="status-note agent-message">
-              <strong>Agent Note:</strong> {request.processedRequest.agentMessage}
+              <strong>Agent Note:</strong> {processedData.agentMessage}
             </div>
           )}
-        </div>
+         
+          {processedData.newDate && currentStatus === 'RESCHEDULED' && (
+            <div className="status-note reschedule-note">
+              <strong>Proposed New Time:</strong>{' '}
+              {formatDate(processedData.newDate)} at{' '}
+              {formatTime(processedData.newStartTime)} - {formatTime(processedData.newEndTime)}
+            </div>
+          )}
 
-         <div className="card-footer">
-          <div className="audit-info">
-            {request.processedRequest?.processedAt && (
-              <span className="audit-timestamp">
-                Processed on {formatDate(request.processedRequest.processedAt)}
-                {request.processedRequest.processedBy && (
-                  <> by {request.processedRequest.processedBy.firstName} {request.processedRequest.processedBy.lastName}</>
-                )}
-              </span>
-            )}
-          </div>
         </div>
       </div>
-
-      {showDeclineModal && (
-        <DeclineModal
-          onClose={() => setShowDeclineModal(false)}
-          onConfirm={handleDecline}
-          isProcessing={isProcessing}
-        />
-      )}
-
-      {showRescheduleModal && (
-        <RescheduleModal
-          onClose={() => setShowRescheduleModal(false)}
-          onConfirm={handleReschedule}
-          isProcessing={isProcessing}
-          currentRequest={request}
-        />
-      )}
+      
+      {showDeclineModal && <DeclineModal onClose={() => setShowDeclineModal(false)} onConfirm={handleDecline} isProcessing={isProcessing} />}
+      {showRescheduleModal && <RescheduleModal onClose={() => setShowRescheduleModal(false)} onConfirm={handleReschedule} isProcessing={isProcessing} currentRequest={request} />}
     </>
   );
 };

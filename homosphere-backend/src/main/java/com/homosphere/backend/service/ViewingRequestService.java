@@ -69,7 +69,6 @@ public class ViewingRequestService {
         ViewingRequest request = viewingRequestRepository.findById(requestId)
             .orElseThrow(() -> new RuntimeException("Viewing Request not found"));
 
-        request.setStatus(dto.getStatus());
 
         ProcessedViewingRequest processedRecord = processedViewingRequestRepository
             .findAll().stream()
@@ -77,19 +76,36 @@ public class ViewingRequestService {
             .findFirst()
             .orElse(new ProcessedViewingRequest());
 
+        // LOGIC: If a buyer ACCEPTS (APPROVED) a RESCHEDULED request, 
+        // update the actual meeting time to the proposed new time from the processed record.
+        if (request.getStatus() == ViewingRequest.Status.RESCHEDULED 
+            && dto.getStatus() == ViewingRequest.Status.APPROVED 
+            && processedRecord.getNewDate() != null) {
+            
+            request.setPreferredDate(processedRecord.getNewDate());
+            request.setStartTime(processedRecord.getNewStartTime());
+            request.setEndTime(processedRecord.getNewEndTime());
+        }
+
+        request.setStatus(dto.getStatus());
+
+        // Update Audit Log
         processedRecord.setViewingRequest(request);
         processedRecord.setProcessedAt(LocalDateTime.now());
-        processedRecord.setAgentMessage(dto.getAgentMessage());
-        processedRecord.setNewDate(dto.getNewDate());
-        processedRecord.setNewStartTime(dto.getNewStartTime());
-        processedRecord.setNewEndTime(dto.getNewEndTime());
-
-        User agent = userRepository.findById(dto.getProcessedBy())
-                .orElseThrow(() -> new RuntimeException("Agent user not found with ID: " + dto.getProcessedBy()));
         
-        processedRecord.setProcessedBy(agent);
+        if (dto.getAgentMessage() != null) processedRecord.setAgentMessage(dto.getAgentMessage());
+        if (dto.getNewDate() != null) processedRecord.setNewDate(dto.getNewDate());
+        if (dto.getNewStartTime() != null) processedRecord.setNewStartTime(dto.getNewStartTime());
+        if (dto.getNewEndTime() != null) processedRecord.setNewEndTime(dto.getNewEndTime());
+
+        User user = userRepository.findById(dto.getProcessedBy())
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + dto.getProcessedBy()));
+        
+        processedRecord.setProcessedBy(user);
 
         processedViewingRequestRepository.save(processedRecord);
+
+        request.setProcessedRequest(processedRecord);
         return viewingRequestRepository.save(request);
     }
     
