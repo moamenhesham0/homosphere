@@ -1,6 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../constants/routes';
 
 const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, onSelect }) => {
+    const navigate = useNavigate();
+    
     let buttonText = plan.buttonText;
     let isCurrent = false;
     let buttonClass = '';
@@ -28,7 +32,14 @@ const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, 
         }
         
         if (window.confirm(`Are you sure you want to ${action} to the ${plan.name} plan?`)) {
-            if (onSelect) onSelect(plan);
+            // Navigate to PayPal checkout page with plan data
+            navigate(ROUTES.PAYPAL_CHECKOUT, {
+                state: {
+                    plan,
+                    billingCycle,
+                    action
+                }
+            });
         }
     };
 

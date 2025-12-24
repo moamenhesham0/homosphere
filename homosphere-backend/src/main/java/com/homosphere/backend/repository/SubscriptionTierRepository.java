@@ -10,4 +10,6 @@ public interface SubscriptionTierRepository extends JpaRepository<SubscriptionTi
     List<SubscriptionTier> findBySellerTrue();
     List<SubscriptionTier> findBySellerFalse();
     List<SubscriptionTier> findBySeller(boolean seller);
+
+    SubscriptionTier findByName(String name);
 }
