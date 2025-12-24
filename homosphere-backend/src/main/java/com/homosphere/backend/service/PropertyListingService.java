@@ -148,6 +148,13 @@ public class PropertyListingService {
                 .collect(Collectors.toList());
     }
 
+    public List<CompactPropertyListingResponse> getPublishedPropertyListingsByUser(UUID userId) {
+        List<PropertyListing> listings = propertyListingRepository.findAllBySellerAndStatus(userId, PropertyListingStatus.PUBLISHED);
+        return listings.stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public void deletePropertyListing(UUID id) {
 
