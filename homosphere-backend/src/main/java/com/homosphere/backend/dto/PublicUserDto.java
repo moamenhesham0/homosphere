@@ -22,4 +22,8 @@ public class PublicUserDto {
     
     @Size(max = 20, message = "Phone must not exceed 20 characters")
     private String phone;
+    
+    private String location;
+    private String userName;
+    private String telegram;
 }
