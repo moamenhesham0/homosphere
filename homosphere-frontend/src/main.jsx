@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import './index.css';
 import App from './App.jsx';
@@ -19,30 +19,32 @@ import SearchPage from './pages/SearchPage.jsx';
 import PropertyDetailsPage from './pages/PropertyDetailsPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 
-
 createRoot(document.getElementById('root')).render(
     <StrictMode>
         <AuthProvider>
-        <BrowserRouter>
-            <Routes>
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path={ROUTES.SIGNUP} element={<SignUp />} />
-                <Route path={ROUTES.SIGNIN} element={<SignIn />} />
-                <Route path={ROUTES.FORGET_PASSWORD} element={<ForgetPassword />} />
-                <Route path={ROUTES.AUTH} element={<AuthPage />} />
-                <Route element={<Layout />}>
-                    <Route path={ROUTES.HOME} element={<App />} />
-                    <Route path="/" element={<App />} />
-                    <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
-                    <Route path={ROUTES.PROPERTY_LISTING_FORM} element={<PropertyListingForm />} />
-                    <Route path={ROUTES.PROFILE} element={<Profile />} />
-                    <Route path={ROUTES.ADMIN_PORTAL} element={<AdminPortal />} />
-                    <Route path={ROUTES.SEARCH} element={<SearchPage />} />
-                    <Route path="/property/:id" element={<PropertyDetailsPage />} />
-                    <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
-                </Route>
-            </Routes>
-        </BrowserRouter>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path={ROUTES.SIGNUP} element={<SignUp />} />
+                    <Route path={ROUTES.SIGNIN} element={<SignIn />} />
+                    <Route path={ROUTES.FORGET_PASSWORD} element={<ForgetPassword />} />
+                    <Route path={ROUTES.AUTH} element={<AuthPage />} />
+                    <Route element={<Layout />}>
+                        <Route path={ROUTES.HOME} element={<App />} />
+                        <Route path="/" element={<App />} />
+                        <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
+                        <Route
+                            path={ROUTES.PROPERTY_LISTING_FORM}
+                            element={<PropertyListingForm />}
+                        />
+                        <Route path={ROUTES.PROFILE} element={<Profile />} />
+                        <Route path={ROUTES.ADMIN_PORTAL} element={<AdminPortal />} />
+                        <Route path={ROUTES.SEARCH} element={<SearchPage />} />
+                        <Route path="/property/:id" element={<PropertyDetailsPage />} />
+                        <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+                    </Route>
+                </Routes>
+            </BrowserRouter>
         </AuthProvider>
-    </StrictMode>
+    </StrictMode>,
 );

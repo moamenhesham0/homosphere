@@ -1,4 +1,3 @@
-
 export function enumToText(enumText) {
     enumText.replace(/_/g, ' ');
     enumText.toLowerCase();

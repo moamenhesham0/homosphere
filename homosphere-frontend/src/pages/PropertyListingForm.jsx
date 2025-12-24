@@ -1,7 +1,7 @@
 import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
 import { uploadImageToCloudflare, uploadMultipleImages } from '../services/cloudflareUpload';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import GeoMap from '../components/GeoMap';
+import GeoMap from '@components/geomap/GeoMap.jsx';
 import '../styles/PropertyListingForm.css';
 import {
   submitPropertyListing,

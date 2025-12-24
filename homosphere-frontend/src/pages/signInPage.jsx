@@ -8,6 +8,12 @@ import FormInput from '../components/FormInput';
 import PasswordInput from '../components/PasswordInput';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import MessageDisplay from '../components/MessageDisplay';
+import { DELAYS } from '@constants/delays.js';
+import {
+    GENERIC_SIGN_IN_ERROR,
+    SIGN_IN_ERRORS_MAP,
+    signInErrorMessages,
+} from '@constants/signInErrors.js';
 
 const SignIn = () => {
     const navigate = useNavigate();
@@ -27,7 +33,7 @@ const SignIn = () => {
 
     const setErrorMessage = (message) => {
         setError(message);
-        setTimeout(() => setError(''), 3000);
+        setTimeout(() => setError(''), DELAYS.SIGNIN_ERROR_DELAY);
     };
 
     const validateFields = () => {
@@ -46,6 +52,15 @@ const SignIn = () => {
         return true;
     };
 
+    const signInUserErrorMapping = (error) => {
+        const mappedError = SIGN_IN_ERRORS_MAP.find(e => error.message.includes(e.match));
+        if (mappedError) {
+            setErrorMessage(mappedError.message);
+        } else {
+            setErrorMessage(GENERIC_SIGN_IN_ERROR);
+        }
+    }
+
     const signInUser = async () => {
         try {
             const result = await login(formData.email, formData.password);
@@ -54,41 +69,34 @@ const SignIn = () => {
                 return true;
             }
         } catch (error) {
-            if (error.message.includes('Invalid login credentials')) {
-                setErrorMessage('Invalid email or password');
-            } else if (error.message.includes('Email not confirmed')) {
-                setErrorMessage('Please verify your email before signing in');
-            } else if (error.message.includes('complete your profile')) {
-                setErrorMessage('Please complete signup process');
-            } else {
-                setErrorMessage(error.message || 'Sign in failed');
-            }
+            signInUserErrorMapping(error);
             return false;
         }
     };
 
     const redirectToProfile = () => {
         setTimeout(() => {
-            navigate(ROUTES.PROFILE);
-        }, 1000);
+            navigate(ROUTES.HOME);
+        }, DELAYS.REDIRECT_DELAY);
     };
+
+    const resetMessages = () => {
+        setError('');
+        setSuccessMessage('');
+    }
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError('');
-        setSuccessMessage('');
+        resetMessages();
 
-        if (!validateFields()) {
+        if (!validateFields())
             return;
-        }
 
         setIsLoading(true);
         try {
             const success = await signInUser();
-            if (success) {
-                
+            if (success)
                 redirectToProfile();
-            }
         } catch (error) {
             setErrorMessage('An unexpected error occurred. Please try again.');
         } finally {

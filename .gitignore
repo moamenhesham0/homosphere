@@ -26,7 +26,8 @@ replay_pid*
 # backend
 target/
 /.mvn/
-application.properties
+resources/*
+
 
 # frontend
 node_modules/

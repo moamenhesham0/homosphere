@@ -2,8 +2,13 @@ package com.homosphere.backend.service;
 
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
+import com.homosphere.backend.enums.UserRole;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.homosphere.backend.model.RegisterUser;
@@ -22,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
     
     private final UserRepository userRepository;
@@ -99,4 +105,30 @@ public class UserService {
         else
             return "Fail";
     }
+
+    public List<String> getSignUpRoles() {
+        List<String> roles = new ArrayList<>();
+        try {
+            roles = Arrays.stream(UserRole.values())
+                    .filter(role -> role != UserRole.ADMIN)
+                    .map(UserRole::name)
+                    .toList();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return roles;
+    }
+
+    public List<String> getAllRoles(){
+        List<String> roles = new ArrayList<>();
+        try {
+            roles = Arrays.stream(UserRole.values())
+                    .map(UserRole::name)
+                    .toList();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return roles;
+    }
+
 }

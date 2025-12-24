@@ -23,8 +23,8 @@ public class ApplicationConfig {
         return email -> userRepository.findByEmail(email)
                 .map(user -> {
                     // Read role directly from Supabase database, default to USER if null
-                    String role = user.getRole() != null && !user.getRole().isEmpty() 
-                                  ? user.getRole().toUpperCase() 
+                    String role = user.getRole() != null && !user.getRole().isEmpty()
+                                  ? user.getRole().toUpperCase()
                                   : "USER";
                     
                     return User.builder()
