@@ -488,6 +488,148 @@
   color: white;
 }
 
+/* Property Validation Section */
+.property-validation-section .property-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.property-tab {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  background: #E4EFE7;
+  color: #00a676;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.property-tab.active {
+  background: #fff;
+  color: #008a63;
+  border-bottom: 3px solid #00a676;
+  box-shadow: 0 -2px 8px rgba(0,166,118,0.08);
+}
+
+.property-tab:hover:not(.active) {
+  background: #f5f5dc;
+  color: #008a63;
+}
+
+.property-validation-section .properties-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  padding: 2rem 0;
+}
+
+@media (max-width: 1400px) {
+  .property-validation-section .properties-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .property-validation-section .properties-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .property-validation-section .properties-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.property-validation-section .property-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  border: 2px solid #E4EFE7;
+}
+
+.property-validation-section .property-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 166, 118, 0.15);
+  border-color: #00a676;
+}
+
+.property-validation-section .property-image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.property-validation-section .property-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.property-validation-section .property-card:hover .property-image img {
+  transform: scale(1.05);
+}
+
+.property-validation-section .property-content {
+  padding: 1.5rem;
+  background: #FDFAF6;
+}
+
+.property-validation-section .property-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #00a676;
+  margin-bottom: 0.5rem;
+}
+
+.property-validation-section .property-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.property-validation-section .property-location {
+  color: #00a676;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.property-validation-section .property-description {
+  color: #4a5568;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.property-validation-section .property-features {
+  display: flex;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #E4EFE7;
+}
+
+.property-validation-section .feature {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #00a676;
+  font-size: 0.85rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .admin-main-content {

@@ -53,7 +53,7 @@ class PropertyListingControllerTest {
     @WithMockUser
     void submitPropertyListing_ReturnsCreated() throws Exception {
         when(propertyListingService.submitPropertyListing(any())).thenReturn(new PropertyListingResponse());
-        mockMvc.perform(post("/api/property-listing/sumbit")
+        mockMvc.perform(post("/api/property-listing/submit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isCreated());

@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../utils/supabase';
+import { updatePropertyStatus } from '../services/apiPropertyStatus';
+import { fetchPropertyReviews } from '../services/apiPropertyReviews';
+import { fetchSinglePropertyReviews } from '../services/apiSinglePropertyReviews';
+import { FaRegCommentDots } from 'react-icons/fa';
 import '../styles/AdminPortal.css';
 
 export default function AdminPortal() {
@@ -20,6 +24,18 @@ export default function AdminPortal() {
   });
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [activeSection, setActiveSection] = useState('admins');
+  const [propertyTab, setPropertyTab] = useState('ALL');
+  const [propertyValidationList, setPropertyValidationList] = useState([]);
+  const [propertyLoading, setPropertyLoading] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewPropertyId, setReviewPropertyId] = useState(null);
+  const [propertyReviews, setPropertyReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [showPropertyReviewsModal, setShowPropertyReviewsModal] = useState(false);
+  const [propertyReviewsList, setPropertyReviewsList] = useState([]);
+  const [propertyReviewsLoading, setPropertyReviewsLoading] = useState(false);
+  const [propertyReviewsTitle, setPropertyReviewsTitle] = useState('');
 
   // Check if user is admin
   useEffect(() => {
@@ -178,6 +194,126 @@ export default function AdminPortal() {
     }
   };
 
+  // Fetch properties for validation
+  const fetchValidationProperties = async (tab) => {
+    setPropertyLoading(true);
+    setError(null);
+    let url = '';
+    switch (tab) {
+      case 'PENDING':
+        url = 'http://localhost:8080/api/properties/admin/pending';
+        break;
+      case 'REJECTED':
+        url = 'http://localhost:8080/api/properties/admin/rejected';
+        break;
+      case 'PUBLISHED':
+        url = 'http://localhost:8080/api/properties/admin/published';
+        break;
+      case 'ALL':
+      default:
+        url = 'http://localhost:8080/api/properties/admin/all-partitioned';
+        break;
+    }
+    try {
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch properties');
+      const data = await response.json();
+      if (tab === 'ALL') {
+        // Support any backend key: partitionedByStatus, partitioned, propertiesByStatus, or direct object
+        let obj = data.partitionedByStatus || data.partitioned || data.propertiesByStatus || data;
+        // If still not an object of arrays, try to go one level deeper
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          const firstVal = Object.values(obj)[0];
+          if (firstVal && typeof firstVal === 'object' && !Array.isArray(firstVal)) {
+            obj = firstVal;
+          }
+        }
+        // Debug: log keys and lengths
+        console.log('ALL tab - partitioned keys:', Object.keys(obj));
+        Object.entries(obj).forEach(([key, arr]) => {
+          console.log(`Key: ${key}, Array length:`, Array.isArray(arr) ? arr.length : 'not array');
+        });
+        const all = [];
+        Object.values(obj).forEach(arr => {
+          if (Array.isArray(arr)) all.push(...arr);
+        });
+        console.log('ALL tab - total properties:', all.length);
+        setPropertyValidationList(all);
+      } else {
+        setPropertyValidationList(data);
+      }
+    } catch (err) {
+      setError(err.message);
+      setPropertyValidationList([]);
+    } finally {
+      setPropertyLoading(false);
+    }
+  };
+
+  const handleOpenReviewModal = (propertyId) => {
+    setReviewPropertyId(propertyId);
+    setReviewText('');
+    setShowReviewModal(true);
+  };
+
+  const handleSubmitReview = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/property-submission-review/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          propertyListingId: reviewPropertyId,
+          message: reviewText,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to submit review');
+      setSuccessMessage('Review submitted successfully');
+      setShowReviewModal(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleShowPropertyReviews = async (property) => {
+    setShowPropertyReviewsModal(true);
+    setPropertyReviewsLoading(true);
+    setPropertyReviewsTitle(property.title || 'No Title');
+    try {
+      const review = await fetchSinglePropertyReviews(property.propertyListingId || property.id, token);
+      setPropertyReviewsList(review && review.message ? [review] : []);
+    } catch (err) {
+      setPropertyReviewsList([]);
+    } finally {
+      setPropertyReviewsLoading(false);
+    }
+  };
+
+  // Fetch property reviews when reviews tab is active
+  useEffect(() => {
+    if (activeSection === 'reviews') {
+      setReviewsLoading(true);
+      fetchPropertyReviews(token)
+        .then(data => {
+          setPropertyReviews(data);
+        })
+        .catch(err => setError(err.message))
+        .finally(() => setReviewsLoading(false));
+    }
+  }, [activeSection, token]);
+
+  // Fetch on tab change
+  useEffect(() => {
+    if (activeSection === 'property-validation') {
+      fetchValidationProperties(propertyTab);
+    }
+    // eslint-disable-next-line
+  }, [propertyTab, activeSection]);
+
   if (authLoading || loading) {
     return (
       <div className="admin-portal">
@@ -263,8 +399,71 @@ export default function AdminPortal() {
           <div className="property-validation-section">
             <div className="section-header">
               <h2>Property Validation Requests</h2>
+              <div className="property-tabs">
+                {['ALL', 'PENDING', 'REJECTED', 'PUBLISHED'].map(tab => (
+                  <button
+                    key={tab}
+                    className={`property-tab ${propertyTab === tab ? 'active' : ''}`}
+                    onClick={() => setPropertyTab(tab)}
+                  >
+                    {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  </button>
+                ))}
+              </div>
             </div>
-            <p className="section-placeholder">Property validation requests coming soon...</p>
+            {propertyLoading && <div className="loading">Loading properties...</div>}
+            {error && <div className="alert alert-error">{error}</div>}
+            {!propertyLoading && propertyValidationList.length === 0 && !error && (
+              <div className="no-results">No properties found for this status.</div>
+            )}
+            <div className="properties-container">
+              {propertyValidationList.map(property => {
+                const propertyId = property.id || property.propertyListingId;
+                const handleStatusChange = async (newStatus) => {
+                  try {
+                    await updatePropertyStatus(propertyId, newStatus, token);
+                    setSuccessMessage(`Property status updated to ${newStatus}`);
+                    // Remove property from current list (optimistic update)
+                    setPropertyValidationList(prev => prev.filter(p => (p.id || p.propertyListingId) !== propertyId));
+                    // Optionally, refetch properties for more accuracy
+                    // fetchValidationProperties(propertyTab);
+                  } catch (err) {
+                    setError(err.message);
+                  }
+                };
+                return (
+                  <div
+                    key={propertyId}
+                    className="property-card"
+                    onClick={() => navigate(`/property/${propertyId}`)}
+                  >
+                    <div className="property-image">
+                      <img src={(property.bannerImage && property.bannerImage.imageUrl) || 'https://via.placeholder.com/400x300?text=Image+Missing'} alt={property.title} />
+                    </div>
+                    <div className="property-content">
+                      <div className="property-price">{property.price ? property.price + ' EGP' : 'N/A'}</div>
+                      <h3 className="property-title">{property.title ? property.title : 'No Title'}</h3>
+                      <p className="property-location">{[property.city, property.state].filter(Boolean).join(', ')}</p>
+                      <button className="btn btn-view" style={{width: '100%', margin: '0.5rem 0'}} onClick={e => { e.stopPropagation(); handleShowPropertyReviews(property); }}>Show Reviews</button>
+                      {property.description && (
+                        <p className="property-description">{property.description}</p>
+                      )}
+                      <div className="property-features">
+                        <span className="feature">{property.bedrooms} beds</span>
+                        <span className="feature">{property.bathrooms} baths</span>
+                      </div>
+                      <div className="property-actions" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'nowrap' }}>
+                        <button className="btn btn-primary" style={{padding: '0.5rem 1rem', fontSize: '0.95rem'}} onClick={e => { e.stopPropagation(); handleStatusChange('PUBLISHED'); }}>Publish</button>
+                        <button className="btn btn-danger" style={{padding: '0.5rem 1rem', fontSize: '0.95rem'}} onClick={e => { e.stopPropagation(); handleStatusChange('REJECTED'); }}>Reject</button>
+                        <button className="btn btn-secondary" style={{padding: '0.5rem', minWidth: '40px', fontSize: '0.95rem', display: 'flex', alignItems: 'center', justifyContent: 'center'}} onClick={e => { e.stopPropagation(); handleOpenReviewModal(propertyId); }} title="Write Review">
+                          <FaRegCommentDots size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         );
 
@@ -428,6 +627,55 @@ export default function AdminPortal() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="modal-overlay" onClick={() => setShowReviewModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Write Review</h2>
+              <button className="modal-close" onClick={() => setShowReviewModal(false)}>×</button>
+            </div>
+            <textarea
+              value={reviewText}
+              onChange={e => setReviewText(e.target.value)}
+              rows={5}
+              style={{ width: '100%', marginBottom: '1rem', padding: '1rem', borderRadius: '8px', border: '1px solid #ccc' }}
+              placeholder="Write your review here..."
+            />
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowReviewModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSubmitReview} disabled={!reviewText.trim()}>Submit Review</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Property Reviews Modal */}
+      {showPropertyReviewsModal && (
+        <div className="modal-overlay" onClick={() => setShowPropertyReviewsModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Reviews for: {propertyReviewsTitle}</h2>
+              <button className="modal-close" onClick={() => setShowPropertyReviewsModal(false)}>×</button>
+            </div>
+            {propertyReviewsLoading ? (
+              <div className="loading">Loading reviews...</div>
+            ) : propertyReviewsList.length === 0 ? (
+              <div className="no-results">No reviews found for this property.</div>
+            ) : (
+              <ul style={{padding: 0, listStyle: 'none'}}>
+                {propertyReviewsList.map((review, idx) => (
+                  <li key={idx} style={{marginBottom: '1rem', background: '#FDFAF6', borderRadius: '8px', padding: '1rem'}}>
+                    <div style={{fontWeight: 600, color: '#00a676'}}>Review:</div>
+                    <div>{review.message}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}

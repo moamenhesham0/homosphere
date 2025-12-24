@@ -31,7 +31,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
+import com.homosphere.backend.enums.PropertyListingStatus;
 import com.homosphere.backend.mapper.PropertyListingMapper;
 import com.homosphere.backend.model.Location;
 import com.homosphere.backend.model.property.Property;
@@ -84,6 +86,9 @@ class PropertyServiceTest {
     private PropertyRepository propertyRepository;
 
     @Mock
+    private PropertyListingRepository propertyListingRepository;
+
+    @Mock
     private PropertyListingMapper propertyListingMapper;
 
     @InjectMocks
@@ -133,7 +138,7 @@ class PropertyServiceTest {
 
         when(propertyRepository.searchPropertyListings(eq(query), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        when(propertyListingMapper.toCompactResponse(propertyListing))
             .thenReturn(compactResponse);
 
         // Act
@@ -210,8 +215,11 @@ class PropertyServiceTest {
 
         when(propertyRepository.searchPropertyListings(eq(query), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
-            .thenReturn(compactResponse);
+        when(propertyListingMapper.toCompactResponse(propertyListing)).thenReturn(compactResponse);
+        CompactPropertyListingResponse compactResponse2 = new CompactPropertyListingResponse();
+        compactResponse2.setPropertyListingId(listing2.getPropertyListingId());
+        compactResponse2.setTitle("4 Bed Apartment");
+        when(propertyListingMapper.toCompactResponse(listing2)).thenReturn(compactResponse2);
 
         // Act
         Page<CompactPropertyListingResponse> result = propertyService.searchProperties(query, pageable);
@@ -220,7 +228,8 @@ class PropertyServiceTest {
         assertNotNull(result);
         assertEquals(2, result.getContent().size());
         verify(propertyRepository, times(1)).searchPropertyListings(query, pageable);
-        verify(propertyListingMapper, times(2)).toCompactResponse(any(PropertyListing.class));
+        verify(propertyListingMapper, times(1)).toCompactResponse(propertyListing);
+        verify(propertyListingMapper, times(1)).toCompactResponse(listing2);
     }
 
     @Test
@@ -240,7 +249,7 @@ class PropertyServiceTest {
             anyInt(), anyInt(), anyDouble(), anyDouble(),
             anyInt(), anyInt(), anyString(), anyString(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        org.mockito.Mockito.lenient().when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -264,7 +273,7 @@ class PropertyServiceTest {
             isNull(), isNull(), isNull(), isNull(),
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        org.mockito.Mockito.lenient().when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -288,8 +297,6 @@ class PropertyServiceTest {
         when(propertyRepository.filterPropertyListings(
             any(), any(), any(), any(), anyInt(), anyInt(), any(), any(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
-            .thenReturn(compactResponse);
 
         // Act
         Page<CompactPropertyListingResponse> result = propertyService.filterProperties(
@@ -331,7 +338,7 @@ class PropertyServiceTest {
             eq(bedrooms), isNull(), isNull(), isNull(),
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        org.mockito.Mockito.lenient().when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -357,7 +364,7 @@ class PropertyServiceTest {
             isNull(), isNull(), eq(minPrice), eq(maxPrice),
             isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
             .thenReturn(propertyPage);
-        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
+        org.mockito.Mockito.lenient().when(propertyListingMapper.toCompactResponse(any(PropertyListing.class)))
             .thenReturn(compactResponse);
 
         // Act
@@ -370,5 +377,153 @@ class PropertyServiceTest {
         verify(propertyRepository, times(1)).filterPropertyListings(
             isNull(), isNull(), eq(minPrice), eq(maxPrice),
             isNull(), isNull(), isNull(), isNull(), eq(pageable));
+    }
+
+    @Test
+    void getAllPropertiesPartitionedByStatus_ReturnsPartitionedResponse() {
+        // Arrange
+        PropertyListing listing1 = new PropertyListing();
+        listing1.setStatus(PropertyListingStatus.PENDING);
+        PropertyListing listing2 = new PropertyListing();
+        listing2.setStatus(PropertyListingStatus.PUBLISHED);
+        PropertyListing listing3 = new PropertyListing();
+        listing3.setStatus(PropertyListingStatus.REJECTED);
+        List<PropertyListing> allListings = List.of(listing1, listing2, listing3);
+        CompactPropertyListingResponse response1 = new CompactPropertyListingResponse();
+        CompactPropertyListingResponse response2 = new CompactPropertyListingResponse();
+        CompactPropertyListingResponse response3 = new CompactPropertyListingResponse();
+        when(propertyListingMapper.toCompactResponse(listing1)).thenReturn(response1);
+        when(propertyListingMapper.toCompactResponse(listing2)).thenReturn(response2);
+        when(propertyListingMapper.toCompactResponse(listing3)).thenReturn(response3);
+        when(propertyListingRepository.findAll()).thenReturn(allListings);
+
+        // Act
+        PropertyAdminResponse response = propertyService.getAllPropertiesPartitionedByStatus();
+
+        // Assert
+        assertNotNull(response);
+        for (PropertyListingStatus status : PropertyListingStatus.values()) {
+            assertNotNull(response.getPropertiesByStatus().get(status));
+        }
+    }
+
+    @Test
+    void getAllPendingProperties_ReturnsPendingList() {
+        // Arrange
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class))).thenReturn(compactResponse);
+        when(propertyListingRepository.findByStatus(PropertyListingStatus.PENDING)).thenReturn(List.of(propertyListing));
+
+        // Act
+        List<CompactPropertyListingResponse> result = propertyService.getAllPendingProperties();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(propertyListingRepository, times(1)).findByStatus(PropertyListingStatus.PENDING);
+    }
+
+    @Test
+    void getAllPublishedProperties_ReturnsPublishedList() {
+        // Arrange
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class))).thenReturn(compactResponse);
+        when(propertyListingRepository.findByStatus(PropertyListingStatus.PUBLISHED)).thenReturn(List.of(propertyListing));
+
+        // Act
+        List<CompactPropertyListingResponse> result = propertyService.getAllPublishedProperties();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(propertyListingRepository, times(1)).findByStatus(PropertyListingStatus.PUBLISHED);
+    }
+
+    @Test
+    void getAllRejectedProperties_ReturnsRejectedList() {
+        // Arrange
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class))).thenReturn(compactResponse);
+        when(propertyListingRepository.findByStatus(PropertyListingStatus.REJECTED)).thenReturn(List.of(propertyListing));
+
+        // Act
+        List<CompactPropertyListingResponse> result = propertyService.getAllRejectedProperties();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(propertyListingRepository, times(1)).findByStatus(PropertyListingStatus.REJECTED);
+    }
+
+    @Test
+    void getAllRequiresChangesProperties_ReturnsRequiresChangesList() {
+        // Arrange
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class))).thenReturn(compactResponse);
+        when(propertyListingRepository.findByStatus(PropertyListingStatus.REQUIRES_CHANGES)).thenReturn(List.of(propertyListing));
+
+        // Act
+        List<CompactPropertyListingResponse> result = propertyService.getAllRequiresChangesProperties();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(propertyListingRepository, times(1)).findByStatus(PropertyListingStatus.REQUIRES_CHANGES);
+    }
+
+    @Test
+    void getAllUnlistedProperties_ReturnsUnlistedList() {
+        // Arrange
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class))).thenReturn(compactResponse);
+        when(propertyListingRepository.findByStatus(PropertyListingStatus.UNLISTED)).thenReturn(List.of(propertyListing));
+
+        // Act
+        List<CompactPropertyListingResponse> result = propertyService.getAllUnlistedProperties();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(propertyListingRepository, times(1)).findByStatus(PropertyListingStatus.UNLISTED);
+    }
+
+    @Test
+    void getAllSoldProperties_ReturnsSoldList() {
+        // Arrange
+        when(propertyListingMapper.toCompactResponse(any(PropertyListing.class))).thenReturn(compactResponse);
+        when(propertyListingRepository.findByStatus(PropertyListingStatus.SOLD)).thenReturn(List.of(propertyListing));
+
+        // Act
+        List<CompactPropertyListingResponse> result = propertyService.getAllSoldProperties();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(propertyListingRepository, times(1)).findByStatus(PropertyListingStatus.SOLD);
+    }
+
+    @Test
+    void updatePropertyListingStatus_UpdatesStatusSuccessfully() {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        PropertyListing listing = new PropertyListing();
+        listing.setPropertyListingId(id);
+        when(propertyListingRepository.findById(id)).thenReturn(java.util.Optional.of(listing));
+        when(propertyListingRepository.save(listing)).thenReturn(listing);
+
+        // Act
+        propertyService.updatePropertyListingStatus(id, PropertyListingStatus.PUBLISHED);
+
+        // Assert
+        assertEquals(PropertyListingStatus.PUBLISHED, listing.getStatus());
+        verify(propertyListingRepository, times(1)).findById(id);
+        verify(propertyListingRepository, times(1)).save(listing);
+    }
+
+    @Test
+    void updatePropertyListingStatus_ThrowsIfNotFound() {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        when(propertyListingRepository.findById(id)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        assertThrows(org.springframework.web.server.ResponseStatusException.class, () ->
+            propertyService.updatePropertyListingStatus(id, PropertyListingStatus.PUBLISHED));
+        verify(propertyListingRepository, times(1)).findById(id);
     }
 }

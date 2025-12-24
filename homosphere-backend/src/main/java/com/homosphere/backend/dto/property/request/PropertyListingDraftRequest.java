@@ -1,9 +1,8 @@
 package com.homosphere.backend.dto.property.request;
 
-import com.homosphere.backend.dto.property.response.PropertyListingResponse;
-import com.homosphere.backend.dto.property.response.PropertyResponse;
+
 import com.homosphere.backend.enums.PropertyListingManagementStatus;
-import com.homosphere.backend.enums.PropertyListingStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
