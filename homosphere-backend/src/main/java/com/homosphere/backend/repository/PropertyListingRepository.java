@@ -36,4 +36,6 @@ public interface PropertyListingRepository extends JpaRepository<PropertyListing
 
     @Query("UPDATE PropertyListing pl SET pl.views = pl.views + 1 WHERE pl.propertyListingId = :propertyListingId")
     void updateViewCount(UUID propertyListingId);
+    
+    java.util.Optional<PropertyListing> findByProperty_PropertyId(UUID propertyId);
 }

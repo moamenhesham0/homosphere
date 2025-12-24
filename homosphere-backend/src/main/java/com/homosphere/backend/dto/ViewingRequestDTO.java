@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ViewingRequestDTO {
     private UUID propertyId;
+    private String propertyTitle; // Added for frontend context
     private String name;
     private String email;
     private String phone;
