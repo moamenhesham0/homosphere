@@ -85,4 +85,11 @@ public class User {
         return this.id;
     }
 
+    public String getName() {
+        String first = firstName != null ? firstName : "";
+        String last = lastName != null ? lastName : "";
+        String fullName = (first + " " + last).trim();
+        return fullName.isEmpty() ? userName : fullName;
+    }
+
 }

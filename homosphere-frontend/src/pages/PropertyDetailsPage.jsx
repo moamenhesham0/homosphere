@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import RequestViewForm from '../components/RequestViewForm';
 import '../styles/PropertyDetailsPage.css';
 
@@ -209,13 +209,17 @@ const PropertyDetailsPage = () => {
                     </div>
 
                     {/* Seller Information */}
-                    {property.sellerName && (
+                    {property.sellerName && property.sellerId && (
                         <div className="property-seller">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
-                            <span>Listed by: <strong>{property.sellerName}</strong></span>
+                            <span>Listed by: <strong>
+                                <Link to={`/public-profile/${property.sellerId}`} className="seller-link">
+                                    {property.sellerName}
+                                </Link>
+                            </strong></span>
                         </div>
                     )}
 

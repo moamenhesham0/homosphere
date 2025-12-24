@@ -18,6 +18,7 @@ import AdminPortal from './pages/AdminPortal.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import PropertyDetailsPage from './pages/PropertyDetailsPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
+import PublicProfile from './pages/PublicProfile.jsx';
 
 
 createRoot(document.getElementById('root')).render(
@@ -40,6 +41,8 @@ createRoot(document.getElementById('root')).render(
                     <Route path={ROUTES.SEARCH} element={<SearchPage />} />
                     <Route path="/property/:id" element={<PropertyDetailsPage />} />
                     <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+                    <Route path="/public-profile/:id" element={<PublicProfile />} />
+                    <Route path="/private-profile/:id" element={<Profile />} />
                 </Route>
             </Routes>
         </BrowserRouter>

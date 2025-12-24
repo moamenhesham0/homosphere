@@ -6,11 +6,13 @@ import { fetchPublicUserData } from "../services/userApi";
 import { fetchPublishedPropertiesByUser } from "../services/propertyApi";
 import ProfileInfo from "../components/profile/ProfileInfo";
 import PublicPropertyCard from "../components/PublicPropertyCard";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function PublicProfile({ id: propId }) {
+  const { token, user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
+  const [userData, setUser] = useState(null);
   const [properties, setProperties] = useState([]);
   const params = useParams();
   const id = propId || params.id;
@@ -21,7 +23,9 @@ export default function PublicProfile({ id: propId }) {
       try {
         setLoading(true);
         if (!id) return;
-        const data = await fetchPublicUserData(id);
+        // Only pass token and isAdmin if user is admin
+        const isAdmin = user && user.role && user.role.toLowerCase() === "admin";
+        const data = await fetchPublicUserData(id, isAdmin ? token : undefined, isAdmin);
         setUser({
           firstname: data.firstname || "",
           lastname: data.lastname || "",
@@ -34,7 +38,7 @@ export default function PublicProfile({ id: propId }) {
           bio: data.bio || "",
         });
         // Fetch published properties for this user
-        const props = await fetchPublishedPropertiesByUser(id);
+        const props = await fetchPublishedPropertiesByUser(id, isAdmin ? token : undefined);
         setProperties(props);
         setError(null);
       } catch (err) {
@@ -45,7 +49,7 @@ export default function PublicProfile({ id: propId }) {
       }
     };
     getUser();
-  }, [id]);
+  }, [id, token, user]);
 
   if (loading)
     return (
@@ -59,7 +63,7 @@ export default function PublicProfile({ id: propId }) {
         <div className="error-message">{error}</div>
       </div>
     );
-  if (!user)
+  if (!userData)
     return (
       <div className="public-profile-container">
         <div className="error-message">No user data loaded.</div>
@@ -68,7 +72,7 @@ export default function PublicProfile({ id: propId }) {
 
   return (
     <div className="public-profile-outer">
-      <ProfileInfo tempUser={user} editMode={false} publicMode={true} />
+      <ProfileInfo tempUser={userData} editMode={false} publicMode={true} />
       <div className="published-ads">Published Properties: {properties.length}</div>
       <div className="properties-container">
         <h2>Published Properties</h2>

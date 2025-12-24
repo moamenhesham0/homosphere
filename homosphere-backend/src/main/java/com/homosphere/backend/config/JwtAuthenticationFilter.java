@@ -31,10 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         
-        // Skip JWT validation for public endpoints only
         String requestPath = request.getRequestURI();
+        // Debug: Log the incoming request path
+        logger.info("Incoming request path: {}", requestPath);
+        // Skip JWT validation for public endpoints only
         if (requestPath.startsWith("/api/auth/") || 
-            requestPath.startsWith("/api/public/"))
+            requestPath.startsWith("/api/public/") ||
+            requestPath.startsWith("/api/user/public")) // Removed /api/property-listing/public/user/ from skip list
             // || requestPath.startsWith("/api/user-subscriptions/")) 
             {
             filterChain.doFilter(request, response);
@@ -55,27 +58,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         }
         
         String authHeader = request.getHeader("Authorization");
-        String userId = null;
-        String token;
-
-        // Debug: Log the incoming Authorization header
-        logger.info("Incoming Authorization header: {}", authHeader);
-
-        /*
-         * Extract JWT token from Authorization header
-         */
         if(authHeader == null || !authHeader.startsWith("Bearer ")){
-            // Allow requests without auth header to pass through (for public endpoints)
-            logger.warn("Missing or invalid Authorization header");
+            logger.warn("Missing or invalid Authorization header for protected endpoint: {}", requestPath);
             filterChain.doFilter(request, response);
             return;
         }
 
-        token = authHeader.replaceFirst("Bearer ", "");
-        try {
-            logger.info("Validating JWT token: {}", token);
+          String token = authHeader.replaceFirst("Bearer ", "");
+          String userId;
+          try {
             userId = jwtService.extractUserId(token);
-            logger.info("Extracted userId from token: {}", userId);
         } catch (Exception e) {
             logger.warn("Token extraction failed: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
@@ -89,7 +81,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         if(userId != null && SecurityContextHolder.getContext().getAuthentication() == null){
 
             if (!jwtService.validateToken(token)) {
-                logger.warn("Token validation failed for userId: {}", userId);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
                 return;
             }
@@ -105,7 +96,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
             Optional<User> userOpt = userRepository.findById(userUuid);
             if (userOpt.isEmpty()) {
-                logger.warn("User not found in database for userId: {}", userId);
+                logger.warn("User not found for userId: {}", userId);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
                 return;
             }
@@ -115,18 +106,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
            /*
             * Extract role from JWT token metadata
             */
-            String role = "USER"; // Default role
+            String role;
             try {
                 role = jwtService.extractUserRole(token);
             } catch (Exception e) {
-                logger.warn("Role extraction failed, using default: {}", e.getMessage());
+                logger.warn("Role extraction failed, using 'authenticated': {}", e.getMessage());
+                role = "authenticated";
             }
-            
-            // Create authorities with ROLE_ prefix
+            logger.info("Extracted role from JWT: {}", role);
+            // Always uppercase for authority
+            String authority = "ROLE_" + role.toUpperCase();
             java.util.Collection<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = 
                 java.util.Collections.singletonList(
-                    new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role)
+                    new org.springframework.security.core.authority.SimpleGrantedAuthority(authority)
                 );
+            logger.info("Spring Security authorities: {}", authorities);
             UsernamePasswordAuthenticationToken authToken = 
                 new UsernamePasswordAuthenticationToken(
                     userId,  // Use userId as principal
