@@ -9,6 +9,7 @@ const AgentDashboard = () => {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null); 
   const [filters, setFilters] = useState({
     propertyName: '',
     status: 'all' 
@@ -36,14 +37,24 @@ const AgentDashboard = () => {
 
       const userId = session.user.id;
       
-      const response = await axios.get(`http://localhost:8080/api/viewing-requests/seller/${userId}`);
+      const role = session.user.user_metadata?.role; 
+      setUserRole(role); 
+
+      let endpoint = '';
+      if ((role || '').toUpperCase() === 'BUYER') {
+        endpoint = `http://localhost:8080/api/viewing-requests/buyer/${userId}`;
+      } else {
+        endpoint = `http://localhost:8080/api/viewing-requests/seller/${userId}`;
+      }
+      
+      const response = await axios.get(endpoint);
 
       const sorted = response.data.sort((a, b) => {
         const dateA = new Date(a.preferredDate);
         const dateB = new Date(b.preferredDate);
         const dateDiff = dateA - dateB;
         if (dateDiff !== 0) return dateDiff;
-        return new Date(a.startTime) - new Date(b.startTime);
+        return (a.startTime || '').localeCompare(b.startTime || '');
       });
 
       setViewingRequests(sorted);
@@ -62,7 +73,6 @@ const AgentDashboard = () => {
     if (filters.propertyName.trim()) {
       const searchTerm = filters.propertyName.toLowerCase();
       filtered = filtered.filter(req => {
-  
         const title1 = req.propertyTitle?.toLowerCase() || '';
         const title2 = req.property?.propertyListing?.title?.toLowerCase() || '';
         return title1.includes(searchTerm) || title2.includes(searchTerm);
@@ -72,10 +82,10 @@ const AgentDashboard = () => {
     if (filters.status !== 'all') {
       filtered = filtered.filter(req => {
         const reqStatus = (req.status || 'PENDING').toUpperCase();
-        
         if (filters.status === 'confirmed') return reqStatus === 'APPROVED';
         if (filters.status === 'declined') return reqStatus === 'REJECTED';
         if (filters.status === 'reschedule') return reqStatus === 'RESCHEDULED';
+        if (filters.status === 'withdrawn') return reqStatus === 'WITHDRAWN';
         return reqStatus === filters.status.toUpperCase();
       });
     }
@@ -92,41 +102,41 @@ const AgentDashboard = () => {
   };
 
   const handleStatusUpdate = async (requestId, newStatus, additionalData = {}) => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          alert('Please log in to update requests');
-          return;
-        }
-        
-        const userId = session.user.id; 
-  
-        // Convert UI status to Backend Enum
-        let backendStatus = newStatus.toUpperCase();
-        if (newStatus === 'confirmed') backendStatus = 'APPROVED';
-        if (newStatus === 'declined') backendStatus = 'REJECTED';
-        if (newStatus === 'reschedule') backendStatus = 'RESCHEDULED';
-
-        const response = await axios.patch(
-          `http://localhost:8080/api/viewing-requests/${requestId}/status`,
-          {
-            status: backendStatus,
-            processedBy: userId,
-            ...additionalData
-          }
-        );
-  
-        setViewingRequests(prev => 
-          prev.map(req => 
-            req.id === requestId ? response.data : req
-          )
-        );
-        alert(`Request ${newStatus} successfully!`);
-      } catch (err) {
-        console.error('Error updating request:', err);
-        alert('Failed to update request status');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        alert('Please log in to update requests');
+        return;
       }
-    };
+      
+      const userId = session.user.id; 
+
+      let backendStatus = newStatus.toUpperCase();
+      if (newStatus === 'confirmed') backendStatus = 'APPROVED';
+      if (newStatus === 'declined') backendStatus = 'REJECTED';
+      if (newStatus === 'reschedule') backendStatus = 'RESCHEDULED';
+      if (newStatus === 'withdrawn') backendStatus = 'WITHDRAWN';
+
+      const response = await axios.patch(
+        `http://localhost:8080/api/viewing-requests/${requestId}/status`,
+        {
+          status: backendStatus,
+          processedBy: userId,
+          ...additionalData
+        }
+      );
+
+      setViewingRequests(prev => 
+        prev.map(req => 
+          req.id === requestId ? response.data : req
+        )
+      );
+      alert(`Request ${newStatus} successfully!`);
+    } catch (err) {
+      console.error('Error updating request:', err);
+      alert('Failed to update request status');
+    }
+  };
 
   const getStatusCounts = () => {
     const counts = {
@@ -134,7 +144,8 @@ const AgentDashboard = () => {
       pending: 0,
       confirmed: 0,
       declined: 0,
-      reschedule: 0
+      reschedule: 0,
+      withdrawn: 0
     };
 
     viewingRequests.forEach(req => {
@@ -144,6 +155,7 @@ const AgentDashboard = () => {
       else if (status === 'APPROVED') counts.confirmed++;
       else if (status === 'REJECTED') counts.declined++;
       else if (status === 'RESCHEDULED') counts.reschedule++;
+      else if (status === 'WITHDRAWN') counts.withdrawn++;
     });
 
     return counts;
@@ -158,8 +170,12 @@ const AgentDashboard = () => {
     <div className="agent-dashboard">
       <div className="dashboard-container">
         <header className="dashboard-header">
-          <h1>Agent Dashboard</h1>
-          <p className="subtitle">Manage your viewing requests efficiently</p>
+          <h1>{(userRole || '').toUpperCase() === 'BUYER' ? 'My Viewing Requests' : 'Agent Dashboard'}</h1>
+          <p className="subtitle">
+            {(userRole || '').toUpperCase() === 'BUYER' 
+              ? 'Track the status of your property viewings' 
+              : 'Manage your viewing requests efficiently'}
+          </p>
         </header>
 
         <div className="filters-section">
@@ -190,6 +206,7 @@ const AgentDashboard = () => {
               <option value="confirmed">Confirmed ({statusCounts.confirmed})</option>
               <option value="declined">Declined ({statusCounts.declined})</option>
               <option value="reschedule">Reschedule ({statusCounts.reschedule})</option>
+              <option value="withdrawn">Withdrawn ({statusCounts.withdrawn})</option>
             </select>
           </div>
           
@@ -227,6 +244,7 @@ const AgentDashboard = () => {
                 key={request.id}
                 request={request}
                 onStatusUpdate={handleStatusUpdate}
+                userRole={userRole} 
               />
             ))
           )}

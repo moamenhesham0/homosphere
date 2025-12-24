@@ -78,6 +78,17 @@ public class ViewingRequestController {
         }
     }
 
+    @GetMapping("/buyer/{buyerId}")
+    public ResponseEntity<?> getBuyerViewingRequests(@PathVariable UUID buyerId) {
+        try {
+            List<ViewingRequest> requests = viewingRequestService.getUserViewingRequests(buyerId);
+            return ResponseEntity.ok(requests);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
     @PatchMapping("/{requestId}/status")
     public ResponseEntity<?> updateViewingRequestStatus(
             @PathVariable UUID requestId,

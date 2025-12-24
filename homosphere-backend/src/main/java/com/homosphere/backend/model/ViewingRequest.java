@@ -16,7 +16,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,6 +35,10 @@ public class ViewingRequest {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "request_viewing_id")
     private UUID id;
+
+    @OneToOne(mappedBy = "viewingRequest", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"viewingRequest", "hibernateLazyInitializer", "handler"}) 
+    private ProcessedViewingRequest processedRequest;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = false)
@@ -72,7 +78,8 @@ public class ViewingRequest {
         PENDING,
         APPROVED,
         REJECTED,
-        RESCHEDULED
+        RESCHEDULED,
+        WITHDRAWN
     }
 
     @Enumerated(EnumType.STRING)

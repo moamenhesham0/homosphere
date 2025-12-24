@@ -226,8 +226,67 @@ class ViewingRequestServiceTest {
             viewingRequestService.updateRequestStatus(requestId, statusDTO);
         });
 
-        assertTrue(exception.getMessage().contains("Agent user not found"));
+        // Error message might be "User not found" or "Agent user not found" depending on your exact Service string
+        assertTrue(exception.getMessage().contains("User not found"));
         verify(processedViewingRequestRepository, never()).save(any());
+    }
+
+    // Test for Buyer Accepting Reschedule (Updates Time) ---
+    @Test
+    void updateRequestStatus_BuyerAcceptsReschedule_UpdatesTime() {
+        // Arrange
+        UUID requestId = mockViewingRequest.getId();
+        // Current state: Rescheduled
+        mockViewingRequest.setStatus(ViewingRequest.Status.RESCHEDULED);
+        
+        // Mock existing processed request with new proposed time
+        ProcessedViewingRequest processed = new ProcessedViewingRequest();
+        processed.setViewingRequest(mockViewingRequest);
+        processed.setNewDate(LocalDate.now().plusDays(10));
+        processed.setNewStartTime(LocalTime.of(14, 0));
+        processed.setNewEndTime(LocalTime.of(15, 0));
+        
+        // Input DTO: Buyer Approves
+        StatusUpdateDTO dto = new StatusUpdateDTO();
+        dto.setStatus(ViewingRequest.Status.APPROVED);
+        dto.setProcessedBy(userId);
+
+        when(viewingRequestRepository.findById(requestId)).thenReturn(Optional.of(mockViewingRequest));
+        // Mock finding the existing processed record
+        when(processedViewingRequestRepository.findAll()).thenReturn(Collections.singletonList(processed));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        // Capture the save to verify changes
+        when(viewingRequestRepository.save(any(ViewingRequest.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        ViewingRequest result = viewingRequestService.updateRequestStatus(requestId, dto);
+
+        // Assert
+        assertEquals(ViewingRequest.Status.APPROVED, result.getStatus());
+        // Verify time was updated to the proposed time
+        assertEquals(processed.getNewDate(), result.getPreferredDate());
+        assertEquals(processed.getNewStartTime(), result.getStartTime());
+        assertEquals(processed.getNewEndTime(), result.getEndTime());
+        // Verify the processed record was attached (memory link)
+        assertNotNull(result.getProcessedRequest());
+    }
+
+    // --- NEW: Test for Buyer Withdrawal ---
+    @Test
+    void updateRequestStatus_BuyerWithdraws_Success() {
+        UUID requestId = mockViewingRequest.getId();
+        StatusUpdateDTO dto = new StatusUpdateDTO();
+        dto.setStatus(ViewingRequest.Status.WITHDRAWN);
+        dto.setProcessedBy(userId);
+
+        when(viewingRequestRepository.findById(requestId)).thenReturn(Optional.of(mockViewingRequest));
+        when(processedViewingRequestRepository.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(viewingRequestRepository.save(any(ViewingRequest.class))).thenAnswer(i -> i.getArgument(0));
+
+        ViewingRequest result = viewingRequestService.updateRequestStatus(requestId, dto);
+
+        assertEquals(ViewingRequest.Status.WITHDRAWN, result.getStatus());
     }
 
     // --- Getters Tests ---

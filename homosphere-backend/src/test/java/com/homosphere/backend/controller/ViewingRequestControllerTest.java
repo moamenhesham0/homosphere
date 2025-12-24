@@ -191,6 +191,49 @@ class ViewingRequestControllerTest {
     }
 
     @Test
+    void updateViewingRequestStatus_Withdrawn() {
+        // New Test: Verifies that the controller handles the WITHDRAWN status payload correctly
+        UUID requestId = UUID.randomUUID();
+        StatusUpdateDTO dto = new StatusUpdateDTO();
+        dto.setProcessedBy(userId);
+        dto.setStatus(ViewingRequest.Status.WITHDRAWN);
+
+        // Update the mock to return a withdrawn request
+        mockViewingRequest.setStatus(ViewingRequest.Status.WITHDRAWN);
+        when(viewingRequestService.updateRequestStatus(eq(requestId), any(StatusUpdateDTO.class)))
+            .thenReturn(mockViewingRequest);
+
+        ResponseEntity<?> response = viewingRequestController.updateViewingRequestStatus(requestId, dto);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ViewingRequest body = (ViewingRequest) response.getBody();
+        assertEquals(ViewingRequest.Status.WITHDRAWN, body.getStatus());
+    }
+
+    @Test
+    void updateViewingRequestStatus_RescheduleWithData() {
+        // New Test: Verifies that the controller accepts the full reschedule payload (Date/Times)
+        UUID requestId = UUID.randomUUID();
+        StatusUpdateDTO dto = new StatusUpdateDTO();
+        dto.setProcessedBy(userId);
+        dto.setStatus(ViewingRequest.Status.RESCHEDULED);
+        dto.setNewDate(LocalDate.now().plusDays(5));
+        dto.setNewStartTime(LocalTime.of(14, 0));
+        dto.setNewEndTime(LocalTime.of(15, 0));
+        dto.setAgentMessage("Need to move time");
+
+        mockViewingRequest.setStatus(ViewingRequest.Status.RESCHEDULED);
+        
+        when(viewingRequestService.updateRequestStatus(eq(requestId), any(StatusUpdateDTO.class)))
+            .thenReturn(mockViewingRequest);
+
+        ResponseEntity<?> response = viewingRequestController.updateViewingRequestStatus(requestId, dto);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(viewingRequestService).updateRequestStatus(eq(requestId), any(StatusUpdateDTO.class));
+    }
+
+    @Test
     void updateViewingRequestStatus_MissingUserId() {
         UUID requestId = UUID.randomUUID();
         StatusUpdateDTO dto = new StatusUpdateDTO();
@@ -215,5 +258,30 @@ class ViewingRequestControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertTrue(response.getBody().toString().contains("Error updating status"));
+    }
+
+    //  Endpoint Tests (Buyer) 
+
+    @Test
+    void getBuyerViewingRequests_Success() {
+        when(viewingRequestService.getUserViewingRequests(userId))
+            .thenReturn(Arrays.asList(mockViewingRequest));
+
+        ResponseEntity<?> response = viewingRequestController.getBuyerViewingRequests(userId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        List<ViewingRequest> body = (List<ViewingRequest>) response.getBody();
+        assertEquals(1, body.size());
+    }
+
+    @Test
+    void getBuyerViewingRequests_Exception() {
+        when(viewingRequestService.getUserViewingRequests(any()))
+            .thenThrow(new RuntimeException("Buyer not found"));
+
+        ResponseEntity<?> response = viewingRequestController.getBuyerViewingRequests(userId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Error"));
     }
 }
