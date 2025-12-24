@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pandas
+catboost
+supabase
+python-dotenv
+psycopg2-binary
+
+# testing
+pytest
+httpx
