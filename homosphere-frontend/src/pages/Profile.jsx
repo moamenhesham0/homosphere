@@ -162,6 +162,7 @@ export default function Profile() {
             'Authorization': `Bearer ${session?.access_token}`
           },
           body: formData,
+          credentials: 'include',
         });
         if (!response.ok) {
           throw new Error(`Upload failed: ${response.status}`);
