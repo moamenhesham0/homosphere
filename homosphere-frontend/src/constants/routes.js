@@ -7,6 +7,7 @@ export const ROUTES = {
   FORGET_PASSWORD: '/forget-password',
   AUTH: '/auth',
   SUBSCRIPTION: '/subscription',
+  PAYPAL_CHECKOUT: '/paypal-checkout',
   PROPERTY_LISTING_FORM: '/property-listing-form',
   ADMIN_PORTAL: '/admin-portal',
   SEARCH: '/search',
