@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.homosphere.backend.dto.PublicUserDto;
 import com.homosphere.backend.model.RegisterUser;
 import com.homosphere.backend.model.SubscriptionTier;
 import com.homosphere.backend.model.User;
@@ -72,10 +73,8 @@ public class UserService {
             System.out.println("user is Null or user not found");
             return null;
         }
-        
         // Use Builder pattern to update user information
-         UserUpdateBuilder builder = new UserUpdateBuilder(old_data);
-        
+        UserUpdateBuilder builder = new UserUpdateBuilder(old_data);
         User updatedProfile = builder
             .withFirstName(userUpdate.getFirstName())
             .withLastName(userUpdate.getLastName())
@@ -84,8 +83,8 @@ public class UserService {
             .withPhone(userUpdate.getPhone())
             .withLocation(userUpdate.getLocation())
             .withPhoto(userUpdate.getPhoto())
+            .withUserName(userUpdate.getUserName()) // ensure username is updated
             .build();
-        
         System.out.println(updatedProfile.getBio() + " " + updatedProfile.getLocation());
         return userRepository.save(updatedProfile);
     }
@@ -98,5 +97,19 @@ public class UserService {
             return "OK";
         else
             return "Fail";
+    }
+    public PublicUserDto getPublicUserDto(UUID id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) return null;
+        return new PublicUserDto(
+            user.getFirstName(),
+            user.getLastName(),
+            user.getPhoto(),
+            user.getBio(),
+            user.getPhone(),
+            user.getLocation(),
+            user.getUserName(),
+            null // telegram, if you add it to User, replace null with user.getTelegram()
+        );
     }
 }

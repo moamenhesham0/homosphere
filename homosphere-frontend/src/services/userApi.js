@@ -29,3 +29,31 @@ export async function fetchUserData(id) {
     publishedAds: 0 // Optionally override in PublicProfile
   };
 }
+
+export async function fetchPublicUserData(id) {
+  const response = await fetch(
+    `http://localhost:8080/api/public/retrieveInf/${id}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  // Map API response to user state
+  return {
+    firstname: data.firstName || "",
+    lastname: data.lastName || "",
+    username: data.userName || (data.email ? data.email.split("@")[0] : ""),
+    location: data.location || "",
+    bio: data.bio || "",
+    photo: data.photo || "",
+    whatsapp: data.phone || "",
+    telegram: data.telegram || "",
+    publishedAds: 0 // Optionally override in PublicProfile
+  };
+}

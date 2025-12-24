@@ -101,7 +101,7 @@ export async function getUserPropertyListingTabs(userId) {
  * @returns {Promise<Object>} - The created property listing response
  */
 export async function submitPropertyListing(listingData) {
-  const response = await fetch(`${PROPERTY_LISTING_BASE_API_URL}/sumbit`, {
+  const response = await fetch(`${PROPERTY_LISTING_BASE_API_URL}/submit`, {
     method: 'POST',
     headers: await getAuthHeaders(),
     credentials: 'include',

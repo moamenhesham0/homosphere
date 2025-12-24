@@ -52,9 +52,11 @@ public class UserController {
         if (user == null) {
             return ResponseEntity.badRequest().build();
         }
+        System.out.println("[DEBUG] Incoming update payload: " + user);
         String userId = authentication.getPrincipal().toString();
         UUID uuid = UUID.fromString(userId);
         User updatedUser = userService.editInformation(uuid, user);
+        System.out.println("[DEBUG] Updated user after save: " + updatedUser);
         return ResponseEntity.ok(updatedUser);
     }
     
@@ -96,7 +98,10 @@ public class UserController {
             user.getLastName(),
             user.getPhoto(),
             user.getBio(),
-            user.getPhone()
+            user.getPhone(),
+            user.getLocation(),
+            user.getUserName(),
+            null // telegram
         ));
     }
 
@@ -145,4 +150,15 @@ public class UserController {
         }
     }
     
+    @GetMapping("/api/user/public")
+    public ResponseEntity<PublicUserDto> getPublicUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+        String userId = authentication.getPrincipal().toString();
+        UUID uuid = UUID.fromString(userId);
+        PublicUserDto dto = userService.getPublicUserDto(uuid);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
+    }
 }

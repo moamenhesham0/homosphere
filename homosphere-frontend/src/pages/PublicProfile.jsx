@@ -1,276 +1,85 @@
 import { useState, useEffect } from "react";
-import "./PublicProfile.css";
-import { fetchUserData } from "../services/userApi";
+import { useParams, useNavigate } from "react-router-dom";
+import "../styles/PublicProfile.css";
+import "../styles/public-profile-info.css";
+import { fetchPublicUserData } from "../services/userApi";
+import { fetchPublishedPropertiesByUser } from "../services/propertyApi";
+import ProfileInfo from "../components/profile/ProfileInfo";
+import PublicPropertyCard from "../components/PublicPropertyCard";
 
-export default function PublicProfile() {
+export default function PublicProfile({ id: propId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [properties, setProperties] = useState([]);
+  const params = useParams();
+  const id = propId || params.id;
+  const navigate = useNavigate();
 
-  const [user, setUser] = useState({
-    firstname: "",
-    lastname: "",
-    publishedAds: 0,
-    photo: "",
-    email: "",
-    whatsapp: "",
-    location: "",
-  });
-
-  const [ads, setAds] = useState([]);
-
-  // Filters state (location seeded from user)
-  const [filters, setFilters] = useState({
-    purpose: "All",
-    location: "",
-    propertyType: "All",
-    beds: null,
-    baths: null,
-    priceMin: "",
-    priceMax: "",
-  });
-
-  // Fetch user data from API
   useEffect(() => {
     const getUser = async () => {
       try {
         setLoading(true);
-        // Map API response to user state
-        const { data } = await fetchUserData(tempUser.id);
-        const mappedUser = {
-          firstname: data.firstName || "",
-          lastname: data.lastName || "",
-          publishedAds: 0, // This would come from another API endpoint
-          photo: data.photo || "", // Map photo filename from API
+        if (!id) return;
+        const data = await fetchPublicUserData(id);
+        setUser({
+          firstname: data.firstname || "",
+          lastname: data.lastname || "",
+          username: data.username || "",
           email: data.email || "",
-          whatsapp: data.phone || "",
+          photo: data.photo || "",
           location: data.location || "",
-        };
-        setUser(mappedUser);
-        setFilters((f) => ({ ...f, location: mappedUser.location }));
+          whatsapp: data.whatsapp || "",
+          telegram: data.telegram || "",
+          bio: data.bio || "",
+        });
+        // Fetch published properties for this user
+        const props = await fetchPublishedPropertiesByUser(id);
+        setProperties(props);
         setError(null);
       } catch (err) {
         setError(err.message);
-        console.error("Error fetching user data:", err);
+        console.error("Error fetching user data or properties:", err);
       } finally {
         setLoading(false);
       }
     };
     getUser();
-  }, []);
+  }, [id]);
 
-  const propertyTypeOptionsByPurpose = {
-    Sale: [
-      "Apartments for Sale",
-      "Villas For Sale",
-      "Vacation Homes for Sale",
-      "Commercial for Sale",
-      "Buildings & Lands",
-    ],
-    Rent: [
-      "Apartments for Rent",
-      "Villas for Rent",
-      "Vacation Homes for Rent",
-    ],
-    All: ["All"],
-  };
-
-  const propertyTypeOptions = propertyTypeOptionsByPurpose[filters.purpose];
-
-  // Ensure propertyType stays valid when purpose changes
-  useEffect(() => {
-    if (!propertyTypeOptions.includes(filters.propertyType)) {
-      setFilters((f) => ({ ...f, propertyType: "All" }));
-    }
-  }, [filters.purpose]);
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const photoURL = URL.createObjectURL(file);
-      setUser({ ...user, photo: photoURL });
-    }
-  };
-
-  const clearFilters = () => {
-    setFilters({
-      purpose: "All",
-      location: user.location,
-      propertyType: "All",
-      beds: null,
-      baths: null,
-      priceMin: "",
-      priceMax: "",
-    });
-  };
+  if (loading)
+    return (
+      <div className="public-profile-container">
+        <div className="loading">Loading...</div>
+      </div>
+    );
+  if (error)
+    return (
+      <div className="public-profile-container">
+        <div className="error-message">{error}</div>
+      </div>
+    );
+  if (!user)
+    return (
+      <div className="public-profile-container">
+        <div className="error-message">No user data loaded.</div>
+      </div>
+    );
 
   return (
-    <div className="public-profile-container">
-      <div className="profile-left">
-        <div className="profile-photo">
-          {user.photo ? (
-            <img src={`https://pub-5fe480d20f5b4a3e9d119df2e1376fbc.r2.dev/${user.photo}`} alt="Profile" />
-          ) : (
-            <div className="placeholder">{user.firstname[0]}</div>
-          )}
-        </div>
-        <div className="public-info">
-           <br/> 
-          <p className="published-ads">
-            <strong>{user.publishedAds}</strong> published ads
-          </p>
-          <p>
-            <strong>Location:</strong> {user.location}
-          </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
-          <p>
-            <strong>WhatsApp:</strong> {user.whatsapp}
-          </p>
-        </div>
-      </div>
-
-      <div className="profile-right">
-        <h1>
-          {user.firstname} {user.lastname}
-        </h1>
-
-        {/* Filters */}
-        <div className="filters">
-          <div className="filter-group">
-            <label>Purpose</label>
-            <select
-              value={filters.purpose}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, purpose: e.target.value }))
-              }
-            >
-              <option value="All">All</option>
-              <option value="Sale">Sale</option>
-              <option value="Rent">Rent</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Location</label>
-            <input
-              type="text"
-              value={filters.location}
-              placeholder="Enter location"
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, location: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className="filter-group">
-            <label>Property type</label>
-            <select
-              value={filters.propertyType}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, propertyType: e.target.value }))
-              }
-            >
-              {propertyTypeOptions.map((pt) => (
-                <option key={pt} value={pt}>
-                  {pt}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Beds</label>
-            <div className="pill-group">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <button
-                  type="button"
-                  key={n}
-                  className={
-                    "pill" + (filters.beds === n ? " active" : "")
-                  }
-                  onClick={() =>
-                    setFilters((f) => ({ ...f, beds: f.beds === n ? null : n }))
-                  }
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <label>Baths</label>
-            <div className="pill-group">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  type="button"
-                  key={n}
-                  className={
-                    "pill" + (filters.baths === n ? " active" : "")
-                  }
-                  onClick={() =>
-                    setFilters((f) => ({ ...f, baths: f.baths === n ? null : n }))
-                  }
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <label>Price (EGP)</label>
-            <div className="price-inputs">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.priceMin}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, priceMin: e.target.value }))
-                }
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.priceMax}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, priceMax: e.target.value }))
-                }
-              />
-            </div>
-          </div>
-
-          <div className="filter-actions">
-            <button type="button" className="reset-btn" onClick={clearFilters}>
-              Clear Filters
-            </button>
-            <button type="button" className="apply-btn">
-              Apply
-            </button>
-          </div>
-        </div>
-
-        <div className="ads-list">
-          {ads.length === 0 ? (
-            <div className="no-ads">
-              <img
-                src="/mnt/data/7f283ca4-50ad-4368-bc66-71056179edf3.png"
-                alt="No Ads"
-              />
-              <p>
-                <strong>There are no ads</strong>
-              </p>
-              <p>When users post ads, they will appear here</p>
-            </div>
-          ) : (
-            ads.map((ad, idx) => (
-              <div key={idx} className="ad-item">
-                {ad.title}
-              </div>
-            ))
-          )}
-        </div>
+    <div className="public-profile-outer">
+      <ProfileInfo tempUser={user} editMode={false} publicMode={true} />
+      <div className="published-ads">Published Properties: {properties.length}</div>
+      <div className="properties-container">
+        <h2>Published Properties</h2>
+        {properties.length === 0 && !loading && <div>No published properties found.</div>}
+        {properties.map((property) => (
+          <PublicPropertyCard
+            key={property.propertyListingId || property.id}
+            property={property}
+            onClick={() => navigate(`/property/${property.propertyListingId || property.id}`)}
+          />
+        ))}
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import EnterPasswordWindow from "../components/enterPasswordWindow";
 import useDeleteUser from "../hooks/useDeleteUser";
 import { supabase } from "../utils/supabase";
 import PasswordChangeWindow from "../components/passwordChangeWindow";
+import PublicProfile from "./PublicProfile";
 
 
 export default function Profile() {
@@ -36,7 +37,7 @@ export default function Profile() {
   const [originalData, setOriginalData] = useState(null);
 
   const [user, setUser] = useState({
-    id:"",
+    id: "",
     firstname: "",
     lastname: "",
     username: "",
@@ -65,7 +66,8 @@ export default function Profile() {
     "Security",
     "Properties",
     "Inquiries",
-    "Management Requests"
+    "Management Requests",
+    "Public Profile"
   ];
 
   // Fetch user data from API
@@ -185,7 +187,7 @@ export default function Profile() {
         email: tempUser.email,
         firstName: tempUser.firstname,
         lastName: tempUser.lastname,
-        userName: tempUser.username,
+        userName: tempUser.username, // backend expects userName
         location: tempUser.location,
         phone: tempUser.whatsapp,
         bio: tempUser.bio,
@@ -199,6 +201,8 @@ export default function Profile() {
         failedLoginAttempt: originalData?.failedLoginAttempt || null,
         banExpiredDate: originalData?.banExpiredDate || null
       };
+      // Remove any accidental 'username' key from payload
+      if (payload.username !== undefined) delete payload.username;
       const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch(
         `http://localhost:8080/api/user`,
@@ -215,8 +219,20 @@ export default function Profile() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const updatedData = await response.json();
+      // Map backend userName to frontend username
       setOriginalData(updatedData);
-      setUser(tempUser);
+      setUser((prev) => ({
+        ...prev,
+        ...updatedData,
+        username: updatedData.userName || prev.username,
+        location: updatedData.location || prev.location
+      }));
+      setTempUser((prev) => ({
+        ...prev,
+        ...updatedData,
+        username: updatedData.userName || prev.username,
+        location: updatedData.location || prev.location
+      }));
       setEditMode(false);
       setSuccessMessage("Profile updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -311,7 +327,16 @@ export default function Profile() {
       <div className="profile-main-content">
         {tab === 0 && (
           <>
-            <ProfileInfo tempUser={tempUser} editMode={editMode} handleChange={handleChange} />
+            <ProfileInfo 
+              tempUser={tempUser} 
+              editMode={editMode} 
+              handleChange={handleChange}
+              handlePhotoChange={handlePhotoChange}
+              handleDeletePhoto={() => {
+                setTempUser((prev) => ({ ...prev, photo: "" }));
+                setUser((prev) => ({ ...prev, photo: "" }));
+              }}
+            />
             <div className="profile-buttons">
               {!editMode ? (
                 <>
@@ -354,6 +379,7 @@ export default function Profile() {
         )}
         {tab === 3 && <Inquiries />}
         {tab === 4 && <ManagementRequests />}
+        {tab === 5 && <PublicProfile id={user.id} />}
         {error && <div className="error-message">{error}</div>}
         {successMessage && <div className="success-message">{successMessage}</div>}
         {showDeleteModal && (

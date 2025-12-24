@@ -1,8 +1,9 @@
 package com.homosphere.backend.controller;
 
+import com.homosphere.backend.dto.property.request.PropertyListingStatusUpdateRequest;
 import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
-import com.homosphere.backend.enums.PropertyType;
 import com.homosphere.backend.service.PropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -63,5 +64,46 @@ public class PropertyController {
     public ResponseEntity<List<String>> getAllConditions() {
         List<String> propertyConditions = propertyService.getAllConditions();
         return new ResponseEntity<>(propertyConditions, HttpStatus.OK);
+    }
+
+    @GetMapping("/admin/all-partitioned")
+    public ResponseEntity<PropertyAdminResponse> getAllPropertiesPartitionedByStatus() {
+        return ResponseEntity.ok(propertyService.getAllPropertiesPartitionedByStatus());
+    }
+
+    @GetMapping("/admin/pending")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getAllPendingProperties() {
+        return ResponseEntity.ok(propertyService.getAllPendingProperties());
+    }
+
+    @GetMapping("/admin/published")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getAllPublishedProperties() {
+        return ResponseEntity.ok(propertyService.getAllPublishedProperties());
+    }
+
+    @GetMapping("/admin/rejected")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getAllRejectedProperties() {
+        return ResponseEntity.ok(propertyService.getAllRejectedProperties());
+    }
+
+    @GetMapping("/admin/requires-changes")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getAllRequiresChangesProperties() {
+        return ResponseEntity.ok(propertyService.getAllRequiresChangesProperties());
+    }
+
+    @GetMapping("/admin/unlisted")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getAllUnlistedProperties() {
+        return ResponseEntity.ok(propertyService.getAllUnlistedProperties());
+    }
+
+    @GetMapping("/admin/sold")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getAllSoldProperties() {
+        return ResponseEntity.ok(propertyService.getAllSoldProperties());
+    }
+
+    @PutMapping("/update-status")
+    public ResponseEntity<?> updatePropertyListingStatus(@RequestBody PropertyListingStatusUpdateRequest request) {
+        propertyService.updatePropertyListingStatus(request.getPropertyListingId(), request.getStatus());
+        return ResponseEntity.ok().build();
     }
 }

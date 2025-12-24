@@ -139,6 +139,12 @@
 			<artifactId>apache-client</artifactId>
 			<version>${cloudflare-aws-sdk-version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-processor</artifactId>
+			<version>${org.mapstruct.version}</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

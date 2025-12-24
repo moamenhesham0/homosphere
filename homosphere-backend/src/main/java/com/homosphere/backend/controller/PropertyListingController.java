@@ -32,7 +32,7 @@ public class PropertyListingController {
 
     private final PropertyListingService propertyListingService;
 
-    @PostMapping("/sumbit")
+    @PostMapping("/submit")
     public ResponseEntity<PropertyListingResponse> submitPropertyListing(@RequestBody PropertyListingRequest request) {
         PropertyListingResponse response = propertyListingService.submitPropertyListing(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -83,6 +83,12 @@ public class PropertyListingController {
     @GetMapping("user/{userId}")
     public ResponseEntity<List<CompactPropertyListingResponse>> getUserPropertyListings(@PathVariable ("userId") UUID userId) {
         List<CompactPropertyListingResponse> response = propertyListingService.getUserPropertyListings(userId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/public/user/{userId}")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getPublishedPropertyListingsByUser(@PathVariable("userId") UUID userId) {
+        List<CompactPropertyListingResponse> response = propertyListingService.getPublishedPropertyListingsByUser(userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
