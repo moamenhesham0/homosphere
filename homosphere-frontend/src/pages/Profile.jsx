@@ -7,9 +7,9 @@ import Inquiries from "../components/profile/Inquiries";
 import AgentDashboard from "../components/profile/AgentDashboard";
 import ManagementRequests from "../components/profile/ManagementRequests";
 import PropertyDashboard from "../components/profile/PropertyDashboard";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Profile.css";
-import { fetchUserData } from "../services/userApi";
+import { fetchUserData, fetchPrivateUserData } from "../services/userApi";
 import {
   getUserPropertyListings,
   getUserPropertyListingTabs,
@@ -20,9 +20,12 @@ import useDeleteUser from "../hooks/useDeleteUser";
 import { supabase } from "../utils/supabase";
 import PasswordChangeWindow from "../components/passwordChangeWindow";
 import PublicProfile from "./PublicProfile";
+import { useAuth } from "../contexts/AuthContext";
 
 
 export default function Profile() {
+  const params = useParams();
+  const { token } = useAuth();
   const navigate = useNavigate();
   const { deleteUser, loading: deleteLoading } = useDeleteUser();
 
@@ -76,18 +79,26 @@ export default function Profile() {
     const getUser = async () => {
       try {
         setLoading(true);
-        // Get user ID from Supabase session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setError("No active session");
-          navigate('/signin');
-          return;
+        if (params.id) {
+          // Admin viewing another user's private profile
+          const mappedUser = await fetchPrivateUserData(params.id, token);
+          setUser({ ...mappedUser, id: params.id });
+          setTempUser({ ...mappedUser, id: params.id });
+          setError(null);
+        } else {
+          // Get user ID from Supabase session
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            setError("No active session");
+            navigate('/signin');
+            return;
+          }
+          const userId = session.user.id;
+          const mappedUser = await fetchUserData(userId);
+          setUser({ ...mappedUser, id: userId });
+          setTempUser({ ...mappedUser, id: userId });
+          setError(null);
         }
-        const userId = session.user.id;
-        const mappedUser = await fetchUserData(userId);
-        setUser({ ...mappedUser, id: userId });
-        setTempUser({ ...mappedUser, id: userId });
-        setError(null);
       } catch (err) {
         setError(err.message);
         console.error("Error fetching user data:", err);
@@ -96,7 +107,7 @@ export default function Profile() {
       }
     };
     getUser();
-  }, [navigate]);
+  }, [navigate, params.id, token]);
 
   // Fetch property tabs once user id is known
   useEffect(() => {

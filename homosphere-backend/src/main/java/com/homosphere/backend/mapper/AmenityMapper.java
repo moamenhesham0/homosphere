@@ -11,5 +11,7 @@ public interface AmenityMapper {
     
     AmenityDTO toDTO(Amenity amenity);
     Amenity toEntity(AmenityDTO amenityDTO);
+    java.util.List<AmenityDTO> toDTOList(java.util.List<Amenity> amenities);
+    java.util.List<Amenity> toEntityList(java.util.List<AmenityDTO> amenityDTOs);
 }
 

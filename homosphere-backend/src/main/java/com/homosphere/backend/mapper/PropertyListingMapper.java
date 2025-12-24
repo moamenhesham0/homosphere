@@ -14,14 +14,31 @@ import java.util.UUID;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = {PropertyMapper.class, PropertyImageMapper.class})
 public interface PropertyListingMapper {
 
+    @Mapping(target = "broker", ignore = true)
+    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "creationDate", ignore = true)
+    @Mapping(target = "lastSubmissionDate", ignore = true)
+    @Mapping(target = "publicationDate", ignore = true)
+    @Mapping(target = "lastUpdatedDate", ignore = true)
+    @Mapping(target = "soldDate", ignore = true)
+    @Mapping(target = "savedByUsers", ignore = true)
     @Mapping(target = "propertyListingId", ignore = true)
     @Mapping(target = "seller", source = "sellerId")
     @Mapping(target = "propertyImages", ignore = true)
     @Mapping(target = "bannerImage", ignore = true)
     PropertyListing toEntity(PropertyListingRequest propertyListingRequest, @Context UserRepository userRepository);
 
+    @Mapping(target = "sellerId", expression = "java(propertyListing.getSeller() != null ? propertyListing.getSeller().getId() : null)")
+    @Mapping(target = "sellerName", expression = "java(propertyListing.getSeller() != null ? propertyListing.getSeller().getName() : null)")
+    @Mapping(target = "brokerId", expression = "java(propertyListing.getBroker() != null ? propertyListing.getBroker().getId() : null)")
+    @Mapping(target = "brokerName", expression = "java(propertyListing.getBroker() != null ? propertyListing.getBroker().getName() : null)")
+    @Mapping(target = "creationData", source = "creationDate")
+    @Mapping(target = "lastSubmissionData", source = "lastSubmissionDate")
     PropertyListingResponse toResponse(PropertyListing propertyListing);
 
+    @Mapping(target = "sellerName", expression = "java(propertyListing.getSeller() != null ? propertyListing.getSeller().getName() : null)")
+    @Mapping(target = "brokerName", expression = "java(propertyListing.getBroker() != null ? propertyListing.getBroker().getName() : null)")
     PropertyListingPublicResponse toPublicResponse(PropertyListing propertyListing);
 
     @Mapping(target = "propertyListingId", source = "propertyListingId")
