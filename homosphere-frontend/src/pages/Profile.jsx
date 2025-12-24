@@ -4,6 +4,7 @@ import "../styles/ProfileSidebar.css";
 import ProfileInfo from "../components/profile/ProfileInfo";
 import Security from "../components/profile/Security";
 import Inquiries from "../components/profile/Inquiries";
+import AgentDashboard from "../components/profile/AgentDashboard";
 import ManagementRequests from "../components/profile/ManagementRequests";
 import PropertyDashboard from "../components/profile/PropertyDashboard";
 import { useNavigate } from "react-router-dom";
@@ -352,7 +353,7 @@ export default function Profile() {
             handleDeleteListing={handleDeleteListing}
           />
         )}
-        {tab === 3 && <Inquiries />}
+        {tab === 3 && <AgentDashboard />}
         {tab === 4 && <ManagementRequests />}
         {error && <div className="error-message">{error}</div>}
         {successMessage && <div className="success-message">{successMessage}</div>}
