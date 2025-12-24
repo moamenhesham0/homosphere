@@ -40,11 +40,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/media/photo").permitAll() // Public photo viewing
                 .requestMatchers("/api/public/**").permitAll() // All public API endpoints (view profiles, etc)
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll() // Public property search
+                .requestMatchers("/api/viewing-requests/**").permitAll() // Viewing requests
                 
                 // authenticated user endpoints (require token)
                 .requestMatchers("/api/user/**").authenticated() // User's own profile/subscriptions
                 .requestMatchers("/api/media/upload").authenticated() // Authenticated upload
-                .requestMatchers("/api/viewing-requests/**").authenticated() // Viewing requests
                 
                 // admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

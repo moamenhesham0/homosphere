@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
+import com.homosphere.backend.dto.StatusUpdateDTO;
 
 import com.homosphere.backend.dto.ViewingRequestDTO;
 import com.homosphere.backend.model.ViewingRequest;
@@ -31,9 +33,6 @@ public class ViewingRequestController {
             @Valid @RequestBody ViewingRequestDTO dto,
             Authentication authentication) {
         
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Unauthorized");
-        }
         
         try {
             String userId = authentication.getPrincipal().toString();
@@ -52,9 +51,7 @@ public class ViewingRequestController {
     
     @GetMapping("/user")
     public ResponseEntity<List<ViewingRequest>> getUserViewingRequests(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
-        }
+
         
         try {
             String userId = authentication.getPrincipal().toString();
@@ -67,13 +64,36 @@ public class ViewingRequestController {
         }
     }
     
-    @GetMapping("/property/{propertyId}")
-    public ResponseEntity<List<ViewingRequest>> getPropertyViewingRequests(@PathVariable UUID propertyId) {
+    
+    @GetMapping("/seller/{sellerId}")
+    public ResponseEntity<?> getSellerPropertyViewingRequests(@PathVariable UUID sellerId) {
+
+        
         try {
-            List<ViewingRequest> requests = viewingRequestService.getPropertyViewingRequests(propertyId);
+            List<ViewingRequest> requests = viewingRequestService.getViewingRequestsForSellerProperties(sellerId);
             return ResponseEntity.ok(requests);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{requestId}/status")
+    public ResponseEntity<?> updateViewingRequestStatus(
+            @PathVariable UUID requestId,
+            @RequestBody StatusUpdateDTO dto) {
+        
+        try {
+            // Validate that processedBy is present
+            if (dto.getProcessedBy() == null) {
+                return ResponseEntity.badRequest().body("Error: 'processedBy' User ID is required.");
+            }
+
+            ViewingRequest updatedRequest = viewingRequestService.updateRequestStatus(requestId, dto);
+            return ResponseEntity.ok(updatedRequest);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error updating status: " + e.getMessage());
         }
     }
 }

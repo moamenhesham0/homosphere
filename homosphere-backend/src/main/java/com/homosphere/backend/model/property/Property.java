@@ -1,5 +1,6 @@
 package com.homosphere.backend.model.property;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.homosphere.backend.enums.PropertyCondition;
 import com.homosphere.backend.enums.PropertyType;
 import com.homosphere.backend.model.Amenity;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Property {
 
     @Id

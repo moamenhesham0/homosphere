@@ -12,6 +12,7 @@ export const ROUTES = {
   SEARCH: '/search',
   REQUEST_VIEW: '/request-viewing',
   ANALYTICS: '/analytics',
+  AGENT_DASHBOARD: '/agent-dashboard',
 };
 
 // External links
