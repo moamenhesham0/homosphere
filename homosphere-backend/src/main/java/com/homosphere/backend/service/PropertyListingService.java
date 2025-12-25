@@ -204,4 +204,14 @@ public class PropertyListingService {
         return propertyListingRepository.findSavedListingIdsByUserId(userId);
     }
 
+    public List<CompactPropertyListingResponse> getSavedPropertyListings(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+             throw new RuntimeException("User not found");
+        }
+        List<PropertyListing> listings = propertyListingRepository.findAllBySavedByUsers_Id(userId);
+        return listings.stream()
+                .map(propertyListingMapper::toCompactResponse)
+                .collect(Collectors.toList());
+    }
+
 }

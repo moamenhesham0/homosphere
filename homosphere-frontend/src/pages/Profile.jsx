@@ -4,6 +4,7 @@ import "../styles/ProfileSidebar.css";
 import ProfileInfo from "../components/profile/ProfileInfo";
 import Security from "../components/profile/Security";
 import Inquiries from "../components/profile/Inquiries";
+import SavedProperties from "../components/profile/SavedProperties";
 import AgentDashboard from "../components/profile/AgentDashboard";
 import ManagementRequests from "../components/profile/ManagementRequests";
 import PropertyDashboard from "../components/profile/PropertyDashboard";
@@ -71,7 +72,8 @@ export default function Profile() {
     "Properties",
     "Inquiries",
     "Management Requests",
-    "Public Profile"
+    "Public Profile",
+    "Saved Properties"
   ];
 
   // Fetch user data from API
@@ -393,6 +395,7 @@ export default function Profile() {
         {tab === 3 && <AgentDashboard />}
         {tab === 4 && <ManagementRequests />}
         {tab === 5 && <PublicProfile id={user.id} />}
+        {tab === 6 && <SavedProperties userId={user.id} />}
         {error && <div className="error-message">{error}</div>}
         {successMessage && <div className="success-message">{successMessage}</div>}
         {showDeleteModal && (

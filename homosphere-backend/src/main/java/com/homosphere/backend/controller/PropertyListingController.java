@@ -114,4 +114,10 @@ public class PropertyListingController {
             return ResponseEntity.ok(Collections.emptyList()); 
         }
     }
+
+    @GetMapping("/saved/{userId}")
+    public ResponseEntity<List<CompactPropertyListingResponse>> getSavedPropertyListings(@PathVariable UUID userId) {
+        List<CompactPropertyListingResponse> response = propertyListingService.getSavedPropertyListings(userId);
+        return ResponseEntity.ok(response);
+    }
 }
