@@ -1,5 +1,5 @@
 import React from "react";
-import { MdPerson, MdSecurity, MdHome, MdQuestionAnswer, MdAssignment, MdPublic } from "react-icons/md";
+import { MdPerson, MdSecurity, MdHome, MdQuestionAnswer, MdAssignment, MdPublic, MdBookmark } from "react-icons/md";
 import "../../styles/ProfileSidebar.css";
 
 const tabIcons = [
@@ -8,7 +8,8 @@ const tabIcons = [
   <MdHome />,           // Properties
   <MdQuestionAnswer />, // Inquiries
   <MdAssignment />,     // Management Requests
-  <MdPublic />          // Public Profile
+  <MdPublic />,          // Public Profile
+  <MdBookmark />
 ];
 
 export default function ProfileTabs({ tab, setTab, tabLabels }) {
