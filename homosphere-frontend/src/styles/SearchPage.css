@@ -379,24 +379,27 @@
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: #00a676;
-  border: none;
+  
+  /* Container stays white in both states */
+  background: white; 
   border-radius: 50%;
   width: 60px;
   height: 60px;
+  
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
   z-index: 2;
-  box-shadow: 0 4px 12px rgba(0, 166, 118, 0.4);
+  border: none; /* No border on the circle button itself */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Shadow to make white button visible */
+  transition: all 0.3s ease;
 }
 
+/* Hover effect for the button container */
 .favorite-btn:hover {
-  background: #008c63;
-  transform: scale(1.15);
-  box-shadow: 0 6px 16px rgba(0, 166, 118, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .favorite-btn svg {
@@ -409,13 +412,24 @@
 }
 
 .favorite-btn.favorited {
-  background: #e53e3e;
-  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+  background: #ffffff;
 }
 
 .favorite-btn.favorited:hover {
-  background: #dc2626;
-  box-shadow: 0 6px 16px rgba(229, 62, 62, 0.5);
+  background: #c5c5c5;
+}
+
+.favorite-btn svg path {
+  fill: transparent;    /* Empty inside */
+  stroke: #00a676;      /* Green outline */
+  stroke-width: 2px;    /* Thickness of the outline */
+  transition: all 0.3s ease;
+}
+
+/* Saved State: Green Fill */
+.favorite-btn.favorited svg path {
+  fill: #00a676;        /* Fills with green */
+  stroke: #00a676;      /* Keep stroke to maintain icon size/shape */
 }
 
 .property-content {

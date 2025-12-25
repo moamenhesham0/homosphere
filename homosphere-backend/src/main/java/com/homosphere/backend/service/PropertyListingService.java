@@ -9,13 +9,16 @@ import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.enums.PropertyListingStatus;
 import com.homosphere.backend.mapper.PropertyListingMapper;
 import com.homosphere.backend.model.property.PropertyListing;
+import com.homosphere.backend.model.User;
 import com.homosphere.backend.repository.PropertyListingRepository;
 import com.homosphere.backend.repository.PropertySubmissionReviewRepository;
+import com.homosphere.backend.repository.UserRepository;
 import com.homosphere.backend.updater.PropertyListingUpdater;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,6 +37,8 @@ public class PropertyListingService {
     private final PropertySubmissionReviewRepository propertySubmissionReviewRepository;
 
     private final PropertySubmissionReviewService propertySubmissionReviewService;
+
+    private final UserRepository userRepository;
 
     @Transactional
     protected PropertyListing createPropertyListing(PropertyListingRequest request) {
@@ -166,6 +171,37 @@ public class PropertyListingService {
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found with ID: " + id));
 
         propertyListingRepository.delete(propertyListing);
+    }
+
+    @Transactional
+    public void toggleSaveProperty(UUID propertyListingId, UUID userId) {
+        PropertyListing listing = propertyListingRepository
+        .findById(propertyListingId)
+        .orElseThrow(() -> new RuntimeException("Listing not found"));
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<User> savedBy = listing.getSavedByUsers();
+        if (savedBy == null) {
+            savedBy = new ArrayList<>();
+            listing.setSavedByUsers(savedBy);
+        }
+
+        if (savedBy.contains(user)) {
+            savedBy.remove(user); // Unsave
+        } else {
+            savedBy.add(user); // Save
+        }
+
+        propertyListingRepository.save(listing);
+    }
+
+    public List<UUID> getUserSavedPropertyIds(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+             throw new RuntimeException("User not found");
+        }
+        return propertyListingRepository.findSavedListingIdsByUserId(userId);
     }
 
 }

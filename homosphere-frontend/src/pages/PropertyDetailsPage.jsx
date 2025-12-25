@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../utils/supabase';
 import RequestViewForm from '../components/RequestViewForm';
 import AIPredictionButton from '../components/AIPredictionButton';
+import '../constants/colors.js';
 import '../styles/PropertyDetailsPage.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/properties';
+const API_LISTING_URL = 'http://localhost:8080/api/property-listing/public/user';
 
 const formatPrice = (price) => {
     if (price === null || price === undefined) return 'Price N/A';
@@ -21,8 +24,48 @@ const PropertyDetailsPage = () => {
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isSaved, setIsSaved] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [showRequestForm, setShowRequestForm] = useState(false);
+
+    // Check if property is saved by user
+    useEffect(() => {
+        const checkSavedStatus = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !id) return;
+            try {
+                const response = await fetch(`${API_LISTING_URL}/saved-ids/${session.user.id}`, {
+                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                });
+                if (response.ok) {
+                    const ids = await response.json();
+                    setIsSaved(ids.includes(id));
+                }
+            } catch (e) { console.error(e); }
+        };
+        checkSavedStatus();
+    }, [id]);
+
+    // Handle save/unsave property
+    const handleSave = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            alert("Please log in to save properties.");
+            return;
+        }
+        try {
+            const response = await fetch(`${API_LISTING_URL}/${id}/save/${session.user.id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${session.access_token}` }
+            });
+            if (response.ok) {
+                setIsSaved(!isSaved);
+                alert(isSaved ? "Property removed from saved." : "Property saved!");
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -428,11 +471,14 @@ const PropertyDetailsPage = () => {
                             </svg>
                             Request Viewing
                         </button>
-                        <button className="property-btn property-btn-secondary">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        <button 
+                            className={`property-btn property-btn-secondary ${isSaved ? 'active' : ''}`} 
+                            onClick={handleSave}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            Save Property
+                            {isSaved ? 'Saved' : 'Save Property'}
                         </button>
                         <button className="property-btn property-btn-secondary">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -118,4 +118,59 @@ class PropertyListingControllerTest {
         mockMvc.perform(get("/api/property-listing/user/" + UUID.randomUUID()))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser
+    void toggleSaveProperty_ReturnsOk() throws Exception {
+        UUID propertyId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        
+        Mockito.doNothing().when(propertyListingService).toggleSaveProperty(propertyId, userId);
+
+        mockMvc.perform(post("/api/property-listing/public/user/" + propertyId + "/save/" + userId))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"message\": \"Property save state updated\"}"));
+    }
+
+    @Test
+    @WithMockUser
+    void toggleSaveProperty_ReturnsBadRequest_OnException() throws Exception {
+        UUID propertyId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        
+        Mockito.doThrow(new RuntimeException("User not found"))
+               .when(propertyListingService).toggleSaveProperty(propertyId, userId);
+
+        mockMvc.perform(post("/api/property-listing/public/user/" + propertyId + "/save/" + userId))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Error: User not found"));
+    }
+
+    @Test
+    @WithMockUser
+    void getSavedPropertyIds_ReturnsOk() throws Exception {
+        UUID userId = UUID.randomUUID();
+        List<UUID> savedIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        
+        when(propertyListingService.getUserSavedPropertyIds(userId)).thenReturn(savedIds);
+
+        mockMvc.perform(get("/api/property-listing/public/user/saved-ids/" + userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    @WithMockUser
+    void getSavedPropertyIds_ReturnsEmptyList_OnException() throws Exception {
+        UUID userId = UUID.randomUUID();
+        
+        // Simulating an exception in service
+        when(propertyListingService.getUserSavedPropertyIds(userId))
+            .thenThrow(new RuntimeException("Database error"));
+
+        // Controller catches exception and returns empty list
+        mockMvc.perform(get("/api/property-listing/public/user/saved-ids/" + userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
 }

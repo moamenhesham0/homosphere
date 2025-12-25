@@ -2,6 +2,8 @@ package com.homosphere.backend.controller;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Collections;
+
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,5 +92,26 @@ public class PropertyListingController {
     public ResponseEntity<List<CompactPropertyListingResponse>> getPublishedPropertyListingsByUser(@PathVariable("userId") UUID userId) {
         List<CompactPropertyListingResponse> response = propertyListingService.getPublishedPropertyListingsByUser(userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/public/user/{id}/save/{userId}")
+    public ResponseEntity<?> toggleSaveProperty(@PathVariable UUID id, @PathVariable UUID userId) {
+        try {
+            
+            propertyListingService.toggleSaveProperty(id, userId);
+            return ResponseEntity.ok().body("{\"message\": \"Property save state updated\"}");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/public/user/saved-ids/{userId}")
+    public ResponseEntity<List<UUID>> getSavedPropertyIds(@PathVariable UUID userId) {
+        try {    
+            List<UUID> savedIds = propertyListingService.getUserSavedPropertyIds(userId);
+            return ResponseEntity.ok(savedIds);
+        } catch (Exception e) {
+            return ResponseEntity.ok(Collections.emptyList()); 
+        }
     }
 }
