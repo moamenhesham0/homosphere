@@ -1,277 +1,176 @@
 package com.homosphere.backend.controller;
 
-import java.util.Arrays;
+import com.homosphere.backend.dto.property.request.PropertyListingDraftRequest;
+import com.homosphere.backend.dto.property.request.PropertyListingEditRequest;
+import com.homosphere.backend.dto.property.request.PropertyListingRequest;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingPublicResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
+import com.homosphere.backend.enums.PropertyListingStatus;
+import com.homosphere.backend.service.PropertyListingService;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.PropertyListingRequest;
-import com.homosphere.backend.dto.PropertyListingResponse;
-import com.homosphere.backend.service.PropertyListingService;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(
+    controllers = PropertyListingController.class,
+    excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.homosphere.backend.config.JwtAuthenticationFilter.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.homosphere.backend.config.SecurityConfig.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.homosphere.backend.config.CorsConfig.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.homosphere.backend.config.ApplicationConfig.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.homosphere.backend.config.CloudflareR2Config.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.homosphere.backend.config.CloudflareProperties.class)
+    }
+)
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
 class PropertyListingControllerTest {
-
-    @Mock
+    @Autowired
+    private MockMvc mockMvc;
+    @MockBean
     private PropertyListingService propertyListingService;
 
-    @Mock
-    private Authentication authentication;
+    // Removed: testGetAllListings_ReturnsOk (no such endpoint in controller)
 
-    @InjectMocks
-    private PropertyListingController propertyListingController;
+    @Test
+    @WithMockUser
+    void submitPropertyListing_ReturnsCreated() throws Exception {
+        when(propertyListingService.submitPropertyListing(any())).thenReturn(new PropertyListingResponse());
+        mockMvc.perform(post("/api/property-listing/submit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isCreated());
+    }
 
-    private PropertyListingRequest request;
-    private PropertyListingResponse response;
-    private CompactPropertyListingResponse compactResponse;
-    private UUID propertyListingId;
+    // ...
 
-    @BeforeEach
-    void setUp() {
-        propertyListingId = UUID.randomUUID();
+    @Test
+    @WithMockUser
+    void editPropertyListing_ReturnsOk() throws Exception {
+        Mockito.lenient().when(propertyListingService.editPropertyListing(any())).thenReturn(new PropertyListingResponse());
+        mockMvc.perform(put("/api/property-listing/edit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void deletePropertyListing_ReturnsNoContent() throws Exception {
+        Mockito.doNothing().when(propertyListingService).deletePropertyListing(any());
+        mockMvc.perform(delete("/api/property-listing/delete/" + UUID.randomUUID()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser
+    void getPropertyListingById_ReturnsOk() throws Exception {
+        Mockito.lenient().when(propertyListingService.getPropertyListingById(any())).thenReturn(new PropertyListingResponse());
+        mockMvc.perform(get("/api/property-listing/" + UUID.randomUUID()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void getPublicPropertyListingById_ReturnsOk() throws Exception {
+        Mockito.lenient().when(propertyListingService.getPropertyListingPublicById(any())).thenReturn(new PropertyListingPublicResponse());
+        mockMvc.perform(get("/api/property-listing/public/" + UUID.randomUUID()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void getPropertyListingStore_ReturnsOk() throws Exception {
+        when(propertyListingService.getAllPublishedPropertyListings()).thenReturn(Collections.emptyList());
+        mockMvc.perform(get("/api/property-listing/store"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void getUserPropertyListingTabs_ReturnsOk() throws Exception {
+        when(propertyListingService.getUserPropertyListingStatuses(any())).thenReturn(List.of(PropertyListingStatus.PENDING));
+        mockMvc.perform(get("/api/property-listing/status/" + UUID.randomUUID()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void getUserPropertyListings_ReturnsOk() throws Exception {
+        when(propertyListingService.getUserPropertyListings(any())).thenReturn(Collections.emptyList());
+        mockMvc.perform(get("/api/property-listing/user/" + UUID.randomUUID()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void toggleSaveProperty_ReturnsOk() throws Exception {
+        UUID propertyId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
         
-        request = new PropertyListingRequest();
-        request.setTitle("Test Property");
-        request.setDescription("Test Description");
+        Mockito.doNothing().when(propertyListingService).toggleSaveProperty(propertyId, userId);
 
-        response = new PropertyListingResponse();
-        response.setPropertyListingId(propertyListingId);
-        response.setTitle("Test Property");
-
-        compactResponse = new CompactPropertyListingResponse();
-        compactResponse.setPropertyListingId(propertyListingId);
-        compactResponse.setTitle("Test Property");
-        compactResponse.setPrice(500000.0);
-        compactResponse.setCity("Test City");
-        compactResponse.setState("Test State");
+        mockMvc.perform(post("/api/property-listing/public/user/" + propertyId + "/save/" + userId))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"message\": \"Property save state updated\"}"));
     }
 
     @Test
-    void createPropertyListing_WithValidRequest_ReturnsCreated() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.createPropertyListing(any(PropertyListingRequest.class)))
-            .thenReturn(response);
+    @WithMockUser
+    void toggleSaveProperty_ReturnsBadRequest_OnException() throws Exception {
+        UUID propertyId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        
+        Mockito.doThrow(new RuntimeException("User not found"))
+               .when(propertyListingService).toggleSaveProperty(propertyId, userId);
 
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
-
-        assertEquals(HttpStatus.CREATED, result.getStatusCode());
-        assertNotNull(result.getBody());
-        assertTrue(result.getBody() instanceof PropertyListingResponse);
-        verify(propertyListingService, times(1)).createPropertyListing(request);
+        mockMvc.perform(post("/api/property-listing/public/user/" + propertyId + "/save/" + userId))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Error: User not found"));
     }
 
     @Test
-    void createPropertyListing_WithUnauthenticated_ReturnsUnauthorized() {
-        when(authentication.isAuthenticated()).thenReturn(false);
+    @WithMockUser
+    void getSavedPropertyIds_ReturnsOk() throws Exception {
+        UUID userId = UUID.randomUUID();
+        List<UUID> savedIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        
+        when(propertyListingService.getUserSavedPropertyIds(userId)).thenReturn(savedIds);
 
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-        verify(propertyListingService, never()).createPropertyListing(any());
+        mockMvc.perform(get("/api/property-listing/public/user/saved-ids/" + userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
-    void createPropertyListing_WithNullAuthentication_ReturnsUnauthorized() {
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, null);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-        verify(propertyListingService, never()).createPropertyListing(any());
-    }
-
-    @Test
-    void createPropertyListing_WithIllegalArgument_ReturnsBadRequest() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.createPropertyListing(any(PropertyListingRequest.class)))
-            .thenThrow(new IllegalArgumentException("Invalid request"));
-
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
-
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        Map<String, Object> body = (Map<String, Object>) result.getBody();
-        assertEquals("Invalid request", body.get("message"));
-    }
-
-    @Test
-    void createPropertyListing_WithException_ReturnsInternalServerError() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.createPropertyListing(any(PropertyListingRequest.class)))
+    @WithMockUser
+    void getSavedPropertyIds_ReturnsEmptyList_OnException() throws Exception {
+        UUID userId = UUID.randomUUID();
+        
+        // Simulating an exception in service
+        when(propertyListingService.getUserSavedPropertyIds(userId))
             .thenThrow(new RuntimeException("Database error"));
 
-        ResponseEntity<?> result = propertyListingController.createPropertyListing(request, authentication);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-        Map<String, Object> body = (Map<String, Object>) result.getBody();
-        assertTrue(body.get("message").toString().contains("Failed to create property listing"));
-    }
-
-    @Test
-    void getAllPropertyListings_ReturnsListOfProperties() {
-        List<CompactPropertyListingResponse> listings = Arrays.asList(compactResponse);
-        when(propertyListingService.getAllPropertyListings()).thenReturn(listings);
-
-        ResponseEntity<?> result = propertyListingController.getAllPropertyListings();
-
-        assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertNotNull(result.getBody());
-        assertTrue(result.getBody() instanceof List);
-        verify(propertyListingService, times(1)).getAllPropertyListings();
-    }
-
-    @Test
-    void getAllPropertyListings_WithException_ReturnsInternalServerError() {
-        when(propertyListingService.getAllPropertyListings())
-            .thenThrow(new RuntimeException("Database error"));
-
-        ResponseEntity<?> result = propertyListingController.getAllPropertyListings();
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-        Map<String, Object> body = (Map<String, Object>) result.getBody();
-        assertTrue(body.get("message").toString().contains("Failed to fetch property listings"));
-    }
-
-    @Test
-    void getPropertyListingById_WithValidId_ReturnsProperty() {
-        when(propertyListingService.getPropertyListingById(propertyListingId)).thenReturn(response);
-
-        ResponseEntity<?> result = propertyListingController.getPropertyListingById(propertyListingId);
-
-        assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertNotNull(result.getBody());
-        assertTrue(result.getBody() instanceof PropertyListingResponse);
-        verify(propertyListingService, times(1)).getPropertyListingById(propertyListingId);
-    }
-
-    @Test
-    void getPropertyListingById_WithInvalidId_ReturnsNotFound() {
-        when(propertyListingService.getPropertyListingById(propertyListingId))
-            .thenThrow(new IllegalArgumentException("Property not found"));
-
-        ResponseEntity<?> result = propertyListingController.getPropertyListingById(propertyListingId);
-
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-        Map<String, Object> body = (Map<String, Object>) result.getBody();
-        assertEquals("Property not found", body.get("message"));
-    }
-
-    @Test
-    void getPropertyListingById_WithException_ReturnsInternalServerError() {
-        when(propertyListingService.getPropertyListingById(propertyListingId))
-            .thenThrow(new RuntimeException("Database error"));
-
-        ResponseEntity<?> result = propertyListingController.getPropertyListingById(propertyListingId);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-    }
-
-    @Test
-    void updatePropertyListing_WithValidRequest_ReturnsUpdatedProperty() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.updatePropertyListing(eq(propertyListingId), any(PropertyListingRequest.class)))
-            .thenReturn(response);
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertNotNull(result.getBody());
-        verify(propertyListingService, times(1)).updatePropertyListing(propertyListingId, request);
-    }
-
-    @Test
-    void updatePropertyListing_WithUnauthenticated_ReturnsUnauthorized() {
-        when(authentication.isAuthenticated()).thenReturn(false);
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-        verify(propertyListingService, never()).updatePropertyListing(any(), any());
-    }
-
-    @Test
-    void updatePropertyListing_WithInvalidId_ReturnsNotFound() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.updatePropertyListing(eq(propertyListingId), any(PropertyListingRequest.class)))
-            .thenThrow(new IllegalArgumentException("Property not found"));
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-    }
-
-    @Test
-    void updatePropertyListing_WithException_ReturnsInternalServerError() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(propertyListingService.updatePropertyListing(eq(propertyListingId), any(PropertyListingRequest.class)))
-            .thenThrow(new RuntimeException("Database error"));
-
-        ResponseEntity<?> result = propertyListingController.updatePropertyListing(propertyListingId, request, authentication);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-    }
-
-    @Test
-    void deletePropertyListing_WithValidId_ReturnsOk() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        doNothing().when(propertyListingService).deletePropertyListing(propertyListingId);
-
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
-
-        assertEquals(HttpStatus.OK, result.getStatusCode());
-        Map<String, Object> body = (Map<String, Object>) result.getBody();
-        assertEquals("Property listing deleted successfully", body.get("message"));
-        verify(propertyListingService, times(1)).deletePropertyListing(propertyListingId);
-    }
-
-    @Test
-    void deletePropertyListing_WithUnauthenticated_ReturnsUnauthorized() {
-        when(authentication.isAuthenticated()).thenReturn(false);
-
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
-
-        assertEquals(HttpStatus.UNAUTHORIZED, result.getStatusCode());
-        verify(propertyListingService, never()).deletePropertyListing(any());
-    }
-
-    @Test
-    void deletePropertyListing_WithInvalidId_ReturnsNotFound() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        doThrow(new IllegalArgumentException("Property not found"))
-            .when(propertyListingService).deletePropertyListing(propertyListingId);
-
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
-
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-    }
-
-    @Test
-    void deletePropertyListing_WithException_ReturnsInternalServerError() {
-        when(authentication.isAuthenticated()).thenReturn(true);
-        doThrow(new RuntimeException("Database error"))
-            .when(propertyListingService).deletePropertyListing(propertyListingId);
-
-        ResponseEntity<?> result = propertyListingController.deletePropertyListing(propertyListingId, authentication);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
+        // Controller catches exception and returns empty list
+        mockMvc.perform(get("/api/property-listing/public/user/saved-ids/" + userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }

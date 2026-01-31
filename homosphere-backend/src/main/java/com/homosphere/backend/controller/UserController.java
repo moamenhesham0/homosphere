@@ -52,9 +52,11 @@ public class UserController {
         if (user == null) {
             return ResponseEntity.badRequest().build();
         }
+        System.out.println("[DEBUG] Incoming update payload: " + user);
         String userId = authentication.getPrincipal().toString();
         UUID uuid = UUID.fromString(userId);
         User updatedUser = userService.editInformation(uuid, user);
+        System.out.println("[DEBUG] Updated user after save: " + updatedUser);
         return ResponseEntity.ok(updatedUser);
     }
     
@@ -86,7 +88,16 @@ public class UserController {
     
     // For public profile viewing
     @GetMapping("/api/public/retrieveInf/{id}")
-    public ResponseEntity<PublicUserDto> retrievePublicInformation(@PathVariable UUID id) {
+    public ResponseEntity<PublicUserDto> retrievePublicInformation(@PathVariable UUID id, Authentication authentication) {
+        // Allow public access or admin access
+        if (authentication != null && authentication.isAuthenticated()) {
+            boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin) {
+                // If the token is present but not admin, treat as unauthenticated (ignore token)
+                authentication = null;
+            }
+        }
         User user = userService.getInformation(id);
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -96,7 +107,10 @@ public class UserController {
             user.getLastName(),
             user.getPhoto(),
             user.getBio(),
-            user.getPhone()
+            user.getPhone(),
+            user.getLocation(),
+            user.getUserName(),
+            null // telegram
         ));
     }
 
@@ -145,4 +159,40 @@ public class UserController {
         }
     }
     
+    @GetMapping("/api/user/public")
+    public ResponseEntity<PublicUserDto> getPublicUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+        String userId = authentication.getPrincipal().toString();
+        UUID uuid = UUID.fromString(userId);
+        PublicUserDto dto = userService.getPublicUserDto(uuid);
+        if (dto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(dto);
+    }
+    
+    // For admin to view any user's private profile
+    @GetMapping("/api/user/{id}")
+    public ResponseEntity<PrivateUserDto> retrievePrivateInformationById(@PathVariable UUID id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+        // Optionally, check if the user has ADMIN role here
+        User user = userService.getInformation(id);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(new PrivateUserDto(
+            user.getFirstName(),
+            user.getLastName(),
+            user.getPhoto(),
+            user.getBio(),
+            user.getPhone(),
+            user.getEmail(),
+            user.getRole(),
+            user.getUserName(),
+            user.getStatus(),
+            user.getLocation()
+        ));
+    }
 }

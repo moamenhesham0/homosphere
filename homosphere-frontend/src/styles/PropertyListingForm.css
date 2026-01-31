@@ -99,6 +99,17 @@
   cursor: pointer;
 }
 
+.form-group select:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.error-text {
+  color: #c33;
+  font-size: 0.85rem;
+  margin-top: -0.3rem;
+}
+
 .form-group input[type="number"]::-webkit-inner-spin-button:hover,
 .form-group input[type="number"]::-webkit-outer-spin-button:hover {
   background: #008c63;
@@ -108,6 +119,35 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
+}
+
+/* Radio button styles */
+.radio-group {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+}
+
+.radio-option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #00a676;
+}
+
+.radio-option span {
+  font-size: 1rem;
+  user-select: none;
 }
 .map-container {
   margin: 1rem 0;
@@ -376,6 +416,12 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 
+.form-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 .submit-btn {
   background: #00a676;
   color: white;
@@ -386,7 +432,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s, transform 0.2s;
-  margin-top: 1rem;
+  flex: 1;
 }
 
 .submit-btn:hover {
@@ -396,6 +442,40 @@
 
 .submit-btn:active {
   transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  flex: 1;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.cancel-btn:active {
+  transform: translateY(0);
+}
+
+.cancel-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (max-width: 768px) {

@@ -12,5 +12,9 @@ public interface LocationMapper {
     LocationResponse toResponse(Location location);
 
     Location toEntity(LocationRequest locationRequest);
+
+    java.util.List<LocationResponse> toResponseList(java.util.List<Location> locations);
+
+    java.util.List<Location> toEntityList(java.util.List<LocationRequest> locationRequests);
 }
 

@@ -4,6 +4,8 @@ package com.homosphere.backend.model;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @NoArgsConstructor
 public class User {
 
@@ -80,6 +83,13 @@ public class User {
 
     public UUID getUserId() {
         return this.id;
+    }
+
+    public String getName() {
+        String first = firstName != null ? firstName : "";
+        String last = lastName != null ? lastName : "";
+        String fullName = (first + " " + last).trim();
+        return fullName.isEmpty() ? userName : fullName;
     }
 
 }

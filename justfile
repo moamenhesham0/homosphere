@@ -4,7 +4,7 @@ BACKEND_LINK := "-f homosphere-backend/pom.xml"
 
 # Packages to install
 FE_DEV_PACKAGES := "eslint prettier eslint-plugin-prettier eslint-config-prettier husky lint-staged"
-FE_PACKAGES := "zustand @supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder"
+FE_PACKAGES := "zustand @supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder recharts react-icons"
 
 # Run frontend
 run-fe:
@@ -43,3 +43,16 @@ format-fe:
 lint-fe:
     cd {{FRONTEND_DIR}} && npm run lint
     @echo "Frontend code linted."
+
+# Test backend
+test-be:
+    mvn {{BACKEND_LINK}} clean test
+    @echo "Backend tests executed."
+
+jacoco:
+    mvn {{BACKEND_LINK}} clean test jacoco:report
+    @echo "Backend tests executed and coverage report generated."
+
+report:
+    xdg-open homosphere-backend/target/site/jacoco/index.html
+    @echo "Jacoco coverage report opened."

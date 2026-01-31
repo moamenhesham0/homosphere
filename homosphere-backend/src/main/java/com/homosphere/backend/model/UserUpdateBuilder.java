@@ -56,6 +56,13 @@ public class UserUpdateBuilder {
             return this;
         }
         
+        public UserUpdateBuilder withUserName(String userName) {
+            if(userName != null) {
+                user.setUserName(userName);
+            }
+            return this;
+        }
+        
         public User build() {
             return user;
         }

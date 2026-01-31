@@ -1,15 +1,34 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import ProfileTabs from "../components/profile/ProfileTabs";
+import "../styles/ProfileSidebar.css";
+import ProfileInfo from "../components/profile/ProfileInfo";
+import Security from "../components/profile/Security";
+import Inquiries from "../components/profile/Inquiries";
+import SavedProperties from "../components/profile/SavedProperties";
+import AgentDashboard from "../components/profile/AgentDashboard";
+import ManagementRequests from "../components/profile/ManagementRequests";
+import PropertyDashboard from "../components/profile/PropertyDashboard";
+import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Profile.css";
-import { fetchUserData } from "../services/userApi";
+import { fetchUserData, fetchPrivateUserData } from "../services/userApi";
+import {
+  getUserPropertyListings,
+  getUserPropertyListingTabs,
+  deletePropertyListing
+} from "../services/apiPropertyListing";
 import EnterPasswordWindow from "../components/enterPasswordWindow";
 import useDeleteUser from "../hooks/useDeleteUser";
 import { supabase } from "../utils/supabase";
-import PasswordChangeWindow  from "../components/passwordChangeWindow";
+import PasswordChangeWindow from "../components/passwordChangeWindow";
+import PublicProfile from "./PublicProfile";
+import { useAuth } from "../contexts/AuthContext";
+
 
 export default function Profile() {
+  const params = useParams();
+  const { token } = useAuth();
   const navigate = useNavigate();
-  const { deleteUser, loading: deleteLoading, error: deleteError } = useDeleteUser();
+  const { deleteUser, loading: deleteLoading } = useDeleteUser();
 
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -23,7 +42,7 @@ export default function Profile() {
   const [originalData, setOriginalData] = useState(null);
 
   const [user, setUser] = useState({
-    id:"",
+    id: "",
     firstname: "",
     lastname: "",
     username: "",
@@ -38,23 +57,50 @@ export default function Profile() {
 
   const [tempUser, setTempUser] = useState({ ...user });
 
+  // Property Dashboard state
+  const [propertyTabs, setPropertyTabs] = useState(["ALL"]);
+  const [userListings, setUserListings] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("ALL");
+  const [listingsLoading, setListingsLoading] = useState(false);
+  const [listingsError, setListingsError] = useState(null);
+
+  // Tab state for profile sections
+  const [tab, setTab] = useState(0);
+  const tabLabels = [
+    "Profile",
+    "Security",
+    "Properties",
+    "Inquiries",
+    "Management Requests",
+    "Public Profile",
+    "Saved Properties"
+  ];
+
   // Fetch user data from API
   useEffect(() => {
     const getUser = async () => {
       try {
         setLoading(true);
-        // Get user ID from Supabase session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setError("No active session");
-          navigate('/signin');
-          return;
+        if (params.id) {
+          // Admin viewing another user's private profile
+          const mappedUser = await fetchPrivateUserData(params.id, token);
+          setUser({ ...mappedUser, id: params.id });
+          setTempUser({ ...mappedUser, id: params.id });
+          setError(null);
+        } else {
+          // Get user ID from Supabase session
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            setError("No active session");
+            navigate('/signin');
+            return;
+          }
+          const userId = session.user.id;
+          const mappedUser = await fetchUserData(userId);
+          setUser({ ...mappedUser, id: userId });
+          setTempUser({ ...mappedUser, id: userId });
+          setError(null);
         }
-        const userId = session.user.id;
-        const mappedUser = await fetchUserData(userId);
-        setUser({ ...mappedUser, id: userId });
-        setTempUser({ ...mappedUser, id: userId });
-        setError(null);
       } catch (err) {
         setError(err.message);
         console.error("Error fetching user data:", err);
@@ -63,7 +109,54 @@ export default function Profile() {
       }
     };
     getUser();
-  }, [navigate]);
+  }, [navigate, params.id, token]);
+
+  // Fetch property tabs once user id is known
+  useEffect(() => {
+    const loadTabs = async () => {
+      if (!user?.id) return;
+      try {
+        const tabs = await getUserPropertyListingTabs(user.id);
+        // Filter out null/undefined values and ensure we have valid strings
+        const validTabs = Array.isArray(tabs) ? tabs.filter(tab => tab != null && tab !== '') : [];
+        console.log('Loaded property tabs:', validTabs);
+        setPropertyTabs(["ALL", ...validTabs]);
+      } catch (err) {
+        console.error("Error fetching property tabs:", err);
+        setPropertyTabs(["ALL"]); // fallback to ALL only
+      }
+    };
+    loadTabs();
+  }, [user?.id]);
+
+  // Fetch user's property listings once user id is known
+  useEffect(() => {
+    const loadListings = async () => {
+      if (!user?.id) return;
+      try {
+        setListingsLoading(true);
+        setListingsError(null);
+        // Fetch all listings for this user (including drafts)
+        const listings = await getUserPropertyListings(user.id);
+        console.log('User property listings fetched:', listings);
+        setUserListings(listings || []);
+      } catch (err) {
+        console.error("Error fetching property listings:", err);
+        setListingsError(err.message || "Failed to load listings");
+        setUserListings([]);
+      } finally {
+        setListingsLoading(false);
+      }
+    };
+    loadListings();
+  }, [user?.id]);
+
+  const filteredListings = useMemo(() => {
+    if (selectedTab === "ALL") return userListings;
+    return userListings.filter((l) => {
+      return l?.status === selectedTab;
+    });
+  }, [userListings, selectedTab]);
 
   const handleChange = (e) => {
     setTempUser({ ...tempUser, [e.target.name]: e.target.value });
@@ -82,6 +175,7 @@ export default function Profile() {
             'Authorization': `Bearer ${session?.access_token}`
           },
           body: formData,
+          credentials: 'include',
         });
         if (!response.ok) {
           throw new Error(`Upload failed: ${response.status}`);
@@ -108,7 +202,7 @@ export default function Profile() {
         email: tempUser.email,
         firstName: tempUser.firstname,
         lastName: tempUser.lastname,
-        userName: tempUser.username,
+        userName: tempUser.username, // backend expects userName
         location: tempUser.location,
         phone: tempUser.whatsapp,
         bio: tempUser.bio,
@@ -122,6 +216,8 @@ export default function Profile() {
         failedLoginAttempt: originalData?.failedLoginAttempt || null,
         banExpiredDate: originalData?.banExpiredDate || null
       };
+      // Remove any accidental 'username' key from payload
+      if (payload.username !== undefined) delete payload.username;
       const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch(
         `http://localhost:8080/api/user`,
@@ -138,8 +234,20 @@ export default function Profile() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const updatedData = await response.json();
+      // Map backend userName to frontend username
       setOriginalData(updatedData);
-      setUser(tempUser);
+      setUser((prev) => ({
+        ...prev,
+        ...updatedData,
+        username: updatedData.userName || prev.username,
+        location: updatedData.location || prev.location
+      }));
+      setTempUser((prev) => ({
+        ...prev,
+        ...updatedData,
+        username: updatedData.userName || prev.username,
+        location: updatedData.location || prev.location
+      }));
       setEditMode(false);
       setSuccessMessage("Profile updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -158,7 +266,7 @@ export default function Profile() {
     setSuccessMessage("");
   };
 
-  const handleDeleteAccount = async (password) => {
+  const handleDeleteAccount = async () => {
     try {
       const result = await deleteUser();
 
@@ -169,7 +277,7 @@ export default function Profile() {
         setError(result.error || 'Failed to delete account');
         setShowDeleteModal(false);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to delete account');
       setShowDeleteModal(false);
     }
@@ -177,20 +285,49 @@ export default function Profile() {
 
   const handlePasswordChange = async (newPassword) => {
     try {
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password: newPassword,  // New password
       });
       if (error) {
-        setPasswordError(error.message);
+        setError(error.message);
         return;
       }
       setError(null);
       setSuccessMessage('Password changed successfully!');
       setShowPasswordModal(false);
-    } catch (err) {
+    } catch {
       setError('Failed to change password');
     }
-  }
+  };
+
+  // Property listing handlers
+  const handleCreateListing = () => {
+    navigate('/property-listing-form');
+  };
+
+  const handleEditListing = (listing) => {
+    navigate(`/property-listing-form?id=${listing.id}`);
+  };
+
+
+  const handleDeleteListing = async (listingId) => {
+    try {
+      await deletePropertyListing(listingId);
+      // Reload listings from backend after successful deletion
+      if (user?.id) {
+        const listings = await getUserPropertyListings(user.id);
+        setUserListings(listings || []);
+      }
+      setSuccessMessage("Listing deleted successfully");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      setError(`Failed to delete listing: ${err.message}`);
+    }
+  };
+
+
+
+
 
   if (loading || deleteLoading) {
     return (
@@ -200,178 +337,80 @@ export default function Profile() {
     );
   }
   return (
-    <div className="profile-page">
-      <div className="left-panel">
-        <div className="photo-container">
-          <img
-            src={tempUser.photo ? `https://pub-5fe480d20f5b4a3e9d119df2e1376fbc.r2.dev/${tempUser.photo}` : "https://via.placeholder.com/200"}
-            alt="User"
-            className="profile-photo"
-          />
-          {editMode && (
-            <>
-              <label className="upload-btn">
-                Upload Photo
-                <input type="file" accept="image/*" onChange={handlePhotoChange} />
-              </label>
-              <button className="delete-photo-btn" onClick={() => {
+    <div className="profile-page" style={{ display: 'flex', minHeight: '100vh', background: '#f5f5dc' }}>
+      <ProfileTabs tab={tab} setTab={setTab} tabLabels={tabLabels} />
+      <div className="profile-main-content">
+        {tab === 0 && (
+          <>
+            <ProfileInfo 
+              tempUser={tempUser} 
+              editMode={editMode} 
+              handleChange={handleChange}
+              handlePhotoChange={handlePhotoChange}
+              handleDeletePhoto={() => {
                 setTempUser((prev) => ({ ...prev, photo: "" }));
                 setUser((prev) => ({ ...prev, photo: "" }));
-              }}>
-                Delete Photo
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="right-panel">
-        <div className="section">
-          <h3>Profile Information</h3>
-          <div className="field-row">
-            <div className="field">
-              <label>Username</label>
-              <input
-                name="username"
-                value={tempUser.username}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
+              }}
+            />
+            <div className="profile-buttons">
+              {!editMode ? (
+                <>
+                  <button className="edit-btn" onClick={() => setEditMode(true)}>
+                    Edit Profile
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="save-btn" onClick={saveChanges} disabled={saving}>
+                    {saving ? "Saving..." : "Save"}
+                  </button>
+                  <button className="cancel-btn" onClick={cancelChanges} disabled={saving}>
+                    Cancel
+                  </button>
+                </>
+              )}
             </div>
-            <div className="field">
-              <label>First Name</label>
-              <input
-                name="firstname"
-                value={tempUser.firstname}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-
-          <div className="field-row">
-            <div className="field">
-              <label>Last Name</label>
-              <input
-                name="lastname"
-                value={tempUser.lastname}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-            <div className="field">
-              <label>Role</label>
-              <input
-                name="role"
-                value={tempUser.role}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-
-          <div className="field-row">
-            <div className="field">
-              <label>Location</label>
-              <input
-                name="location"
-                value={tempUser.location}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="section">
-          <h3>Contact Info</h3>
-          <div className="field-row">
-            <div className="field">
-              <label>Email</label>
-              <input
-                name="email"
-                value={tempUser.email}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-            <div className="field">
-              <label>WhatsApp</label>
-              <input
-                name="whatsapp"
-                value={tempUser.whatsapp}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-          <div className="field-row">
-            <div className="field">
-              <label>Telegram</label>
-              <input
-                name="telegram"
-                value={tempUser.telegram}
-                onChange={handleChange}
-                disabled={!editMode}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="section">
-          <h3>About the User</h3>
-          <textarea
-            name="bio"
-            value={tempUser.bio}
-            onChange={handleChange}
-            disabled={!editMode}
+          </>
+        )}
+        {tab === 1 && (
+          <Security
+            onChangePassword={() => setShowPasswordModal(true)}
+            onDeleteAccount={() => setShowDeleteModal(true)}
           />
-        </div>
-
+        )}
+        {tab === 2 && (
+          <PropertyDashboard
+            propertyTabs={propertyTabs}
+            selectedTab={selectedTab}
+            setSelectedTab={setSelectedTab}
+            handleCreateListing={handleCreateListing}
+            listingsLoading={listingsLoading}
+            listingsError={listingsError}
+            filteredListings={filteredListings}
+            navigate={navigate}
+            handleEditListing={handleEditListing}
+            handleDeleteListing={handleDeleteListing}
+          />
+        )}
+        {tab === 3 && <AgentDashboard />}
+        {tab === 4 && <ManagementRequests />}
+        {tab === 5 && <PublicProfile id={user.id} />}
+        {tab === 6 && <SavedProperties userId={user.id} />}
         {error && <div className="error-message">{error}</div>}
         {successMessage && <div className="success-message">{successMessage}</div>}
-
-        <div className="profile-buttons">
-          {!editMode ? (
-            <>
-              <button className="edit-btn" onClick={() => setEditMode(true)}>
-                Edit Profile
-              </button>
-              <button className="change-password-btn" onClick={() => setShowPasswordModal(true)}>
-                Change Password
-              </button>
-              <button className="delete-account-btn" onClick={() => setShowDeleteModal(true)}>
-                Delete Account
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="save-btn" onClick={saveChanges}>
-                Save
-              </button>
-              <button className="cancel-btn" onClick={cancelChanges}>
-                Cancel
-              </button>
-            </>
-          )}
-        </div>
+        {showDeleteModal && (
+          <EnterPasswordWindow
+            onClose={() => setShowDeleteModal(false)}
+            onSubmit={handleDeleteAccount}
+          />
+        )}
+        {showPasswordModal && (
+          <PasswordChangeWindow
+            onClose={() => setShowPasswordModal(false)}
+            onSubmit={handlePasswordChange}
+          />
+        )}
       </div>
-
-      {showDeleteModal && (
-        <EnterPasswordWindow
-          onClose={() => setShowDeleteModal(false)}
-          onSubmit={handleDeleteAccount}
-        />
-      )}
-
-      {showPasswordModal && (
-        <PasswordChangeWindow
-          onClose={() => setShowPasswordModal(false)}
-          onSubmit={handlePasswordChange}
-        />
-
-      )}
     </div>
   );
 }
-

@@ -6,12 +6,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.homosphere.backend.model.property.PropertyImage;
+import com.homosphere.backend.model.property.PropertyListing;
+import com.homosphere.backend.repository.PropertyListingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 
 class PropertyImageTest {
 
     private PropertyImage propertyImage;
+
+    @Mock
+    private PropertyListingRepository propertyListingRepository;
 
     @BeforeEach
     void setUp() {
@@ -22,17 +30,17 @@ class PropertyImageTest {
     void testPropertyImageCreation() {
         // Arrange & Act
         UUID imageId = UUID.randomUUID();
-        UUID listingId = UUID.randomUUID();
+        PropertyListing propertyListing = new PropertyListing();
         String imageUrl = "https://example.com/image.jpg";
 
         propertyImage.setPropertyImageId(imageId);
         propertyImage.setImageUrl(imageUrl);
-        propertyImage.setPropertyListingId(listingId);
+        propertyImage.setPropertyListing(propertyListing);
 
         // Assert
         assertEquals(imageId, propertyImage.getPropertyImageId());
         assertEquals(imageUrl, propertyImage.getImageUrl());
-        assertEquals(listingId, propertyImage.getPropertyListingId());
+        assertEquals(propertyListing, propertyImage.getPropertyListing());
     }
 
     @Test
@@ -54,49 +62,20 @@ class PropertyImageTest {
     }
 
     @Test
-    void testPropertyImageAllArgsConstructor() {
-        // Arrange & Act
-        UUID imageId = UUID.randomUUID();
-        UUID listingId = UUID.randomUUID();
-        PropertyImage newImage = new PropertyImage(
-            imageId,
-            "https://example.com/test.jpg",
-            listingId
-        );
-
-        // Assert
-        assertEquals(imageId, newImage.getPropertyImageId());
-        assertEquals("https://example.com/test.jpg", newImage.getImageUrl());
-        assertEquals(listingId, newImage.getPropertyListingId());
-    }
-
-    @Test
-    void testPropertyImageNoArgsConstructor() {
-        // Act
-        PropertyImage newImage = new PropertyImage();
-
-        // Assert
-        assertNotNull(newImage);
-        assertNull(newImage.getPropertyImageId());
-        assertNull(newImage.getImageUrl());
-        assertNull(newImage.getPropertyListingId());
-    }
-
-    @Test
     void testPropertyImageEquality() {
         // Arrange
         UUID imageId = UUID.randomUUID();
-        UUID listingId = UUID.randomUUID();
+        PropertyListing propertyListing = new PropertyListing();
 
         PropertyImage image1 = new PropertyImage();
         image1.setPropertyImageId(imageId);
         image1.setImageUrl("https://example.com/image.jpg");
-        image1.setPropertyListingId(listingId);
+        image1.setPropertyListing(propertyListing);
 
         PropertyImage image2 = new PropertyImage();
         image2.setPropertyImageId(imageId);
         image2.setImageUrl("https://example.com/image.jpg");
-        image2.setPropertyListingId(listingId);
+        image2.setPropertyListing(propertyListing);
 
         // Assert
         assertEquals(image1, image2);
@@ -132,9 +111,9 @@ class PropertyImageTest {
     @Test
     void testPropertyImageWithNullPropertyListingId() {
         // Act
-        propertyImage.setPropertyListingId(null);
+        propertyImage.setPropertyListing(null);
 
         // Assert
-        assertNull(propertyImage.getPropertyListingId());
+        assertNull(propertyImage.getPropertyListing());
     }
 }

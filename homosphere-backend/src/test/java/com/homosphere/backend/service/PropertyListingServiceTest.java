@@ -1,465 +1,307 @@
 package com.homosphere.backend.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
-import com.homosphere.backend.dto.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.LocationRequest;
-import com.homosphere.backend.dto.PropertyImageRequest;
-import com.homosphere.backend.dto.PropertyListingRequest;
-import com.homosphere.backend.dto.PropertyListingResponse;
-import com.homosphere.backend.dto.PropertyRequest;
-import com.homosphere.backend.enums.PropertyCondition;
+import com.homosphere.backend.dto.property.request.PropertyListingDraftRequest;
+import com.homosphere.backend.dto.property.request.PropertyListingEditRequest;
+import com.homosphere.backend.dto.property.request.PropertyListingRequest;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingPublicResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.enums.PropertyListingStatus;
-import com.homosphere.backend.enums.PropertyType;
-import com.homosphere.backend.mapper.CompactPropertyListingMapper;
-import com.homosphere.backend.mapper.LocationMapper;
-import com.homosphere.backend.mapper.PropertyImageMapper;
 import com.homosphere.backend.mapper.PropertyListingMapper;
-import com.homosphere.backend.mapper.PropertyMapper;
-import com.homosphere.backend.model.Location;
-import com.homosphere.backend.model.Property;
-import com.homosphere.backend.model.PropertyImage;
-import com.homosphere.backend.model.PropertyListing;
-import com.homosphere.backend.model.User;
-import com.homosphere.backend.repository.LocationRepository;
+import com.homosphere.backend.model.property.PropertyListing;
 import com.homosphere.backend.repository.PropertyListingRepository;
-import com.homosphere.backend.repository.PropertyRepository;
+import com.homosphere.backend.repository.PropertySubmissionReviewRepository;
 import com.homosphere.backend.repository.UserRepository;
+import com.homosphere.backend.updater.PropertyListingUpdater;
+import com.homosphere.backend.model.User;
 
-@ExtendWith(MockitoExtension.class)
 class PropertyListingServiceTest {
-
     @Mock
     private PropertyListingRepository propertyListingRepository;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private PropertyRepository propertyRepository;
-
-    @Mock
-    private LocationRepository locationRepository;
-
     @Mock
     private PropertyListingMapper propertyListingMapper;
-
     @Mock
-    private CompactPropertyListingMapper compactPropertyListingMapper;
-
+    private PropertyListingUpdater propertyListingUpdater;
     @Mock
-    private PropertyMapper propertyMapper;
-
+    private PropertySubmissionReviewRepository propertySubmissionReviewRepository;
     @Mock
-    private LocationMapper locationMapper;
-
+    private PropertySubmissionReviewService propertySubmissionReviewService;
     @Mock
-    private PropertyImageMapper propertyImageMapper;
-
+    private UserRepository userRepository;
     @InjectMocks
     private PropertyListingService propertyListingService;
 
-    private PropertyListingRequest propertyListingRequest;
-    private User seller;
-    private Property property;
-    private Location location;
     private PropertyListing propertyListing;
-    private PropertyListingResponse propertyListingResponse;
+    private PropertyListingRequest propertyListingRequest;
+    private PropertyListingDraftRequest draftRequest;
+    private PropertyListingEditRequest editRequest;
+    private UUID id;
+    private User user;
 
     @BeforeEach
     void setUp() {
-        // Setup test data
-        UUID sellerId = UUID.randomUUID();
-        UUID propertyId = UUID.randomUUID();
-        UUID locationId = UUID.randomUUID();
-        UUID listingId = UUID.randomUUID();
-
-        // Create seller
-        seller = new User();
-        seller.setId(sellerId);
-        seller.setEmail("seller@test.com");
-        seller.setFirstName("Test");
-        seller.setLastName("Seller");
-
-        // Create location DTO
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setLatitude(40.7128);
-        locationRequest.setLongitude(-74.0060);
-        locationRequest.setStreet("123 Test St");
-        locationRequest.setCity("New York");
-        locationRequest.setState("NY");
-        locationRequest.setZipCode("10001");
-
-        // Create location entity
-        location = new Location();
-        location.setLocationId(locationId);
-        location.setLatitude(40.7128);
-        location.setLongitude(-74.0060);
-        location.setStreet("123 Test St");
-        location.setCity("New York");
-        location.setState("NY");
-        location.setZipCode("10001");
-
-        // Create property DTO
-        PropertyRequest propertyRequest = new PropertyRequest();
-        propertyRequest.setAreaInSquareMeters(100.0);
-        propertyRequest.setBedrooms(3);
-        propertyRequest.setBathrooms(2);
-        propertyRequest.setPropertyType(PropertyType.APARTMENT);
-        propertyRequest.setPropertyCondition(PropertyCondition.GOOD);
-        propertyRequest.setLocation(locationRequest);
-        propertyRequest.setAmenities(new ArrayList<>());
-
-        // Create property entity
-        property = new Property();
-        property.setPropertyId(propertyId);
-        property.setAreaInSquareMeters(100.0);
-        property.setBedrooms(3);
-        property.setBathrooms(2);
-        property.setType(PropertyType.APARTMENT);
-        property.setCondition(PropertyCondition.GOOD);
-        property.setLocation(location);
-
-        // Create banner image
-        PropertyImageRequest bannerImageRequest = new PropertyImageRequest();
-        bannerImageRequest.setImageUrl("https://example.com/banner.jpg");
-
-        // Create property images
-        PropertyImageRequest image1 = new PropertyImageRequest();
-        image1.setImageUrl("https://example.com/image1.jpg");
-        PropertyImageRequest image2 = new PropertyImageRequest();
-        image2.setImageUrl("https://example.com/image2.jpg");
-        List<PropertyImageRequest> propertyImageRequests = Arrays.asList(image1, image2);
-
-        // Create property listing request
-        propertyListingRequest = new PropertyListingRequest();
-        propertyListingRequest.setTitle("Beautiful Apartment");
-        propertyListingRequest.setDescription("A stunning apartment in the heart of the city");
-        propertyListingRequest.setPrice(500000.0);
-        propertyListingRequest.setSellerId(sellerId);
-        propertyListingRequest.setProperty(propertyRequest);
-        propertyListingRequest.setBannerImage(bannerImageRequest);
-        propertyListingRequest.setPropertyImages(propertyImageRequests);
-        propertyListingRequest.setPropertyListingStatus(PropertyListingStatus.PUBLISHED);
-
-        // Create property listing entity
+        MockitoAnnotations.openMocks(this);
+        id = UUID.randomUUID();
         propertyListing = new PropertyListing();
-        propertyListing.setPropertyListingId(listingId);
-        propertyListing.setTitle("Beautiful Apartment");
-        propertyListing.setDescription("A stunning apartment in the heart of the city");
-        propertyListing.setPrice(500000.0);
-        propertyListing.setSeller(seller);
-        propertyListing.setProperty(property);
-        propertyListing.setPropertyListingStatus(PropertyListingStatus.PUBLISHED);
-        propertyListing.setViews(0);
-        propertyListing.setPublicationDate(LocalDateTime.now());
-        propertyListing.setLastUpdatedDate(LocalDateTime.now());
-
-        // Create response
-        propertyListingResponse = new PropertyListingResponse();
-        propertyListingResponse.setPropertyListingId(listingId);
-        propertyListingResponse.setTitle("Beautiful Apartment");
-        propertyListingResponse.setDescription("A stunning apartment in the heart of the city");
-        propertyListingResponse.setPrice(500000.0);
+        propertyListing.setPropertyListingId(id);
+        propertyListingRequest = new PropertyListingRequest();
+        draftRequest = new PropertyListingDraftRequest();
+        draftRequest.setPropertyListingId(id);
+        editRequest = new PropertyListingEditRequest();
+        editRequest.setPropertyListingId(id);
+        user = new User();
+        user.setId(UUID.randomUUID());
     }
 
     @Test
-    void createPropertyListing_Success() {
-        // Arrange
-        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
-        when(propertyMapper.toEntity(any())).thenReturn(property);
-        when(locationMapper.toEntity(any())).thenReturn(location);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(propertyImageMapper.toEntity(any(PropertyImageRequest.class)))
-                .thenReturn(new PropertyImage());
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("Beautiful Apartment", result.getTitle());
-        assertEquals(500000.0, result.getPrice());
-        verify(userRepository, times(1)).findById(any(UUID.class));
-        verify(propertyRepository, times(1)).save(any(Property.class));
-        verify(locationRepository, times(1)).save(any(Location.class));
-        verify(propertyListingRepository, times(2)).save(any(PropertyListing.class)); // Called twice: once before images, once after
-    }
-
-    @Test
-    void createPropertyListing_SellerNotFound_ThrowsException() {
-        // Arrange
-        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () ->
-            propertyListingService.createPropertyListing(propertyListingRequest)
-        );
-        verify(propertyListingRepository, never()).save(any());
-    }
-
-    @Test
-    void createPropertyListing_WithoutLocation_Success() {
-        // Arrange
-        propertyListingRequest.getProperty().setLocation(null);
-        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
-        when(propertyMapper.toEntity(any())).thenReturn(property);
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
-
-        // Assert
-        assertNotNull(result);
-        verify(locationRepository, never()).save(any());
-    }
-
-    @Test
-    void createPropertyListing_WithoutBannerImage_Success() {
-        // Arrange
-        propertyListingRequest.setBannerImage(null);
-        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
-        when(propertyMapper.toEntity(any())).thenReturn(property);
-        when(locationMapper.toEntity(any())).thenReturn(location);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(propertyImageMapper.toEntity(any(PropertyImageRequest.class))).thenReturn(new PropertyImage());
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
-
-        // Assert
-        assertNotNull(result);
-        // Property images are still set, so mapper is called
-        verify(propertyImageMapper, times(2)).toEntity(any(PropertyImageRequest.class));
-    }
-
-    @Test
-    void createPropertyListing_WithoutPropertyImages_Success() {
-        // Arrange
-        propertyListingRequest.setPropertyImages(new ArrayList<>());
-        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
-        when(propertyMapper.toEntity(any())).thenReturn(property);
-        when(locationMapper.toEntity(any())).thenReturn(location);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(propertyImageMapper.toEntity(any(PropertyImageRequest.class))).thenReturn(new PropertyImage());
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
-
-        // Assert
+    void submitPropertyListing_Success() {
+        when(propertyListingUpdater.createWithRelationLinks(any())).thenReturn(propertyListing);
+        when(propertyListingRepository.save(any())).thenReturn(propertyListing);
+        when(propertyListingMapper.toResponse(any())).thenReturn(new PropertyListingResponse());
+        PropertyListingResponse result = propertyListingService.submitPropertyListing(propertyListingRequest);
         assertNotNull(result);
     }
 
     @Test
-    void createPropertyListing_DefaultStatus_Success() {
-        // Arrange
-        propertyListingRequest.setPropertyListingStatus(null);
-        when(userRepository.findById(any(UUID.class))).thenReturn(Optional.of(seller));
-        when(propertyMapper.toEntity(any())).thenReturn(property);
-        when(locationMapper.toEntity(any())).thenReturn(location);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
+    void submitPropertyListing_ThrowsException() {
+        when(propertyListingUpdater.createWithRelationLinks(any())).thenThrow(new RuntimeException("fail"));
+        assertThrows(RuntimeException.class, () -> propertyListingService.submitPropertyListing(propertyListingRequest));
+    }
 
-        // Act
-        PropertyListingResponse result = propertyListingService.createPropertyListing(propertyListingRequest);
-
-        // Assert
+    @Test
+    void saveDraftPropertyListing_Success() {
+        when(propertyListingUpdater.createWithRelationLinks(any())).thenReturn(propertyListing);
+        when(propertyListingRepository.save(any())).thenReturn(propertyListing);
+        when(propertyListingMapper.toResponse(any())).thenReturn(new PropertyListingResponse());
+        PropertyListingResponse result = propertyListingService.saveDraftPropertyListing(propertyListingRequest);
         assertNotNull(result);
+    }
+
+    @Test
+    void resubmitPropertyListing_Success() {
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        doNothing().when(propertyListingUpdater).applyDraft(any(), any());
+        when(propertyListingMapper.toResponse(any())).thenReturn(new PropertyListingResponse());
+        PropertyListingResponse result = propertyListingService.resubmitPropertyListing(draftRequest);
+        assertNotNull(result);
+    }
+
+    @Test
+    void resubmitPropertyListing_NotFound() {
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> propertyListingService.resubmitPropertyListing(draftRequest));
+    }
+
+    @Test
+    void editPropertyListing_Success() {
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        doNothing().when(propertyListingUpdater).applyEdit(any(), any());
+        when(propertyListingMapper.toResponse(any())).thenReturn(new PropertyListingResponse());
+        PropertyListingResponse result = propertyListingService.editPropertyListing(editRequest);
+        assertNotNull(result);
+    }
+
+    @Test
+    void editPropertyListing_NotFound() {
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> propertyListingService.editPropertyListing(editRequest));
     }
 
     @Test
     void getPropertyListingById_Success() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        when(propertyListingMapper.toResponse(propertyListing)).thenReturn(propertyListingResponse);
-
-        // Act
-        PropertyListingResponse result = propertyListingService.getPropertyListingById(listingId);
-
-        // Assert
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        when(propertyListingMapper.toResponse(any())).thenReturn(new PropertyListingResponse());
+        PropertyListingResponse result = propertyListingService.getPropertyListingById(id);
         assertNotNull(result);
-        assertEquals("Beautiful Apartment", result.getTitle());
-        verify(propertyListingRepository, times(1)).findById(listingId);
     }
 
     @Test
-    void getPropertyListingById_NotFound_ThrowsException() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.empty());
+    void getPropertyListingById_NotFound() {
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> propertyListingService.getPropertyListingById(id));
+    }
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () ->
-            propertyListingService.getPropertyListingById(listingId)
-        );
+    @Test
+    void getPropertyListingPublicById_Success() {
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        doNothing().when(propertyListingRepository).updateViewCount(id);
+        when(propertyListingMapper.toPublicResponse(any())).thenReturn(new PropertyListingPublicResponse());
+        PropertyListingPublicResponse result = propertyListingService.getPropertyListingPublicById(id);
+        assertNotNull(result);
+    }
+
+    @Test
+    void getPropertyListingPublicById_NotFound() {
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> propertyListingService.getPropertyListingPublicById(id));
     }
 
     @Test
     void getAllPropertyListings_Success() {
-        // Arrange
-        List<PropertyListing> listings = Arrays.asList(propertyListing, propertyListing);
-        CompactPropertyListingResponse compactResponse = new CompactPropertyListingResponse();
-        compactResponse.setTitle("Beautiful Apartment");
-
-        when(propertyListingRepository.findAll()).thenReturn(listings);
-        when(compactPropertyListingMapper.toCompactResponse(any(PropertyListing.class)))
-                .thenReturn(compactResponse);
-
-        // Act
+        when(propertyListingRepository.findAll()).thenReturn(List.of(propertyListing));
+        when(propertyListingMapper.toCompactResponse(any())).thenReturn(new CompactPropertyListingResponse());
         List<CompactPropertyListingResponse> result = propertyListingService.getAllPropertyListings();
-
-        // Assert
         assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(propertyListingRepository, times(1)).findAll();
     }
 
     @Test
-    void getAllPropertyListings_EmptyList() {
-        // Arrange
-        when(propertyListingRepository.findAll()).thenReturn(new ArrayList<>());
-
-        // Act
-        List<CompactPropertyListingResponse> result = propertyListingService.getAllPropertyListings();
-
-        // Assert
+    void getAllPublishedPropertyListings_Success() {
+        when(propertyListingRepository.findAllPublishedListings()).thenReturn(List.of(propertyListing));
+        when(propertyListingMapper.toCompactResponse(any())).thenReturn(new CompactPropertyListingResponse());
+        List<CompactPropertyListingResponse> result = propertyListingService.getAllPublishedPropertyListings();
         assertNotNull(result);
-        assertTrue(result.isEmpty());
     }
 
     @Test
-    void updatePropertyListing_Success() {
+    void getAllPropertyListingsBySellerAndStatus_Success() {
+        when(propertyListingRepository.findAllBySellerAndStatus(any(), any())).thenReturn(List.of(propertyListing));
+        when(propertyListingMapper.toCompactResponse(any())).thenReturn(new CompactPropertyListingResponse());
+        List<CompactPropertyListingResponse> result = propertyListingService.getAllPropertyListingsBySellerAndStatus(UUID.randomUUID(), PropertyListingStatus.PENDING);
+        assertNotNull(result);
+    }
+
+    @Test
+    void getAllPropertyListingsByStatus_Success() {
+        when(propertyListingRepository.findByStatus(any())).thenReturn(List.of(propertyListing));
+        when(propertyListingMapper.toCompactResponse(any())).thenReturn(new CompactPropertyListingResponse());
+        List<CompactPropertyListingResponse> result = propertyListingService.getAllPropertyListingsByStatus(PropertyListingStatus.PENDING);
+        assertNotNull(result);
+    }
+
+    @Test
+    void getUserPropertyListingStatuses_Success() {
+        when(propertyListingRepository.findDistinctStatusesByUserId(any())).thenReturn(List.of(PropertyListingStatus.PENDING));
+        List<PropertyListingStatus> result = propertyListingService.getUserPropertyListingStatuses(UUID.randomUUID());
+        assertNotNull(result);
+    }
+
+    @Test
+    void getUserPropertyListings_Success() {
+        when(propertyListingRepository.findBySeller_Id(any())).thenReturn(List.of(propertyListing));
+        when(propertyListingMapper.toCompactResponse(any())).thenReturn(new CompactPropertyListingResponse());
+        List<CompactPropertyListingResponse> result = propertyListingService.getUserPropertyListings(UUID.randomUUID());
+        assertNotNull(result);
+    }
+
+    @Test
+    void deletePropertyListing_WithReview() {
+        when(propertySubmissionReviewRepository.existsById(id)).thenReturn(true);
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        doNothing().when(propertySubmissionReviewService).deletePropertySubmissionReview(id);
+        doNothing().when(propertyListingRepository).delete(any());
+        propertyListingService.deletePropertyListing(id);
+        verify(propertySubmissionReviewService).deletePropertySubmissionReview(id);
+        verify(propertyListingRepository).delete(propertyListing);
+    }
+
+    @Test
+    void deletePropertyListing_WithoutReview() {
+        when(propertySubmissionReviewRepository.existsById(id)).thenReturn(false);
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        doNothing().when(propertyListingRepository).delete(any());
+        propertyListingService.deletePropertyListing(id);
+        verify(propertyListingRepository).delete(propertyListing);
+    }
+
+    @Test
+    void deletePropertyListing_NotFound() {
+        when(propertySubmissionReviewRepository.existsById(id)).thenReturn(false);
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> propertyListingService.deletePropertyListing(id));
+    }
+
+    @Test
+    void toggleSaveProperty_Save_Success() {
         // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
+        UUID userId = user.getId();
+        propertyListing.setSavedByUsers(new ArrayList<>()); // Ensure list is mutable
+        
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
 
         // Act
-        PropertyListingResponse result = propertyListingService.updatePropertyListing(listingId, propertyListingRequest);
+        propertyListingService.toggleSaveProperty(id, userId);
 
         // Assert
-        assertNotNull(result);
-        verify(propertyListingRepository, times(1)).findById(listingId);
-        verify(propertyListingRepository, times(1)).save(any(PropertyListing.class));
+        verify(propertyListingRepository).save(propertyListing);
+        assert(propertyListing.getSavedByUsers().contains(user));
     }
 
     @Test
-    void updatePropertyListing_NotFound_ThrowsException() {
+    void toggleSaveProperty_Unsave_Success() {
         // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.empty());
+        UUID userId = user.getId();
+        List<User> savedBy = new ArrayList<>();
+        savedBy.add(user);
+        propertyListing.setSavedByUsers(savedBy);
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () ->
-            propertyListingService.updatePropertyListing(listingId, propertyListingRequest)
-        );
-    }
-
-    @Test
-    void updatePropertyListing_WithNewLocation_Success() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        propertyListing.getProperty().setLocation(null);
-
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        when(locationMapper.toEntity(any())).thenReturn(location);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
 
         // Act
-        PropertyListingResponse result = propertyListingService.updatePropertyListing(listingId, propertyListingRequest);
+        propertyListingService.toggleSaveProperty(id, userId);
 
         // Assert
+        verify(propertyListingRepository).save(propertyListing);
+        assert(!propertyListing.getSavedByUsers().contains(user));
+    }
+
+    @Test
+    void toggleSaveProperty_ListingNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> propertyListingService.toggleSaveProperty(id, userId));
+    }
+
+    @Test
+    void toggleSaveProperty_UserNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(propertyListingRepository.findById(id)).thenReturn(Optional.of(propertyListing));
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> propertyListingService.toggleSaveProperty(id, userId));
+    }
+
+    @Test
+    void getUserSavedPropertyIds_Success() {
+        UUID userId = UUID.randomUUID();
+        List<UUID> expectedIds = List.of(UUID.randomUUID(), UUID.randomUUID());
+        
+        when(userRepository.existsById(userId)).thenReturn(true);
+        when(propertyListingRepository.findSavedListingIdsByUserId(userId)).thenReturn(expectedIds);
+
+        List<UUID> result = propertyListingService.getUserSavedPropertyIds(userId);
+
         assertNotNull(result);
-        verify(locationRepository, times(1)).save(any(Location.class));
+        assert(result.size() == 2);
+        verify(propertyListingRepository).findSavedListingIdsByUserId(userId);
     }
 
     @Test
-    void updatePropertyListing_WithPropertyImages_Success() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        when(propertyRepository.save(any(Property.class))).thenReturn(property);
-        when(locationRepository.save(any(Location.class))).thenReturn(location);
-        when(propertyImageMapper.toEntity(any(PropertyImageRequest.class))).thenReturn(new PropertyImage());
-        when(propertyListingRepository.save(any(PropertyListing.class))).thenReturn(propertyListing);
-        when(propertyListingMapper.toResponse(any(PropertyListing.class))).thenReturn(propertyListingResponse);
+    void getUserSavedPropertyIds_UserNotFound() {
+        UUID userId = UUID.randomUUID();
+        when(userRepository.existsById(userId)).thenReturn(false);
 
-        // Act
-        PropertyListingResponse result = propertyListingService.updatePropertyListing(listingId, propertyListingRequest);
-
-        // Assert
-        assertNotNull(result);
-        verify(propertyImageMapper, atLeastOnce()).toEntity(any(PropertyImageRequest.class));
-    }
-
-    @Test
-    void deletePropertyListing_Success() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.of(propertyListing));
-        doNothing().when(propertyListingRepository).delete(propertyListing);
-
-        // Act
-        propertyListingService.deletePropertyListing(listingId);
-
-        // Assert
-        verify(propertyListingRepository, times(1)).findById(listingId);
-        verify(propertyListingRepository, times(1)).delete(propertyListing);
-    }
-
-    @Test
-    void deletePropertyListing_NotFound_ThrowsException() {
-        // Arrange
-        UUID listingId = UUID.randomUUID();
-        when(propertyListingRepository.findById(listingId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () ->
-            propertyListingService.deletePropertyListing(listingId)
-        );
-        verify(propertyListingRepository, never()).delete(any());
+        assertThrows(RuntimeException.class, () -> propertyListingService.getUserSavedPropertyIds(userId));
     }
 }

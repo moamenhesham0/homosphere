@@ -1,14 +1,15 @@
 package com.homosphere.backend.repository;
 
-import com.homosphere.backend.model.PropertyListing;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.UUID;
-
+import com.homosphere.backend.enums.PropertyListingStatus;
+import com.homosphere.backend.model.property.PropertyListing;
 
 
 @Repository
@@ -21,4 +22,25 @@ public interface PropertyListingRepository extends JpaRepository<PropertyListing
     @Query("SELECT COALESCE(SUM(pl.views), 0) FROM PropertyListing pl WHERE pl.seller.id = :userId")
     Integer sumViewsByUserId(@Param("userId") UUID userId);
 
+    @Query("SELECT pl FROM PropertyListing pl WHERE pl.status = 'PUBLISHED'")
+    List<PropertyListing> findAllPublishedListings();
+
+    @Query("SELECT pl FROM PropertyListing pl WHERE pl.status = :status AND pl.seller.id = :sellerId")
+    List<PropertyListing> findAllBySellerAndStatus(@Param("sellerId") UUID sellerId, @Param("status") PropertyListingStatus status);
+
+    @Query("SELECT pl FROM PropertyListing pl WHERE pl.status = :status")
+    List<PropertyListing> findByStatus(@Param("status") PropertyListingStatus status);
+
+    @Query("SELECT DISTINCT pl.status FROM PropertyListing pl WHERE pl.seller.id = :userId")
+    List<PropertyListingStatus> findDistinctStatusesByUserId(@Param("userId") UUID userId);
+
+    @Query("UPDATE PropertyListing pl SET pl.views = pl.views + 1 WHERE pl.propertyListingId = :propertyListingId")
+    void updateViewCount(UUID propertyListingId);
+
+    @Query("SELECT pl.propertyListingId FROM PropertyListing pl JOIN pl.savedByUsers u WHERE u.id = :userId")
+    List<UUID> findSavedListingIdsByUserId(@Param("userId") UUID userId);
+
+    List<PropertyListing> findAllBySavedByUsers_Id(UUID userId);
+    
+    java.util.Optional<PropertyListing> findByProperty_PropertyId(UUID propertyId);
 }

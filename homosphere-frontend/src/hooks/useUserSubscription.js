@@ -15,16 +15,28 @@ const useUserSubscription = () => {
                 const fetchedUserId = session.user.id;
                 setUserId(fetchedUserId);
 
-                const subRes = await axios.get(`http://localhost:8080/api/user-subscriptions/my-role-tier`, {
+                // Use the new payment endpoint that gets the latest subscription
+                const subRes = await axios.get(`http://localhost:8080/api/payment/my-subscription`, {
                     headers: {
                         'Authorization': `Bearer ${session.access_token}`,
                         'Content-Type': 'application/json'
                     }
                 });
-                if (subRes.data && subRes.data.length > 0) {
+                
+                if (subRes.data && subRes.data.subscriptionTierId) {
                     console.log("User subscription data:", subRes.data);
-                    setCurrentSubscriptionId(subRes.data[0].subscriptionTierId);
-                    setRole(subRes.data[0].role);
+                    setCurrentSubscriptionId(subRes.data.subscriptionTierId);
+                    
+                    // Fetch role from user endpoint
+                    const roleRes = await axios.get(`http://localhost:8080/api/user-subscriptions/my-role-tier`, {
+                        headers: {
+                            'Authorization': `Bearer ${session.access_token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (roleRes.data && roleRes.data.length > 0) {
+                        setRole(roleRes.data[0].role);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching user subscription:", error);

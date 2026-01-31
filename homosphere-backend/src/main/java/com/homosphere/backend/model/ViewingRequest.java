@@ -4,15 +4,21 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.homosphere.backend.model.property.Property;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +26,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "viewing_requests")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,21 +35,30 @@ public class ViewingRequest {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "request_viewing_id")
     private UUID id;
+
+    @OneToOne(mappedBy = "viewingRequest", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"viewingRequest", "hibernateLazyInitializer", "handler"}) 
+    private ProcessedViewingRequest processedRequest;
     
-    @Column(name = "property_id", nullable = false)
-    private UUID propertyId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "property_id", nullable = false)
+    private Property property;
     
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
+    // Property title for context
+    @Column(name = "property_title", nullable = true, length = 255)
+    private String propertyTitle;
+
     // Buyer information
     @Column(name = "buyer_name", nullable = false, length = 50)
     private String name;
-    
+
     @Column(name = "buyer_email", nullable = false)
     private String email;
-    
+
     @Column(name = "buyer_phone", nullable = false, length = 15)
     private String phone;
 
@@ -62,7 +78,8 @@ public class ViewingRequest {
         PENDING,
         APPROVED,
         REJECTED,
-        RESCHEDULED
+        RESCHEDULED,
+        WITHDRAWN
     }
 
     @Enumerated(EnumType.STRING)

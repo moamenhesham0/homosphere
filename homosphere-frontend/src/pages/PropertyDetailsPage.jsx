@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../utils/supabase';
 import RequestViewForm from '../components/RequestViewForm';
+import AIPredictionButton from '../components/AIPredictionButton';
+import '../constants/colors.js';
 import '../styles/PropertyDetailsPage.css';
 
 const API_BASE_URL = 'http://localhost:8080/api/properties';
+const API_LISTING_URL = 'http://localhost:8080/api/property-listing/public/user';
 
 const formatPrice = (price) => {
     if (price === null || price === undefined) return 'Price N/A';
-    return new Intl.NumberFormat('en-US', { 
-        style: 'currency', 
-        currency: 'USD', 
-        minimumFractionDigits: 0 
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0
     }).format(price);
 };
 
@@ -20,8 +24,48 @@ const PropertyDetailsPage = () => {
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isSaved, setIsSaved] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [showRequestForm, setShowRequestForm] = useState(false);
+
+    // Check if property is saved by user
+    useEffect(() => {
+        const checkSavedStatus = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !id) return;
+            try {
+                const response = await fetch(`${API_LISTING_URL}/saved-ids/${session.user.id}`, {
+                    headers: { 'Authorization': `Bearer ${session.access_token}` }
+                });
+                if (response.ok) {
+                    const ids = await response.json();
+                    setIsSaved(ids.includes(id));
+                }
+            } catch (e) { console.error(e); }
+        };
+        checkSavedStatus();
+    }, [id]);
+
+    // Handle save/unsave property
+    const handleSave = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            alert("Please log in to save properties.");
+            return;
+        }
+        try {
+            const response = await fetch(`${API_LISTING_URL}/${id}/save/${session.user.id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${session.access_token}` }
+            });
+            if (response.ok) {
+                setIsSaved(!isSaved);
+                alert(isSaved ? "Property removed from saved." : "Property saved!");
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -49,13 +93,13 @@ const PropertyDetailsPage = () => {
             <div className="loading-spinner">Loading property...</div>
         </div>
     );
-    
+
     if (error) return (
         <div className="property-details-page">
             <div className="error-message">{error}</div>
         </div>
     );
-    
+
     if (!property) return (
         <div className="property-details-page">
             <div className="no-results">Property not found.</div>
@@ -70,20 +114,20 @@ const PropertyDetailsPage = () => {
 
     // Combine banner image with property images for the gallery
     const allImages = [];
-    
+
     // Add banner image first if it exists
     if (bannerImage.imageUrl) {
-        allImages.push({ 
-            imageUrl: bannerImage.imageUrl, 
+        allImages.push({
+            imageUrl: bannerImage.imageUrl,
             isBanner: true,
             alt: 'Banner Image'
         });
     }
-    
+
     // Add all property images
     propertyImages.forEach((img, index) => {
-        allImages.push({ 
-            imageUrl: img.imageUrl, 
+        allImages.push({
+            imageUrl: img.imageUrl,
             isBanner: false,
             alt: `Property Image ${index + 1}`
         });
@@ -122,16 +166,16 @@ const PropertyDetailsPage = () => {
                     <div className="main-image-container">
                         {hasImages ? (
                             <>
-                                <img 
-                                    src={currentImage.imageUrl} 
+                                <img
+                                    src={currentImage.imageUrl}
                                     alt={currentImage.alt}
                                     className="main-property-image"
                                 />
-                                
+
                                 {/* Image Navigation Arrows */}
                                 {allImages.length > 1 && (
                                     <>
-                                        <button 
+                                        <button
                                             className="image-nav-btn prev-btn"
                                             onClick={handlePrevImage}
                                             disabled={selectedImageIndex === 0}
@@ -140,7 +184,7 @@ const PropertyDetailsPage = () => {
                                                 <polyline points="15 18 9 12 15 6"></polyline>
                                             </svg>
                                         </button>
-                                        <button 
+                                        <button
                                             className="image-nav-btn next-btn"
                                             onClick={handleNextImage}
                                             disabled={selectedImageIndex === allImages.length - 1}
@@ -181,13 +225,13 @@ const PropertyDetailsPage = () => {
                         <div className="image-gallery-container">
                             <div className="image-gallery-scroll">
                                 {allImages.map((img, index) => (
-                                    <div 
+                                    <div
                                         key={index}
                                         className={`gallery-thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
                                         onClick={() => handleImageSelect(index)}
                                     >
-                                        <img 
-                                            src={img.imageUrl} 
+                                        <img
+                                            src={img.imageUrl}
                                             alt={img.alt}
                                         />
                                         {img.isBanner && (
@@ -209,13 +253,17 @@ const PropertyDetailsPage = () => {
                     </div>
 
                     {/* Seller Information */}
-                    {property.sellerName && (
+                    {property.sellerName && property.sellerId && (
                         <div className="property-seller">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
-                            <span>Listed by: <strong>{property.sellerName}</strong></span>
+                            <span>Listed by: <strong>
+                                <Link to={`/public-profile/${property.sellerId}`} className="seller-link">
+                                    {property.sellerName}
+                                </Link>
+                            </strong></span>
                         </div>
                     )}
 
@@ -263,9 +311,21 @@ const PropertyDetailsPage = () => {
                             </svg>
                             <div>
                                 <span className="property-feature-value">
-                                    {propertyData.areaInSquareMeters ?? 'N/A'}
+                                    {property?.property?.propertyAreaSqFt ?? 'N/A'}
                                 </span>
-                                <span className="property-feature-label">Area (m²)</span>
+                                <span className="property-feature-label">Property Area (sq ft)</span>
+                            </div>
+                        </div>
+
+                        <div className="property-feature-item">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            </svg>
+                            <div>
+                                <span className="property-feature-value">
+                                    {property?.property?.lotAreaSqFt ?? 'N/A'}
+                                </span>
+                                <span className="property-feature-label">Lot Area (sq ft)</span>
                             </div>
                         </div>
 
@@ -318,10 +378,6 @@ const PropertyDetailsPage = () => {
                         <table className="property-attributes-table">
                             <tbody>
                                 <tr>
-                                    <td>Listing Status</td>
-                                    <td>{property.propertyListingStatus || 'N/A'}</td>
-                                </tr>
-                                <tr>
                                     <td>Address</td>
                                     <td>
                                         {location.street && `${location.street}, `}
@@ -347,8 +403,12 @@ const PropertyDetailsPage = () => {
                                     <td>{propertyData.bathrooms ?? 'N/A'}</td>
                                 </tr>
                                 <tr>
-                                    <td>Area</td>
-                                    <td>{propertyData.areaInSquareMeters ? `${propertyData.areaInSquareMeters} m²` : 'N/A'}</td>
+                                    <td>Property Area</td>
+                                    <td>{property?.property?.propertyAreaSqFt ? `${property.property.propertyAreaSqFt} sq ft` : 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Lot Area</td>
+                                    <td>{property?.property?.lotAreaSqFt ? `${property.property.lotAreaSqFt} sq ft` : 'N/A'}</td>
                                 </tr>
                                 <tr>
                                     <td>Condition</td>
@@ -390,6 +450,19 @@ const PropertyDetailsPage = () => {
                         </table>
                     </div>
 
+                    {/* AI Prediction Section */}
+                    <AIPredictionButton
+                        propertyData={{
+                            bedrooms: propertyData.bedrooms,
+                            bathrooms: propertyData.bathrooms,
+                            propertyAreaSqFt: propertyData.propertyAreaSqFt,
+                            lotAreaSqFt: propertyData.lotAreaSqFt,
+                            city: location.city,
+                            state: location.state,
+                            zipCode: location.zipCode,
+                        }}
+                    />
+
                     {/* Action Buttons */}
                     <div className="property-actions">
                         <button className="property-btn property-btn-primary" onClick={() => setShowRequestForm(true)}>
@@ -398,11 +471,14 @@ const PropertyDetailsPage = () => {
                             </svg>
                             Request Viewing
                         </button>
-                        <button className="property-btn property-btn-secondary">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        <button 
+                            className={`property-btn property-btn-secondary ${isSaved ? 'active' : ''}`} 
+                            onClick={handleSave}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill={isSaved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            Save Property
+                            {isSaved ? 'Saved' : 'Save Property'}
                         </button>
                         <button className="property-btn property-btn-secondary">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -419,9 +495,10 @@ const PropertyDetailsPage = () => {
             {/* Viewing Request Form Modal */}
             {showRequestForm && (
                 <div className="modal-overlay" onClick={() => setShowRequestForm(false)}>
-                    <RequestViewForm 
-                        propertyId={id} 
-                        onClose={() => setShowRequestForm(false)} 
+                    <RequestViewForm
+                        propertyId={property?.property?.propertyId || id}
+                        propertyTitle={property?.title || property?.property?.title || 'Untitled Property'}
+                        onClose={() => setShowRequestForm(false)}
                     />
                 </div>
             )}

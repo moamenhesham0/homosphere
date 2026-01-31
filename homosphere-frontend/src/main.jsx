@@ -11,6 +11,7 @@ import SignUp from './pages/signUpPage.jsx';
 import SignIn from './pages/signInPage.jsx';
 import Layout from './components/Layout.jsx';
 import SubscriptionPage from './pages/SubscriptionPage.jsx';
+import PayPalCheckoutPage from './pages/PayPalCheckoutPage.jsx';
 import AuthCallback from './pages/AuthCallback.jsx';
 import Profile from './pages/Profile.jsx';
 import PropertyListingForm from './pages/PropertyListingForm.jsx';
@@ -18,6 +19,7 @@ import AdminPortal from './pages/AdminPortal.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import PropertyDetailsPage from './pages/PropertyDetailsPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
+import PublicProfile from './pages/PublicProfile.jsx';
 
 
 createRoot(document.getElementById('root')).render(
@@ -34,12 +36,15 @@ createRoot(document.getElementById('root')).render(
                     <Route path={ROUTES.HOME} element={<App />} />
                     <Route path="/" element={<App />} />
                     <Route path={ROUTES.SUBSCRIPTION} element={<SubscriptionPage />} />
+                    <Route path={ROUTES.PAYPAL_CHECKOUT} element={<PayPalCheckoutPage />} />
                     <Route path={ROUTES.PROPERTY_LISTING_FORM} element={<PropertyListingForm />} />
                     <Route path={ROUTES.PROFILE} element={<Profile />} />
                     <Route path={ROUTES.ADMIN_PORTAL} element={<AdminPortal />} />
                     <Route path={ROUTES.SEARCH} element={<SearchPage />} />
                     <Route path="/property/:id" element={<PropertyDetailsPage />} />
                     <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
+                    <Route path="/public-profile/:id" element={<PublicProfile />} />
+                    <Route path="/private-profile/:id" element={<Profile />} />
                 </Route>
             </Routes>
         </BrowserRouter>

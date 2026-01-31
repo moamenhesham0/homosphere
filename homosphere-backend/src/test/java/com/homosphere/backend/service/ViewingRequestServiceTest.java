@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,14 +18,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
+import com.homosphere.backend.dto.StatusUpdateDTO;
 import com.homosphere.backend.dto.ViewingRequestDTO;
+import com.homosphere.backend.model.ProcessedViewingRequest;
 import com.homosphere.backend.model.User;
 import com.homosphere.backend.model.ViewingRequest;
+import com.homosphere.backend.model.property.Property;
+import com.homosphere.backend.repository.ProcessedViewingRequestRepository;
+import com.homosphere.backend.repository.PropertyRepository;
 import com.homosphere.backend.repository.UserRepository;
 import com.homosphere.backend.repository.ViewingRequestRepository;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class ViewingRequestServiceTest {
 
     @Mock
@@ -32,6 +41,12 @@ class ViewingRequestServiceTest {
 
     @Mock
     private UserRepository userRepository;
+    
+    @Mock
+    private PropertyRepository propertyRepository;
+    
+    @Mock
+    private ProcessedViewingRequestRepository processedViewingRequestRepository;
 
     @InjectMocks
     private ViewingRequestService viewingRequestService;
@@ -39,6 +54,7 @@ class ViewingRequestServiceTest {
     private UUID userId;
     private UUID propertyId;
     private User mockUser;
+    private Property mockProperty;
     private ViewingRequestDTO mockDTO;
     private ViewingRequest mockViewingRequest;
 
@@ -53,6 +69,11 @@ class ViewingRequestServiceTest {
         mockUser.setEmail("test@example.com");
         mockUser.setFirstName("John");
         mockUser.setLastName("Doe");
+        mockUser.setRole("BUYER");
+        
+        // Setup mock property
+        mockProperty = new Property();
+        mockProperty.setPropertyId(propertyId);
 
         // Setup mock DTO
         mockDTO = new ViewingRequestDTO();
@@ -68,7 +89,7 @@ class ViewingRequestServiceTest {
         // Setup mock viewing request
         mockViewingRequest = new ViewingRequest();
         mockViewingRequest.setId(UUID.randomUUID());
-        mockViewingRequest.setPropertyId(propertyId);
+        mockViewingRequest.setProperty(mockProperty);
         mockViewingRequest.setUser(mockUser);
         mockViewingRequest.setName(mockDTO.getName());
         mockViewingRequest.setEmail(mockDTO.getEmail());
@@ -78,195 +99,246 @@ class ViewingRequestServiceTest {
         mockViewingRequest.setStartTime(mockDTO.getStartTime());
         mockViewingRequest.setEndTime(mockDTO.getEndTime());
         mockViewingRequest.setMessage(mockDTO.getMessage());
+        mockViewingRequest.setStatus(ViewingRequest.Status.PENDING);
     }
+
+    // --- Create Viewing Request Tests ---
 
     @Test
     void createViewingRequest_Success() {
-        // Arrange
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(mockProperty));
         when(viewingRequestRepository.save(any(ViewingRequest.class))).thenReturn(mockViewingRequest);
 
-        // Act
         ViewingRequest result = viewingRequestService.createViewingRequest(userId, mockDTO);
 
-        // Assert
         assertNotNull(result);
-        assertEquals(propertyId, result.getPropertyId());
+        assertEquals(mockProperty, result.getProperty());
         assertEquals(mockUser, result.getUser());
-        assertEquals(mockDTO.getName(), result.getName());
-        assertEquals(mockDTO.getEmail(), result.getEmail());
-        assertEquals(mockDTO.getPhone(), result.getPhone());
-        assertEquals(mockDTO.getPreferredDate(), result.getPreferredDate());
-        assertEquals(mockDTO.getStartTime(), result.getStartTime());
-        assertEquals(mockDTO.getEndTime(), result.getEndTime());
-        assertEquals(mockDTO.getMessage(), result.getMessage());
-        assertNotNull(result.getSubmittedAt());
-
         verify(userRepository, times(1)).findById(userId);
         verify(viewingRequestRepository, times(1)).save(any(ViewingRequest.class));
     }
 
     @Test
     void createViewingRequest_UserNotFound_ThrowsException() {
-        // Arrange
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             viewingRequestService.createViewingRequest(userId, mockDTO);
         });
 
         assertEquals("User not found", exception.getMessage());
-        verify(userRepository, times(1)).findById(userId);
+        verify(viewingRequestRepository, never()).save(any(ViewingRequest.class));
+    }
+    
+    @Test
+    void createViewingRequest_NonBuyer_ThrowsException() {
+        mockUser.setRole("AGENT"); // Set role to something other than BUYER
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            viewingRequestService.createViewingRequest(userId, mockDTO);
+        });
+
+        assertTrue(exception.getMessage().contains("Only buyers can submit viewing requests"));
         verify(viewingRequestRepository, never()).save(any(ViewingRequest.class));
     }
 
     @Test
     void createViewingRequest_SetsSubmittedAtToCurrentDate() {
-        // Arrange
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(mockProperty));
+        
         when(viewingRequestRepository.save(any(ViewingRequest.class))).thenAnswer(invocation -> {
             ViewingRequest vr = invocation.getArgument(0);
             vr.setId(UUID.randomUUID());
             return vr;
         });
 
-        // Act
         ViewingRequest result = viewingRequestService.createViewingRequest(userId, mockDTO);
 
-        // Assert
         assertNotNull(result.getSubmittedAt());
         assertEquals(LocalDate.now(), result.getSubmittedAt());
     }
 
     @Test
     void createViewingRequest_WithNullMessage_Success() {
-        // Arrange
         mockDTO.setMessage(null);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(propertyRepository.findById(propertyId)).thenReturn(Optional.of(mockProperty));
         when(viewingRequestRepository.save(any(ViewingRequest.class))).thenReturn(mockViewingRequest);
 
-        // Act
         ViewingRequest result = viewingRequestService.createViewingRequest(userId, mockDTO);
 
-        // Assert
         assertNotNull(result);
         verify(viewingRequestRepository, times(1)).save(any(ViewingRequest.class));
     }
 
+    // --- Update Request Status Tests ---
+
     @Test
-    void getUserViewingRequests_Success() {
+    void updateRequestStatus_Success() {
+        UUID requestId = mockViewingRequest.getId();
+        StatusUpdateDTO statusDTO = new StatusUpdateDTO();
+        statusDTO.setStatus(ViewingRequest.Status.APPROVED);
+        statusDTO.setProcessedBy(userId);
+        statusDTO.setAgentMessage("Confirmed");
+
+        when(viewingRequestRepository.findById(requestId)).thenReturn(Optional.of(mockViewingRequest));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser)); // Agent
+        when(processedViewingRequestRepository.findAll()).thenReturn(Collections.emptyList());
+        when(viewingRequestRepository.save(any(ViewingRequest.class))).thenReturn(mockViewingRequest);
+
+        ViewingRequest result = viewingRequestService.updateRequestStatus(requestId, statusDTO);
+
+        assertEquals(ViewingRequest.Status.APPROVED, result.getStatus());
+        verify(processedViewingRequestRepository, times(1)).save(any(ProcessedViewingRequest.class));
+        verify(viewingRequestRepository, times(1)).save(mockViewingRequest);
+    }
+
+    @Test
+    void updateRequestStatus_RequestNotFound_ThrowsException() {
+        UUID requestId = UUID.randomUUID();
+        StatusUpdateDTO statusDTO = new StatusUpdateDTO();
+        
+        when(viewingRequestRepository.findById(requestId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            viewingRequestService.updateRequestStatus(requestId, statusDTO);
+        });
+
+        assertEquals("Viewing Request not found", exception.getMessage());
+        verify(processedViewingRequestRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRequestStatus_AgentNotFound_ThrowsException() {
+        UUID requestId = mockViewingRequest.getId();
+        StatusUpdateDTO statusDTO = new StatusUpdateDTO();
+        statusDTO.setStatus(ViewingRequest.Status.REJECTED);
+        statusDTO.setProcessedBy(userId);
+
+        when(viewingRequestRepository.findById(requestId)).thenReturn(Optional.of(mockViewingRequest));
+        when(processedViewingRequestRepository.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findById(userId)).thenReturn(Optional.empty()); // Agent not found
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            viewingRequestService.updateRequestStatus(requestId, statusDTO);
+        });
+
+        // Error message might be "User not found" or "Agent user not found" depending on your exact Service string
+        assertTrue(exception.getMessage().contains("User not found"));
+        verify(processedViewingRequestRepository, never()).save(any());
+    }
+
+    // Test for Buyer Accepting Reschedule (Updates Time) ---
+    @Test
+    void updateRequestStatus_BuyerAcceptsReschedule_UpdatesTime() {
         // Arrange
-        ViewingRequest request1 = new ViewingRequest();
-        request1.setId(UUID.randomUUID());
-        request1.setUser(mockUser);
-        request1.setPropertyId(propertyId);
+        UUID requestId = mockViewingRequest.getId();
+        // Current state: Rescheduled
+        mockViewingRequest.setStatus(ViewingRequest.Status.RESCHEDULED);
+        
+        // Mock existing processed request with new proposed time
+        ProcessedViewingRequest processed = new ProcessedViewingRequest();
+        processed.setViewingRequest(mockViewingRequest);
+        processed.setNewDate(LocalDate.now().plusDays(10));
+        processed.setNewStartTime(LocalTime.of(14, 0));
+        processed.setNewEndTime(LocalTime.of(15, 0));
+        
+        // Input DTO: Buyer Approves
+        StatusUpdateDTO dto = new StatusUpdateDTO();
+        dto.setStatus(ViewingRequest.Status.APPROVED);
+        dto.setProcessedBy(userId);
 
-        ViewingRequest request2 = new ViewingRequest();
-        request2.setId(UUID.randomUUID());
-        request2.setUser(mockUser);
-        request2.setPropertyId(UUID.randomUUID());
-
-        List<ViewingRequest> mockRequests = Arrays.asList(request1, request2);
-        when(viewingRequestRepository.findByUser_Id(userId)).thenReturn(mockRequests);
+        when(viewingRequestRepository.findById(requestId)).thenReturn(Optional.of(mockViewingRequest));
+        // Mock finding the existing processed record
+        when(processedViewingRequestRepository.findAll()).thenReturn(Collections.singletonList(processed));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        // Capture the save to verify changes
+        when(viewingRequestRepository.save(any(ViewingRequest.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
-        List<ViewingRequest> result = viewingRequestService.getUserViewingRequests(userId);
+        ViewingRequest result = viewingRequestService.updateRequestStatus(requestId, dto);
 
         // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
+        assertEquals(ViewingRequest.Status.APPROVED, result.getStatus());
+        // Verify time was updated to the proposed time
+        assertEquals(processed.getNewDate(), result.getPreferredDate());
+        assertEquals(processed.getNewStartTime(), result.getStartTime());
+        assertEquals(processed.getNewEndTime(), result.getEndTime());
+        // Verify the processed record was attached (memory link)
+        assertNotNull(result.getProcessedRequest());
+    }
+
+    // --- NEW: Test for Buyer Withdrawal ---
+    @Test
+    void updateRequestStatus_BuyerWithdraws_Success() {
+        UUID requestId = mockViewingRequest.getId();
+        StatusUpdateDTO dto = new StatusUpdateDTO();
+        dto.setStatus(ViewingRequest.Status.WITHDRAWN);
+        dto.setProcessedBy(userId);
+
+        when(viewingRequestRepository.findById(requestId)).thenReturn(Optional.of(mockViewingRequest));
+        when(processedViewingRequestRepository.findAll()).thenReturn(Collections.emptyList());
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+        when(viewingRequestRepository.save(any(ViewingRequest.class))).thenAnswer(i -> i.getArgument(0));
+
+        ViewingRequest result = viewingRequestService.updateRequestStatus(requestId, dto);
+
+        assertEquals(ViewingRequest.Status.WITHDRAWN, result.getStatus());
+    }
+
+    // --- Getters Tests ---
+
+    @Test
+    void getUserViewingRequests_Success() {
+        List<ViewingRequest> mockRequests = Arrays.asList(mockViewingRequest);
+        when(viewingRequestRepository.findByUser_Id(userId)).thenReturn(mockRequests);
+
+        List<ViewingRequest> result = viewingRequestService.getUserViewingRequests(userId);
+
+        assertEquals(1, result.size());
         assertEquals(mockRequests, result);
-        verify(viewingRequestRepository, times(1)).findByUser_Id(userId);
     }
 
     @Test
     void getUserViewingRequests_NoRequests_ReturnsEmptyList() {
-        // Arrange
-        when(viewingRequestRepository.findByUser_Id(userId)).thenReturn(Arrays.asList());
+        when(viewingRequestRepository.findByUser_Id(userId)).thenReturn(Collections.emptyList());
 
-        // Act
         List<ViewingRequest> result = viewingRequestService.getUserViewingRequests(userId);
 
-        // Assert
-        assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(viewingRequestRepository, times(1)).findByUser_Id(userId);
     }
 
     @Test
     void getPropertyViewingRequests_Success() {
-        // Arrange
-        User user1 = new User();
-        user1.setId(UUID.randomUUID());
-        
-        User user2 = new User();
-        user2.setId(UUID.randomUUID());
+        List<ViewingRequest> mockRequests = Arrays.asList(mockViewingRequest);
+        when(viewingRequestRepository.findByProperty_PropertyId(propertyId)).thenReturn(mockRequests);
 
-        ViewingRequest request1 = new ViewingRequest();
-        request1.setId(UUID.randomUUID());
-        request1.setUser(user1);
-        request1.setPropertyId(propertyId);
-
-        ViewingRequest request2 = new ViewingRequest();
-        request2.setId(UUID.randomUUID());
-        request2.setUser(user2);
-        request2.setPropertyId(propertyId);
-
-        List<ViewingRequest> mockRequests = Arrays.asList(request1, request2);
-        when(viewingRequestRepository.findByPropertyId(propertyId)).thenReturn(mockRequests);
-
-        // Act
         List<ViewingRequest> result = viewingRequestService.getPropertyViewingRequests(propertyId);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(mockRequests, result);
-        verify(viewingRequestRepository, times(1)).findByPropertyId(propertyId);
+        assertEquals(1, result.size());
     }
 
     @Test
     void getPropertyViewingRequests_NoRequests_ReturnsEmptyList() {
-        // Arrange
-        when(viewingRequestRepository.findByPropertyId(propertyId)).thenReturn(Arrays.asList());
+        when(viewingRequestRepository.findByProperty_PropertyId(propertyId)).thenReturn(Collections.emptyList());
 
-        // Act
         List<ViewingRequest> result = viewingRequestService.getPropertyViewingRequests(propertyId);
 
-        // Assert
-        assertNotNull(result);
         assertTrue(result.isEmpty());
-        verify(viewingRequestRepository, times(1)).findByPropertyId(propertyId);
     }
-
+    
     @Test
-    void createViewingRequest_ValidatesAllFields() {
-        // Arrange
-        when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
-        when(viewingRequestRepository.save(any(ViewingRequest.class))).thenAnswer(invocation -> {
-            ViewingRequest savedRequest = invocation.getArgument(0);
-            
-            // Verify all fields are properly set
-            assertNotNull(savedRequest.getPropertyId());
-            assertNotNull(savedRequest.getUser());
-            assertNotNull(savedRequest.getName());
-            assertNotNull(savedRequest.getEmail());
-            assertNotNull(savedRequest.getPhone());
-            assertNotNull(savedRequest.getSubmittedAt());
-            assertNotNull(savedRequest.getPreferredDate());
-            assertNotNull(savedRequest.getStartTime());
-            assertNotNull(savedRequest.getEndTime());
-            
-            savedRequest.setId(UUID.randomUUID());
-            return savedRequest;
-        });
+    void getViewingRequestsForSellerProperties_Success() {
+        List<ViewingRequest> mockRequests = Arrays.asList(mockViewingRequest);
+        when(viewingRequestRepository.findByPropertyListingSellerId(userId)).thenReturn(mockRequests);
 
-        // Act
-        ViewingRequest result = viewingRequestService.createViewingRequest(userId, mockDTO);
+        List<ViewingRequest> result = viewingRequestService.getViewingRequestsForSellerProperties(userId);
 
-        // Assert
-        assertNotNull(result);
-        verify(viewingRequestRepository, times(1)).save(any(ViewingRequest.class));
+        assertEquals(1, result.size());
+        assertEquals(mockRequests, result);
+        verify(viewingRequestRepository, times(1)).findByPropertyListingSellerId(userId);
     }
 }

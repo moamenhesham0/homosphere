@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.homosphere.backend.dto.PropertyStatsDTO;
 import com.homosphere.backend.dto.UserSubscriptionAnalyticsDTO;
-import com.homosphere.backend.model.PropertyListing;
+import com.homosphere.backend.model.property.PropertyListing;
 import com.homosphere.backend.model.SubscriptionTier;
 import com.homosphere.backend.model.UserSubscription;
 import com.homosphere.backend.repository.PropertyLeadRepository;
