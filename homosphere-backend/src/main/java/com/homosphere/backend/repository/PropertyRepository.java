@@ -1,5 +1,6 @@
 package com.homosphere.backend.repository;
 
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.model.property.Property;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.homosphere.backend.model.property.PropertyListing;
@@ -85,4 +86,6 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
         @Param("state") String state,
         Pageable pageable
     );
+
+
 }

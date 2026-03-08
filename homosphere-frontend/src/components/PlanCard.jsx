@@ -22,7 +22,7 @@ const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, 
         }
     }
 
-    const handleSelect = () => {
+    const handleSelect = async() => {
         if (isCurrent) return;
         
         let action = "subscribe";
@@ -33,13 +33,15 @@ const PlanCard = ({ plan, billingCycle, currentSubscriptionId, currentPriority, 
         
         if (window.confirm(`Are you sure you want to ${action} to the ${plan.name} plan?`)) {
             // Navigate to PayPal checkout page with plan data
-            navigate(ROUTES.PAYPAL_CHECKOUT, {
+            /*navigate(ROUTES.PAYPAL_CHECKOUT, {
                 state: {
                     plan,
                     billingCycle,
                     action
                 }
-            });
+            });*/
+
+            await onSelect(plan);
         }
     };
 

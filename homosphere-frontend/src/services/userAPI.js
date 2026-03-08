@@ -1,4 +1,4 @@
-// src/services/userApi.js
+// src/services/userAPI.js
 
 export async function fetchUserData(id) {
   const response = await fetch(

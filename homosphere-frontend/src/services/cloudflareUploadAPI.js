@@ -29,7 +29,8 @@ export async function uploadImageToCloudflare(file) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.message || `Upload failed: ${response.statusText}`);
+    console.log(errorData);
+    throw new Error(errorData?.message || `Upload failed: ${response.message}`);
   }
 
   const data = await response.json();

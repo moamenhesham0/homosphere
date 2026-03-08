@@ -10,12 +10,12 @@ import ManagementRequests from "../components/profile/ManagementRequests";
 import PropertyDashboard from "../components/profile/PropertyDashboard";
 import { useNavigate, useParams } from "react-router-dom";
 import "../styles/Profile.css";
-import { fetchUserData, fetchPrivateUserData } from "../services/userApi";
+import { fetchUserData, fetchPrivateUserData } from "@services/userAPI.js";
 import {
   getUserPropertyListings,
   getUserPropertyListingTabs,
   deletePropertyListing
-} from "../services/apiPropertyListing";
+} from "@services/propertyListingAPI.js";
 import EnterPasswordWindow from "../components/enterPasswordWindow";
 import useDeleteUser from "../hooks/useDeleteUser";
 import { supabase } from "../utils/supabase";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchUserProperties, fetchPropertyStats } from '../services/analyticsApi';
+import { fetchUserProperties, fetchPropertyStats } from '@services/analyticsAPI.js';
 import '../styles/FunnelWidget.css'
 import { 
     BarChart, 

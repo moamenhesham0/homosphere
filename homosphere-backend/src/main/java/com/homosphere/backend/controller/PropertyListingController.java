@@ -5,6 +5,10 @@ import java.util.UUID;
 import java.util.Collections;
 
 
+import com.homosphere.backend.dto.PropertySearchParams;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -120,4 +124,11 @@ public class PropertyListingController {
         List<CompactPropertyListingResponse> response = propertyListingService.getSavedPropertyListings(userId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/search-properties")
+    public Page<CompactPropertyListingResponse> getSearchedProperties(PropertySearchParams searchParams, Pageable pageable) {
+        return propertyListingService.getSearchedProperties(searchParams, pageable);
+    }
+
+
 }

@@ -16,7 +16,7 @@ import AuthCallback from './pages/AuthCallback.jsx';
 import Profile from './pages/Profile.jsx';
 import PropertyListingForm from './pages/PropertyListingForm.jsx';
 import AdminPortal from './pages/AdminPortal.jsx';
-import SearchPage from './pages/SearchPage.jsx';
+import StorePage from '@pages/StorePage.jsx';
 import PropertyDetailsPage from './pages/PropertyDetailsPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import PublicProfile from './pages/PublicProfile.jsx';
@@ -40,7 +40,7 @@ createRoot(document.getElementById('root')).render(
                     <Route path={ROUTES.PROPERTY_LISTING_FORM} element={<PropertyListingForm />} />
                     <Route path={ROUTES.PROFILE} element={<Profile />} />
                     <Route path={ROUTES.ADMIN_PORTAL} element={<AdminPortal />} />
-                    <Route path={ROUTES.SEARCH} element={<SearchPage />} />
+                    <Route path={ROUTES.SEARCH} element={<StorePage />} />
                     <Route path="/property/:id" element={<PropertyDetailsPage />} />
                     <Route path={ROUTES.ANALYTICS} element={<AnalyticsPage />} />
                     <Route path="/public-profile/:id" element={<PublicProfile />} />

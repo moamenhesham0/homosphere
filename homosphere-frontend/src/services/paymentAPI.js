@@ -10,6 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'
  * @returns {Promise<{paymentId: number, orderId: string}>}
  */
 export const createPayPalOrder = async (tierName, tierType, currencyCode, token) => {
+    console.log(token);
     const response = await fetch(`${API_BASE_URL}/api/payment/create`, {
         method: 'POST',
         headers: {

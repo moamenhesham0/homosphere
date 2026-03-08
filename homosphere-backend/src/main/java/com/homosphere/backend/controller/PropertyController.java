@@ -1,5 +1,6 @@
 package com.homosphere.backend.controller;
 
+import com.homosphere.backend.dto.PropertySearchParams;
 import com.homosphere.backend.dto.property.request.PropertyListingStatusUpdateRequest;
 import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
@@ -22,7 +23,6 @@ import java.util.UUID;
 public class PropertyController {
     private final PropertyService propertyService;
 
-    
     @GetMapping("/search")
     public Page<CompactPropertyListingResponse> searchProperties(
         @RequestParam("q") String query,

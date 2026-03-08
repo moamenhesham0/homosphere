@@ -4,7 +4,7 @@ import { ROUTES } from "@constants/routes";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@utils/supabase";
 import { useEffect, useState } from "react";
-import { getPasswordResetTokenForEmail, sendResetPasswordForEmail  } from "@services/apiResetPassword";
+import { getPasswordResetTokenForEmail, sendResetPasswordForEmail  } from "@services/resetPasswordAPI.js";
 import FormInput from '@components/FormInput';
 import MessageDisplay from '@components/MessageDisplay';
 import { PASSWORD_RECOVERY, SIGNED_IN}  from "@constants/events";

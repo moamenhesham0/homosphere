@@ -1,4 +1,4 @@
-// src/services/apiPropertyReviews.js
+// src/services/propertyReviewAPI.js
 
 export async function fetchPropertyReviews(token) {
   const response = await fetch('http://localhost:8080/api/property-submission-review/all', {

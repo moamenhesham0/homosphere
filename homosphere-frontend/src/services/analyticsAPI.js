@@ -1,4 +1,4 @@
-// src/services/analyticsApi.js
+// src/services/analyticsAPI.js
 import { apiCall } from '../utils/api';
 
 /**

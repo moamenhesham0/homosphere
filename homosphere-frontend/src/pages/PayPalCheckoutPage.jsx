@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { createPayPalOrder, capturePayPalOrder, getPayPalCheckoutUrl } from '../services/paymentApi';
+import { createPayPalOrder, capturePayPalOrder, getPayPalCheckoutUrl } from '@services/paymentAPI.js';
 import '../styles/PayPalCheckoutPage.css';
 
 // PayPal Logo SVG Component

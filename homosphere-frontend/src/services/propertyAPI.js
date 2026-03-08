@@ -1,4 +1,4 @@
-// src/services/propertyApi.js
+// src/services/propertyAPI.js
 
 export async function fetchPublishedPropertiesByUser(userId, token, isAdmin) {
   const headers = { "Content-Type": "application/json" };

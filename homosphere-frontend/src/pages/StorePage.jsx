@@ -3,26 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
 import '../styles/SearchPage.css';
 
-
-const API_BASE_URL = 'http://localhost:8080/api/properties';
-const API_LISTING_URL = 'http://localhost:8080/api/property-listing/public/user';
-
-// Utility function to format price from number to string (assuming USD/EGP formatting as required)
-const formatPrice = (price) => {
-    if (price === null || price === undefined) return 'Price N/A';
-    // Format as a currency string. Adjust 'USD' to 'EGP' if your data is Egyptian Pounds
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0
-    }).format(price);
-};
-
-
-const SearchPage = () => {
+const StorePage = () => {
     // State for search and filters
-    const [searchQuery, setSearchQuery] = useState('');
-    const [priceRange, setPriceRange] = useState({ min: '', max: '' });
     const [propertyType, setPropertyType] = useState(''); // Not directly supported by current backend DTO/Controller
     const [bedrooms, setBedrooms] = useState('');
     const [bathrooms, setBathrooms] = useState('');
@@ -30,115 +12,8 @@ const SearchPage = () => {
     const [age, setAge] = useState(''); // Add age state
     const [showFilters, setShowFilters] = useState(false);
     const [savedPropertyIds, setSavedPropertyIds] = useState([]);
-    const [showToast, setShowToast] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-
-    // State for data and loading
-    const [properties, setProperties] = useState([]);
-    const [currentPage, setCurrentPage] = useState(0); // Backend uses 0-based page index
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalElements, setTotalElements] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const itemsPerPage = 8; // Should match the default size in the backend controller
-
-    // State for favorites
-    const [favorites, setFavorites] = useState([]);
-
-    // State for property details view
-    const [showDetails, setShowDetails] = useState(false);
-    const [selectedProperty, setSelectedProperty] = useState(null);
-
+    const itemsPerPage = 8; // i.e. size of page
     const navigate = useNavigate();
-
-
-    // CORE FUNCTION: Fetch and Filter Logic
-    const fetchProperties = useCallback(async (page = 0) => {
-        setLoading(true);
-        setError(null);
-        setCurrentPage(page);
-
-        try {
-            let url;
-            const params = new URLSearchParams({ page: page.toString(), size: itemsPerPage.toString() });
-
-            // --- 1. Determine Endpoint and Parameters ---
-            const activeFilters = bedrooms || bathrooms || priceRange.min || priceRange.max || location || age;
-            const isSimpleSearch = searchQuery.trim() !== '' && !activeFilters;
-
-            if (isSimpleSearch) {
-                // Simple text search (/search endpoint)
-                url = `${API_BASE_URL}/search`;
-                params.append('q', searchQuery.trim());
-            } else {
-                // Filtered search (/filter endpoint)
-                url = `${API_BASE_URL}/filter`;
-
-                // Price Range
-                const minP = priceRange.min;
-                const maxP = priceRange.max;
-                if (minP && !isNaN(Number(minP))) params.append('minPrice', minP);
-                if (maxP && !isNaN(Number(maxP))) params.append('maxPrice', maxP);
-
-                // Bedrooms/Bathrooms
-                if (bedrooms) params.append('bedrooms', bedrooms);
-                if (bathrooms) params.append('bathrooms', bathrooms);
-
-                // Age
-                if (age && !isNaN(Number(age))) params.append('age', age);
-
-                // Location (Assuming location input is "City, State")
-                if (location) {
-                    const parts = location.split(',').map(p => p.trim());
-                    if (parts[0]) params.append('city', parts[0]);
-                    if (parts[1]) params.append('state', parts[1]);
-                }
-            }
-
-            // --- 2. Fetch Data ---
-            const response = await fetch(`${url}?${params.toString()}`);
-
-            // Check for non-200 status *before* trying to parse JSON (to catch HTML error pages)
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API Call Failed:', response.status, errorText.substring(0, 100) + '...');
-                throw new Error(`Server responded with status ${response.status}. Check backend logs.`);
-            }
-
-            const data = await response.json();
-            console.log('Fetched properties from backend:', data);
-            // --- 3. Map DTO to Frontend State (Handling missing mock data fields) ---
-            const mappedProperties = (data.content || []).map(p => ({
-                id: p.propertyListingId || p.id, // Use propertyListingId if present, fallback to id
-                title: p.title,
-                // Combine city and state for display
-                location: `${p.city || ''}${p.city && p.state ? ', ' : ''}${p.state || ''}`,
-                // Format the numeric price from DTO
-                price: formatPrice(p.price),
-                beds: p.bedrooms,
-                baths: p.bathrooms,
-                // --- Use imageUrl from bannerImage object if present ---
-                image: (p.bannerImage && p.bannerImage.imageUrl) ? p.bannerImage.imageUrl : 'https://via.placeholder.com/400x300?text=Image+Missing',
-                badge: p.badge || '',
-                description: p.description || p.title,
-                sqft: p.propertyAreaSqFt || 'N/A',
-                type: p.type || 'House',
-            }));
-
-            setProperties(mappedProperties);
-            setTotalPages(data.totalPages || 1);
-            setTotalElements(data.totalElements || 0);
-
-        } catch (e) {
-            console.error('Failed to fetch properties:', e);
-            setError(`Could not load properties. Error: ${e.message}`);
-            setProperties([]);
-            setTotalPages(1);
-            setTotalElements(0);
-        } finally {
-            setLoading(false);
-        }
-    }, [searchQuery, priceRange, bedrooms, bathrooms, location, age]);
 
     const fetchSavedProperties = async () => {
         try {
@@ -299,22 +174,6 @@ const SearchPage = () => {
             <div className="container">
                 {/* Search Header */}
                 <div className="search-header-content">
-                    <div className="search-bar-container">
-                        <div className="search-bar">
-                            <input
-                                type="text"
-                                placeholder="Search for properties, locations, or neighborhoods..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="search-input"
-                            />
-                            <button type="button" onClick={handleSearch} className="search-btn">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <path d="M21 21l-4.35-4.35"></path>
-                                </svg>
-                            </button>
-                        </div>
                         <button
                             type="button"
                             onClick={() => setShowFilters(!showFilters)}
@@ -683,4 +542,4 @@ const SearchPage = () => {
     );
 };
 
-export default SearchPage;
+export default StorePage;

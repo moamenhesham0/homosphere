@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.homosphere.backend.enums.PropertyCondition;
+import com.stripe.param.ProductSearchParams;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -148,5 +149,4 @@ public class PropertyService {
         propertyListing.setStatus(status);
         propertyListingRepository.save(propertyListing);
     }
-
 }

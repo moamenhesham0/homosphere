@@ -1,8 +1,8 @@
 import { supabase } from '../utils/supabase';
 
 
-const AUTH_HEADER = import.meta.env.VITE_AUTH_HEADER;
-const AUTH_PREFIX = import.meta.env.VITE_AUTH_PREFIX;
+const AUTH_HEADER = 'Authorization';
+const AUTH_PREFIX = 'Bearer';
 
 /**
  * Get the authentication token from Supabase session

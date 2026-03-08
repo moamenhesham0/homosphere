@@ -42,7 +42,8 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll() // Public property search
                 .requestMatchers("/api/viewing-requests/**").permitAll() // Viewing requests
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/property-listing/public/user/**").permitAll() // Allow public access to published properties by user
-                
+                .requestMatchers("/api/payment/**").permitAll()
+
                 // authenticated user endpoints (require token)
                 .requestMatchers("/api/user/**").authenticated() // User's own profile/subscriptions
                 .requestMatchers("/api/media/upload").authenticated() // Authenticated upload

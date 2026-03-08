@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/SubscriptionAnalyticsWidget.css';
-import {fetchUserSubscriptionAnalytics} from '../services/analyticsApi';
+import {fetchUserSubscriptionAnalytics} from '@services/analyticsAPI.js';
 import { 
     BarChart,
     Bar,

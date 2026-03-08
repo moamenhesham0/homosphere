@@ -1,5 +1,5 @@
 import { useState, useMemo, useContext, useCallback, useEffect, useRef } from 'react';
-import { uploadImageToCloudflare, uploadMultipleImages } from '../services/cloudflareUpload';
+import { uploadImageToCloudflare, uploadMultipleImages } from '@services/cloudflareUploadAPI.js';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import GeoMap from '../components/GeoMap';
 import AIPredictionButton from '../components/AIPredictionButton';
@@ -12,8 +12,8 @@ import {
   fetchPropertyTypes,
   resubmitPropertyListing,
   fetchAllConditions
-} from '../services/apiPropertyListing';
-import { getPropertySubmissionReview } from '../services/apiPropertySubmissionReview';
+} from '@services/propertyListingAPI.js';
+import { getPropertySubmissionReview } from '@services/propertySubmissionReviewAPI.js';
 import { AuthContext } from '../contexts/AuthContext';
 import { getAmenityIcon } from '../utils/amenityIcons';
 import { groupAmenitiesByType } from '../utils/amenityUtils';
@@ -352,6 +352,7 @@ const PropertyListingForm = () => {
         propertyImageUrls = await uploadMultipleImages(propertyImages);
       }
 
+
       // Prepare listing data for API (match backend DTO)
       const listingData = {
         title: formData.title,
@@ -405,14 +406,12 @@ const PropertyListingForm = () => {
         }
         setSuccessMessage('Property listing updated successfully!');
       } else {
-        response = await submitPropertyListing(
-          listingData,
-          bannerImage,
-          propertyImages
-        );
+        response = await submitPropertyListing(listingData);
         setSuccessMessage('Property listing created successfully!');
       }
 
+      console.log(`response : ${response}`);
+      console.log('response :', response);
       setTimeout(() => {
         setSuccessMessage("");
         navigate('/profile');

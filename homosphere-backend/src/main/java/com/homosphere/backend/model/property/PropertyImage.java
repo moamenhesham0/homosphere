@@ -23,6 +23,6 @@ public class PropertyImage {
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "property_listing_id", nullable = false)
+    @JoinColumn(name = "property_listing_id")
     private PropertyListing propertyListing;
 }

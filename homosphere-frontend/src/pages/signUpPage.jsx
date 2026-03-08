@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../styles/signUpStyle.css';
-import { signUpWithEmail } from '../services/apiSignUp';
+import { signUpWithEmail } from '@services/signUpAPI.js';
 import { getFieldError, getInputClass } from '../utils/validators';
 import { ROUTES, EXTERNAL_LINKS } from '../constants/routes';
 import { COLORS } from '../constants/colors';

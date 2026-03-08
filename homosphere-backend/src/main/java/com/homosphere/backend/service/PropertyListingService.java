@@ -7,6 +7,7 @@ import com.homosphere.backend.dto.property.response.CompactPropertyListingRespon
 import com.homosphere.backend.dto.property.response.PropertyListingPublicResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.enums.PropertyListingStatus;
+import com.homosphere.backend.dto.PropertySearchParams;
 import com.homosphere.backend.mapper.PropertyListingMapper;
 import com.homosphere.backend.model.property.PropertyListing;
 import com.homosphere.backend.model.User;
@@ -14,7 +15,12 @@ import com.homosphere.backend.repository.PropertyListingRepository;
 import com.homosphere.backend.repository.PropertySubmissionReviewRepository;
 import com.homosphere.backend.repository.UserRepository;
 import com.homosphere.backend.updater.PropertyListingUpdater;
+import com.stripe.param.ProductSearchParams;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +45,8 @@ public class PropertyListingService {
     private final PropertySubmissionReviewService propertySubmissionReviewService;
 
     private final UserRepository userRepository;
+
+    private static final Logger logger = LoggerFactory.getLogger(PropertyListingService.class);
 
     @Transactional
     protected PropertyListing createPropertyListing(PropertyListingRequest request) {
@@ -214,4 +222,15 @@ public class PropertyListingService {
                 .collect(Collectors.toList());
     }
 
+    public Page<CompactPropertyListingResponse> getSearchedProperties(PropertySearchParams searchParams, Pageable pageable) {
+        Page<CompactPropertyListingResponse> properties = Page.empty();
+        Page<PropertyListing> propertyPage;
+        try {
+            propertyPage = propertyListingRepository.SearchPropertiesBySearchParams(searchParams, pageable);
+        } catch (Exception e) {
+            logger.error("Error during property search: {}", e.getMessage());
+            return properties;
+        }
+        return propertyPage.map(propertyListingMapper::toCompactResponse);
+    }
 }
