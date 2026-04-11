@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
           // Extract user info from token
           const userInfo = getUserFromToken(session.access_token);
-          console.log('Auth state change - User from token:', userInfo);
           if (userInfo) {
             setUser(userInfo);
           }
@@ -55,7 +54,6 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         // Extract user info from token
         const userInfo = getUserFromToken(session.access_token);
-        console.log('Check session - User from token:', userInfo);
         if (userInfo) {
           setUser(userInfo);
         }
@@ -73,11 +71,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const { api } = await import('../utils/api');
       const response = await api.login(accessToken);
-      
-      console.log('fetchUserProfile - Response:', response);
-      console.log('fetchUserProfile - User data:', response?.user);
-      console.log('fetchUserProfile - User role:', response?.user?.role);
-      
       if (response && response.user) {
         // Merge backend data with existing user data from token
         // Only override with non-null values from backend
@@ -92,7 +85,6 @@ export const AuthProvider = ({ children }) => {
           if (!response.user.role && prevUser?.role) {
             merged.role = prevUser.role;
           }
-          console.log('Merged user data:', merged);
           return merged;
         });
       }
@@ -137,7 +129,6 @@ export const AuthProvider = ({ children }) => {
 
         // Extract user info from token immediately
         const userInfo = getUserFromToken(session.access_token);
-        console.log('Login - User from token:', userInfo);
         if (userInfo) {
           setUser(userInfo);
         }
@@ -160,7 +151,6 @@ export const AuthProvider = ({ children }) => {
               if (!response.user.role && prevUser?.role) {
                 merged.role = prevUser.role;
               }
-              console.log('Login - Merged user data:', merged);
               return merged;
             });
           }

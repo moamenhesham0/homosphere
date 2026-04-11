@@ -1,0 +1,648 @@
+/* General Layout & Typography */
+.profile-info-card {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #333;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,166,118,0.07), 0 1.5px 4px rgba(0,0,0,0.04);
+  padding: 2.5rem 2vw 2rem 2vw;
+  border: 1.5px solid #e4efe7;
+  box-sizing: border-box;
+}
+
+.profile-left-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 320px;
+  width: 100%;
+}
+
+.profile-right-column {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 320px;
+}
+
+/* Common Card Styling */
+.profile-photo-section,
+.profile-info-details,
+.profile-bio-section,
+.profile-location-section,
+.profile-subscription-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  /* Subtle border/shadow to match the clean look */
+  border: 1px solid #f0f0f0; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* --- Left Column Styles --- */
+
+/* Photo Section */
+.profile-photo-section {
+  padding: 0; /* Remove padding to let banner touch edges */
+  overflow: hidden;
+  text-align: left;
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.profile-photo-background {
+  height: 100px;
+  width: 100%;
+  /* Replicating the colorful abstract gradient */
+  background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+  background-image: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 50%, #ff9a9e 100%);
+}
+
+.profile-photo-wrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin: -45px 0 0 24px; /* Pull up to overlap banner */
+}
+
+.profile-photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ffffff;
+  background: #fff;
+}
+
+.profile-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  border: 4px solid #ffffff;
+}
+
+.profile-photo-edit-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.profile-photo-edit-btn:hover {
+  background: #f3f4f6;
+  border-color: #2563eb;
+  transform: scale(1.05);
+}
+
+.profile-photo-edit-btn svg {
+  width: 14px;
+  height: 14px;
+  color: #374151;
+}
+
+.profile-photo-label {
+  margin: 10px 24px 16px;
+}
+
+.profile-photo-label h3 {
+  margin-bottom: 4px;
+}
+
+.profile-photo-label p {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.profile-photo-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px;
+}
+
+.btn-upload {
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #374151;
+}
+
+.btn-save {
+  padding: 8px 16px;
+  background: #2563eb; /* Blue primary */
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Personal Info Form */
+.form-group {
+  margin-bottom: 18px;
+  width: 100%;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background-color: #f9fafb;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input-with-icon:focus-within {
+  border-color: #d1d5db;
+  background-color: #f9fafb;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.input-icon {
+  margin-right: 12px;
+  font-size: 18px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: #1f2937;
+  background: transparent;
+  font-weight: 400;
+}
+
+.input-with-icon input::placeholder {
+  color: #9ca3af;
+}
+
+.input-display {
+  flex: 1;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 400;
+}
+
+/* Standalone input (for Role field) */
+.form-group input[type="text"]:not(.input-with-icon input) {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background-color: #f9fafb;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.form-group input[type="text"]:not(.input-with-icon input):focus {
+  border-color: #d1d5db;
+  background-color: #f9fafb;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.form-group input[type="text"]:not(.input-with-icon input)::placeholder {
+  color: #9ca3af;
+}
+
+/* Role display (non-edit mode) */
+.form-group .input-display:not(.input-with-icon .input-display) {
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* --- Right Column Styles --- */
+
+/* Bio Section */
+.profile-bio-section textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+  outline: none;
+}
+
+.profile-bio-section textarea:focus {
+  border-color: #2563eb;
+}
+
+.profile-bio-section p {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+/* Location / Interests Section */
+/* Note: Designed to look like the "Industry/Interests" card in the image */
+.profile-location-section h3 {
+  margin-bottom: 16px;
+}
+
+.location-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* Styling the text inside as a tag */
+.location-tags h4 { 
+  display: inline-block;
+  background: #eff6ff; /* Light blue bg */
+  color: #2563eb;       /* Blue text */
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.btn-add-more {
+  width: 100%;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-more:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Subscription */
+.profile-subscription-section h3 {
+  margin-bottom: 16px;
+}
+
+.subscription-header {
+  display: flex;
+  font-size: 14px;
+  color: #4b5563;
+  margin-bottom: 10px;
+  gap: 337px;
+}
+
+.subscription-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.subscription-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subscription-item label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.subscription-value {
+  font-size: 14px;
+  color: #4b5563;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  display: flex;
+  align-items: center;
+}
+
+/* Plan badges */
+.plan-badge{
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.plan-badge.free {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.plan-badge.basic {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.plan-badge.premium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.plan-badge.premium-buyer,
+.plan-badge.premium-seller {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.plan-badge.pro {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+/* Status badges */
+.subscription-badge {
+  height: fit-content;
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.subscription-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.subscription-badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.subscription-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.subscription-badge.expired {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .profile-info-card {
+    flex-direction: column;
+  }
+  
+  .profile-left-column,
+  .profile-right-column {
+    min-width: 100%;
+  }
+}
+
+/* --- Edit Icon Styling --- */
+
+/* 1. Make sure the containers allow absolute positioning */
+.profile-info-details,
+.profile-bio-section,
+.profile-location-section,
+.profile-subscription-section {
+  position: relative; /* Essential for placing the icon */
+}
+
+/* 2. Style the pen button */
+.section-edit-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  padding: 0;
+}
+
+.section-edit-btn:hover {
+  background: #f3f4f6;
+  border-color: #2563eb;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section-edit-btn svg {
+  width: 14px;
+  height: 14px;
+  color: #374151;
+  display: block;
+}
+
+/* --- Menu Button & Dropdown Styling --- */
+.menu-container {
+  position: absolute;
+  top: 119px;
+  right: 254px;
+  z-index: 20;
+}
+
+.menu-button {
+  width: 36px;
+  height: 36px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.menu-button:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-button svg {
+  color: #6b7280;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-item {
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: block;
+}
+
+.menu-item:hover {
+  background: #f9fafb;
+}
+
+.menu-item:active {
+  background: #f3f4f6;
+}
+
+.menu-item:not(:last-child) {
+  border-bottom: 1px solid #f3f4f6;
+}
+.location-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1f2937;
+  background-color: #fff;
+  transition: all 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.location-input:focus {
+  border-color: #d1d5db;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.location-input::placeholder {
+  color: #9ca3af;
+}
+
+.section-actions {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.section-save-btn, .section-cancel-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.section-save-btn:hover {
+  background: #f0fdf4;
+  border-color: #22c55e;
+  color: #16a34a;
+}
+
+.section-cancel-btn:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.section-save-btn svg, .section-cancel-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
+}

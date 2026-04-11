@@ -68,7 +68,7 @@ const PasswordChangeWindow = ({ onClose, onSubmit }) => {
         return;
       }
 
-      onSubmit(formData.password);
+      await onSubmit(formData.password);
     } catch (err) {
       setError('Failed to verify current password');
     }

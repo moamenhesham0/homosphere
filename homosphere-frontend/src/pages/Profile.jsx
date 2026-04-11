@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, use } from "react";
 import ProfileTabs from "../components/profile/ProfileTabs";
 import "../styles/ProfileSidebar.css";
 import ProfileInfo from "../components/profile/ProfileInfo";
-import Security from "../components/profile/Security";
 import Inquiries from "../components/profile/Inquiries";
 import SavedProperties from "../components/profile/SavedProperties";
 import AgentDashboard from "../components/profile/AgentDashboard";
@@ -16,12 +15,13 @@ import {
   getUserPropertyListingTabs,
   deletePropertyListing
 } from "../services/apiPropertyListing";
-import EnterPasswordWindow from "../components/enterPasswordWindow";
 import useDeleteUser from "../hooks/useDeleteUser";
 import { supabase } from "../utils/supabase";
-import PasswordChangeWindow from "../components/passwordChangeWindow";
 import PublicProfile from "./PublicProfile";
 import { useAuth } from "../contexts/AuthContext";
+import axios from 'axios';
+import { getAuthToken } from '../utils/authUtils';
+import SuccessModal from '../components/SuccessModal';
 
 
 export default function Profile() {
@@ -45,17 +45,17 @@ export default function Profile() {
     id: "",
     firstname: "",
     lastname: "",
-    username: "",
+    fullname: "",
     role: "",
     email: "",
-    whatsapp: "",
-    telegram: "",
+    phone: "",
     location: "",
     bio: "",
     photo: "" // store only the filename
   });
 
-  const [tempUser, setTempUser] = useState({ ...user });
+  const [tempUser, setTempUser] = useState({ ...user, fullname: `${user.firstname} ${user.lastname}` });
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
   // Property Dashboard state
   const [propertyTabs, setPropertyTabs] = useState(["ALL"]);
@@ -68,7 +68,6 @@ export default function Profile() {
   const [tab, setTab] = useState(0);
   const tabLabels = [
     "Profile",
-    "Security",
     "Properties",
     "Inquiries",
     "Management Requests",
@@ -85,7 +84,8 @@ export default function Profile() {
           // Admin viewing another user's private profile
           const mappedUser = await fetchPrivateUserData(params.id, token);
           setUser({ ...mappedUser, id: params.id });
-          setTempUser({ ...mappedUser, id: params.id });
+          setTempUser({ ...mappedUser, id: params.id, fullname: `${mappedUser.firstname} ${mappedUser.lastname}` });
+          
           setError(null);
         } else {
           // Get user ID from Supabase session
@@ -96,9 +96,9 @@ export default function Profile() {
             return;
           }
           const userId = session.user.id;
-          const mappedUser = await fetchUserData(userId);
+          const mappedUser = await fetchPrivateUserData(userId, session.access_token);
           setUser({ ...mappedUser, id: userId });
-          setTempUser({ ...mappedUser, id: userId });
+          setTempUser({ ...mappedUser, id: userId, fullname: `${mappedUser.firstname} ${mappedUser.lastname}` });
           setError(null);
         }
       } catch (err) {
@@ -184,8 +184,12 @@ export default function Profile() {
         const url = data.url;
         console.log("Uploaded image URL:", url);
         const filename = url.split("/").pop();
+        console.log("Extracted filename:", filename);
+
+        const updatedUser = { ...tempUser, photo: filename };
         setTempUser((prev) => ({ ...prev, photo: filename }));
         setUser((prev) => ({ ...prev, photo: filename }));
+        saveChanges(updatedUser);
       } catch (err) {
         setError(`Photo upload failed: ${err.message}`);
         console.error("Error uploading photo:", err);
@@ -193,21 +197,28 @@ export default function Profile() {
     }
   };
 
-  const saveChanges = async () => {
+  const saveChanges = async (userDataOverride) => {
+    const currentUser = (userDataOverride && !userDataOverride.nativeEvent) ? userDataOverride : tempUser;
+
     try {
       setSaving(true);
       setError(null);
       setSuccessMessage("");
+      console.log("Saving user data:", currentUser);
+      const nameParts = currentUser.fullname?.trim().split(/\s+/) || [];
+      const newFirstName = nameParts[0] || "";
+      const newLastName = nameParts.slice(1).join(" ") || "";
+
       const payload = {
-        email: tempUser.email,
-        firstName: tempUser.firstname,
-        lastName: tempUser.lastname,
-        userName: tempUser.username, // backend expects userName
-        location: tempUser.location,
-        phone: tempUser.whatsapp,
-        bio: tempUser.bio,
-        role: tempUser.role,
-        photo: tempUser.photo, // send only filename to backend
+        email: currentUser.email,
+        firstName: newFirstName,
+        lastName: newLastName,
+        userName: currentUser.username, // backend expects userName
+        location: currentUser.location,
+        phone: currentUser.phone,
+        bio: currentUser.bio,
+        role: currentUser.role,
+        photo: currentUser.photo ? currentUser.photo.split('/').pop() : "",
         googleOuthId: originalData?.googleOuthId || 0,
         password: originalData?.password || "",
         isVerified: originalData?.isVerified || null,
@@ -216,6 +227,7 @@ export default function Profile() {
         failedLoginAttempt: originalData?.failedLoginAttempt || null,
         banExpiredDate: originalData?.banExpiredDate || null
       };
+      console.log("saving Payload to be sent to backend:", payload);
       // Remove any accidental 'username' key from payload
       if (payload.username !== undefined) delete payload.username;
       const { data: { session } } = await supabase.auth.getSession();
@@ -250,7 +262,6 @@ export default function Profile() {
       }));
       setEditMode(false);
       setSuccessMessage("Profile updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       setError(`Failed to save changes: ${err.message}`);
       console.error("Error saving user data:", err);
@@ -266,7 +277,7 @@ export default function Profile() {
     setSuccessMessage("");
   };
 
-  const handleDeleteAccount = async () => {
+ const handleDeleteAccount = async () => {
     try {
       const result = await deleteUser();
 
@@ -300,6 +311,16 @@ export default function Profile() {
     }
   };
 
+  const revertFields = (fields) => {
+    setTempUser((prev) => {
+      const next = { ...prev };
+      fields.forEach((field) => {
+        next[field] = user[field];
+      });
+      return next;
+    });
+  };
+
   // Property listing handlers
   const handleCreateListing = () => {
     navigate('/property-listing-form');
@@ -319,15 +340,48 @@ export default function Profile() {
         setUserListings(listings || []);
       }
       setSuccessMessage("Listing deleted successfully");
-      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       setError(`Failed to delete listing: ${err.message}`);
     }
   };
 
 
-
-
+useEffect(() => {
+  const getSubscriptionStatus = async () => {
+    try {
+      const session = await getAuthToken(); // Must await this async function
+      console.log("Session token:", session);
+      
+      if (!session) {
+        console.log("No session token found");
+        return null;
+      }
+      
+      const subscription = await axios.get(`http://localhost:8080/api/user-subscriptions/my-subscriptions`, {
+        headers: {
+          'Authorization': `Bearer ${session}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log("User subscription data:", subscription.data);
+      return subscription.data;
+    } catch (error) {
+      console.error("Error fetching subscription status:", error);
+      console.error("Error response:", error.response?.data);
+      return null;
+    }
+  };
+  
+  getSubscriptionStatus().then(data => {
+    if (data) {
+      setSubscriptionStatus(data);
+      console.log("Subscription status set:", data);
+    }
+  }).catch(error => {
+    console.error("Promise error:", error);
+  });   
+}, []);
 
   if (loading || deleteLoading) {
     return (
@@ -341,7 +395,6 @@ export default function Profile() {
       <ProfileTabs tab={tab} setTab={setTab} tabLabels={tabLabels} />
       <div className="profile-main-content">
         {tab === 0 && (
-          <>
             <ProfileInfo 
               tempUser={tempUser} 
               editMode={editMode} 
@@ -351,34 +404,12 @@ export default function Profile() {
                 setTempUser((prev) => ({ ...prev, photo: "" }));
                 setUser((prev) => ({ ...prev, photo: "" }));
               }}
+              subscriptionData={subscriptionStatus?.[0]}
+              onSave={saveChanges}
+              onCancel={revertFields}
             />
-            <div className="profile-buttons">
-              {!editMode ? (
-                <>
-                  <button className="edit-btn" onClick={() => setEditMode(true)}>
-                    Edit Profile
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className="save-btn" onClick={saveChanges} disabled={saving}>
-                    {saving ? "Saving..." : "Save"}
-                  </button>
-                  <button className="cancel-btn" onClick={cancelChanges} disabled={saving}>
-                    Cancel
-                  </button>
-                </>
-              )}
-            </div>
-          </>
         )}
         {tab === 1 && (
-          <Security
-            onChangePassword={() => setShowPasswordModal(true)}
-            onDeleteAccount={() => setShowDeleteModal(true)}
-          />
-        )}
-        {tab === 2 && (
           <PropertyDashboard
             propertyTabs={propertyTabs}
             selectedTab={selectedTab}
@@ -392,25 +423,19 @@ export default function Profile() {
             handleDeleteListing={handleDeleteListing}
           />
         )}
-        {tab === 3 && <AgentDashboard />}
-        {tab === 4 && <ManagementRequests />}
-        {tab === 5 && <PublicProfile id={user.id} />}
-        {tab === 6 && <SavedProperties userId={user.id} />}
-        {error && <div className="error-message">{error}</div>}
-        {successMessage && <div className="success-message">{successMessage}</div>}
-        {showDeleteModal && (
-          <EnterPasswordWindow
-            onClose={() => setShowDeleteModal(false)}
-            onSubmit={handleDeleteAccount}
-          />
-        )}
-        {showPasswordModal && (
-          <PasswordChangeWindow
-            onClose={() => setShowPasswordModal(false)}
-            onSubmit={handlePasswordChange}
-          />
-        )}
+        {tab === 2 && <AgentDashboard />}
+        {tab === 3 && <ManagementRequests />}
+        {tab === 4 && <PublicProfile id={user.id} />}
+        {tab === 5 && <SavedProperties userId={user.id} />}
       </div>
+      
+      {/* Success Modal */}
+      {successMessage && (
+        <SuccessModal 
+          message={successMessage} 
+          onClose={() => setSuccessMessage("")} 
+        />
+      )}
     </div>
   );
 }

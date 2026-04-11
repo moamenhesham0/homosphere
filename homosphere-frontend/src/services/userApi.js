@@ -14,6 +14,7 @@ export async function fetchUserData(id) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
   const data = await response.json();
+  console.log("Fetched user data:", data);
   // Map API response to user state
   return {
     firstname: data.firstName || "",
@@ -21,7 +22,7 @@ export async function fetchUserData(id) {
     username: data.userName || (data.email ? data.email.split("@")[0] : ""),
     role: data.role || "",
     email: data.email || "",
-    whatsapp: data.phone || "",
+    phone: data.phone || "",
     telegram: "",
     location: data.location || "",
     bio: data.bio || "",
@@ -81,7 +82,7 @@ export async function fetchPrivateUserData(id, token) {
     location: data.location || "",
     bio: data.bio || "",
     photo: data.photo || "",
-    whatsapp: data.phone || "",
+    phone: data.phone || "",
     email: data.email || "",
     role: data.role || "",
     status: data.status || "",
