@@ -1,8 +1,28 @@
 import { Link } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
+import {useEffect, useState} from "react";
 
 export default function Subscription() {
+
+  const [tiers, setTiers] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/subscription-tiers/seller-tiers")
+        .then(res => res.json())
+        .then(data => setTiers(data))
+        .catch(err => console.error(err))
+  }, []);
+
+
+  const tier_1 = tiers.find(t => t.visibilityPriority === 1) || "";
+  const tier_2 = tiers.find(t => t.visibilityPriority === 2) || "";
+  const tier_3 = tiers.find(t => t.visibilityPriority === 3) || "";
+
+  const tier_1_description = tier_1?.description?.split(",") || [];
+  const tier_2_description = tier_2?.description?.split(",") || [];
+  const tier_3_description = tier_3?.description?.split(",") || [];
+
   return (
     <div className="bg-background text-on-background antialiased min-h-screen flex flex-col">
       <TopNavBar />
@@ -17,27 +37,27 @@ export default function Subscription() {
         {/* Pricing Cards */}
         <section className="max-w-7xl mx-auto px-8 mb-24">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
             {/* Basic Plan */}
             <div className="bg-surface-container-lowest p-10 rounded-xl flex flex-col items-start transition-all hover:translate-y-[-4px]">
-              <div className="text-sm font-bold text-secondary tracking-widest uppercase mb-4 font-body">Basic</div>
+              <div className="text-sm font-bold text-secondary tracking-widest uppercase mb-4 font-body">{tier_1.name}</div>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-on-surface font-headline">$0</span>
+                <span className="text-4xl font-extrabold text-on-surface font-headline">{tier_1.monthlyPrice}</span>
                 <span className="text-secondary font-body">/mo</span>
               </div>
-              <p className="text-sm text-secondary mb-8 leading-relaxed font-body">Perfect for independent sellers getting started on the platform.</p>
+              <p className="text-sm text-secondary mb-8 leading-relaxed font-body">{tier_1_description[0]}</p>
               <ul className="space-y-4 mb-10 w-full">
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Standard Listing Placement
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Basic Property Analytics
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Up to 5 Active Listings
-                </li>
+                {tier_1_description.slice(1).map((item, index) => (
+                    <li
+                        key={index}
+                        className="flex items-center gap-3 text-sm text-on-surface-variant font-body"
+                    >
+                      <span className="material-symbols-outlined text-primary text-[20px]">
+                        check_circle
+                      </span>
+                                    {item}
+                    </li>
+                ))}
               </ul>
               <button className="w-full mt-auto py-3 px-6 rounded-lg bg-secondary-container text-on-secondary-container font-bold hover:opacity-80 transition-all font-body">Get Started</button>
             </div>
@@ -45,57 +65,48 @@ export default function Subscription() {
             {/* Premier Agent */}
             <div className="relative bg-surface-container-lowest p-10 rounded-xl flex flex-col items-start border-2 border-primary-container transition-all hover:translate-y-[-4px] overflow-hidden">
               <div className="absolute top-0 right-0 bg-primary-container text-on-primary-container px-4 py-1.5 text-xs font-black rounded-bl-xl tracking-tight font-body">MOST POPULAR</div>
-              <div className="text-sm font-bold text-primary tracking-widest uppercase mb-4 font-body">Premier Agent</div>
+              <div className="text-sm font-bold text-primary tracking-widest uppercase mb-4 font-body">{tier_2.name}</div>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-on-surface font-headline">$99</span>
+                <span className="text-4xl font-extrabold text-on-surface font-headline">{tier_2.monthlyPrice}</span>
                 <span className="text-secondary font-body">/mo</span>
               </div>
-              <p className="text-sm text-secondary mb-8 leading-relaxed font-body">Engineered for high-performing agents seeking maximum visibility.</p>
+              <p className="text-sm text-secondary mb-8 leading-relaxed font-body">{tier_2_description[0]}</p>
               <ul className="space-y-4 mb-10 w-full">
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Featured Priority Search Results
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Premium Direct Lead Generation
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Professional Photography Credits
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Advanced CRM Integration
-                </li>
+                {tier_2_description.slice(1).map((item, index) => (
+                    <li
+                        key={index}
+                        className="flex items-center gap-3 text-sm text-on-surface-variant font-body"
+                    >
+                      <span className="material-symbols-outlined text-primary text-[20px]">
+                        check_circle
+                      </span>
+                      {item}
+                    </li>
+                ))}
               </ul>
               <button className="w-full mt-auto py-3 px-6 rounded-lg bg-primary-container text-on-primary-container font-bold hover:scale-105 transition-all shadow-md font-body">Get Started</button>
             </div>
 
             {/* Enterprise */}
             <div className="bg-surface-container-lowest p-10 rounded-xl flex flex-col items-start transition-all hover:translate-y-[-4px]">
-              <div className="text-sm font-bold text-secondary tracking-widest uppercase mb-4 font-body">Enterprise</div>
+              <div className="text-sm font-bold text-secondary tracking-widest uppercase mb-4 font-body">{tier_3.name}</div>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-on-surface font-headline">Custom</span>
+                <span className="text-4xl font-extrabold text-on-surface font-headline">{tier_3.monthlyPrice}</span>
+                <span className="text-secondary font-body">/mo</span>
               </div>
-              <p className="text-sm text-secondary mb-8 leading-relaxed font-body">Full-scale digital ecosystem for brokerage firms and large teams.</p>
+              <p className="text-sm text-secondary mb-8 leading-relaxed font-body">{tier_3_description[0]}</p>
               <ul className="space-y-4 mb-10 w-full">
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  White-label Branding Options
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Dedicated Success Manager
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Global Market Data API Access
-                </li>
-                <li className="flex items-center gap-3 text-sm text-on-surface-variant font-body">
-                  <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
-                  Custom Security Protocols
-                </li>
+                {tier_3_description.slice(1).map((item, index) => (
+                    <li
+                        key={index}
+                        className="flex items-center gap-3 text-sm text-on-surface-variant font-body"
+                    >
+                      <span className="material-symbols-outlined text-primary text-[20px]">
+                        check_circle
+                      </span>
+                      {item}
+                    </li>
+                ))}
               </ul>
               <button className="w-full mt-auto py-3 px-6 rounded-lg bg-secondary text-on-secondary font-bold hover:opacity-90 transition-all font-body">Contact Sales</button>
             </div>
