@@ -1,6 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function PropertyCard({
+  propertyId,
   image,
   price,
   addressLine1,
@@ -11,8 +13,9 @@ export default function PropertyCard({
   featured,
   trend,
   newConstruction,
+  onFavoriteClick,
 }) {
-  return (
+  const card = (
     <div className="group flex flex-col bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-on-surface/5 hover:translate-y-[-4px]">
       <div className="aspect-[4/3] relative overflow-hidden">
         <img className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Property" src={image} />
@@ -26,7 +29,15 @@ export default function PropertyCard({
             New Construction
           </div>
         )}
-        <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-error flex items-center justify-center hover:bg-white transition-all shadow-sm">
+        <button
+          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-error flex items-center justify-center hover:bg-white transition-all shadow-sm"
+          type="button"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onFavoriteClick?.();
+          }}
+        >
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
         </button>
       </div>
@@ -58,5 +69,15 @@ export default function PropertyCard({
         </div>
       </div>
     </div>
+  );
+
+  if (!propertyId) {
+    return card;
+  }
+
+  return (
+    <Link to={`/property-details/${propertyId}`}>
+      {card}
+    </Link>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 
 export default function ApprovalCard({
+  propertyId,
   image,
   title,
   address,
@@ -11,6 +12,9 @@ export default function ApprovalCard({
   submittedTime,
   flaggedReason,
   warningMessage,
+  onApprove,
+  onReject,
+  onView,
 }) {
   const isFlagged = status === 'Flagged';
 
@@ -53,13 +57,25 @@ export default function ApprovalCard({
         </div>
       </div>
       <div className="flex flex-col gap-2 shrink-0">
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-on-primary hover:scale-105 transition-transform shadow-[0px_12px_32px_rgba(26,27,31,0.06)]">
+        <button
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-on-primary hover:scale-105 transition-transform shadow-[0px_12px_32px_rgba(26,27,31,0.06)]"
+          type="button"
+          onClick={() => onApprove?.(propertyId)}
+        >
           <span className="material-symbols-outlined">check</span>
         </button>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container transition-colors">
+        <button
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container transition-colors"
+          type="button"
+          onClick={() => onReject?.(propertyId)}
+        >
           <span className="material-symbols-outlined">close</span>
         </button>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors">
+        <button
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors"
+          type="button"
+          onClick={() => onView?.(propertyId)}
+        >
           <span className="material-symbols-outlined">visibility</span>
         </button>
       </div>

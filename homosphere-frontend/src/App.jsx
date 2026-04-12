@@ -14,7 +14,7 @@ import CreateProperty from './pages/CreateProperty';
 import UserManagement from './pages/admin/UserManagement';
 import PropertyApprovals from './pages/admin/PropertyApprovals';
 import Profile from './pages/Profile';
-import ReviewRequest from './pages/admin/ReviewRequest';
+import ReviewRequest from './pages/ReviewRequest';
 
 export default function App() {
   return (
@@ -26,6 +26,7 @@ export default function App() {
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/search" element={<Search />} />
         <Route path="/property-details" element={<PropertyDetails />} />
+        <Route path="/property-details/:propertyId" element={<PropertyDetails />} />
         <Route path="/create-property" element={<CreateProperty />} />
         <Route path="/admin/user-management" element={<UserManagement />} />
         <Route path="/admin/property-approvals" element={<PropertyApprovals />} />

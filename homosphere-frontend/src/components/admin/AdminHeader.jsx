@@ -1,8 +1,8 @@
 export default function AdminHeader() {
   return (
-    <header className="sticky top-0 z-40 flex justify-between items-center px-10 h-20 bg-white/80 dark:bg-stone-950/80 backdrop-blur-xl shadow-sm border-b border-stone-200 dark:border-stone-800">
+    <header className="sticky top-0 z-40 flex justify-between items-center px-10 h-20 bg-white/80 backdrop-blur-xl shadow-sm border-b border-stone-200">
       <div className="flex items-center gap-8">
-        <h2 className="font-headline text-2xl font-bold tracking-tight text-green-800 dark:text-green-300">Approvals Portal</h2>
+        <h2 className="font-headline text-2xl font-bold tracking-tight text-green-800">Approvals Portal</h2>
         <div className="relative group">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">search</span>
           <input className="pl-10 pr-4 py-2 bg-stone-100 border-none rounded-full text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all font-body outline-none" placeholder="Search listings..." type="text" />
@@ -10,9 +10,9 @@ export default function AdminHeader() {
       </div>
       <div className="flex items-center gap-6">
         <nav className="hidden md:flex items-center gap-6 mr-4 font-body">
-          <a className="text-green-800 dark:text-green-300 border-b-2 border-green-800 pb-1 font-medium" href="#">Queue</a>
-          <a className="text-stone-600 dark:text-stone-400 font-medium hover:text-green-700 transition-all" href="#">History</a>
-          <a className="text-stone-600 dark:text-stone-400 font-medium hover:text-green-700 transition-all" href="#">Guidelines</a>
+          <a className="text-green-800 border-b-2 border-green-800 pb-1 font-medium" href="#">Queue</a>
+          <a className="text-stone-600 font-medium hover:text-green-700 transition-all" href="#">History</a>
+          <a className="text-stone-600 font-medium hover:text-green-700 transition-all" href="#">Guidelines</a>
         </nav>
         <div className="flex items-center gap-4">
           <button className="p-2 text-stone-600 hover:bg-stone-100 rounded-full transition-colors relative">
