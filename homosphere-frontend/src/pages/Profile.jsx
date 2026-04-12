@@ -1,441 +1,125 @@
-import { useState, useEffect, useMemo, use } from "react";
-import ProfileTabs from "../components/profile/ProfileTabs";
-import "../styles/ProfileSidebar.css";
-import ProfileInfo from "../components/profile/ProfileInfo";
-import Inquiries from "../components/profile/Inquiries";
-import SavedProperties from "../components/profile/SavedProperties";
-import AgentDashboard from "../components/profile/AgentDashboard";
-import ManagementRequests from "../components/profile/ManagementRequests";
-import PropertyDashboard from "../components/profile/PropertyDashboard";
-import { useNavigate, useParams } from "react-router-dom";
-import "../styles/Profile.css";
-import { fetchUserData, fetchPrivateUserData } from "../services/userApi";
-import {
-  getUserPropertyListings,
-  getUserPropertyListingTabs,
-  deletePropertyListing
-} from "../services/apiPropertyListing";
-import useDeleteUser from "../hooks/useDeleteUser";
-import { supabase } from "../utils/supabase";
-import PublicProfile from "./PublicProfile";
-import { useAuth } from "../contexts/AuthContext";
-import axios from 'axios';
-import { getAuthToken } from '../utils/authUtils';
-import SuccessModal from '../components/SuccessModal';
-
+import { Link } from 'react-router-dom';
+import TopNavBar from '../components/TopNavBar';
+import Footer from '../components/Footer';
+import PropertyCard from '../components/PropertyCard';
 
 export default function Profile() {
-  const params = useParams();
-  const { token } = useAuth();
-  const navigate = useNavigate();
-  const { deleteUser, loading: deleteLoading } = useDeleteUser();
-
-  const [editMode, setEditMode] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-
-  // Store the original API data to preserve fields we don't edit
-  const [originalData, setOriginalData] = useState(null);
-
-  const [user, setUser] = useState({
-    id: "",
-    firstname: "",
-    lastname: "",
-    fullname: "",
-    role: "",
-    email: "",
-    phone: "",
-    location: "",
-    bio: "",
-    photo: "" // store only the filename
-  });
-
-  const [tempUser, setTempUser] = useState({ ...user, fullname: `${user.firstname} ${user.lastname}` });
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-
-  // Property Dashboard state
-  const [propertyTabs, setPropertyTabs] = useState(["ALL"]);
-  const [userListings, setUserListings] = useState([]);
-  const [selectedTab, setSelectedTab] = useState("ALL");
-  const [listingsLoading, setListingsLoading] = useState(false);
-  const [listingsError, setListingsError] = useState(null);
-
-  // Tab state for profile sections
-  const [tab, setTab] = useState(0);
-  const tabLabels = [
-    "Profile",
-    "Properties",
-    "Inquiries",
-    "Management Requests",
-    "Public Profile",
-    "Saved Properties"
-  ];
-
-  // Fetch user data from API
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        setLoading(true);
-        if (params.id) {
-          // Admin viewing another user's private profile
-          const mappedUser = await fetchPrivateUserData(params.id, token);
-          setUser({ ...mappedUser, id: params.id });
-          setTempUser({ ...mappedUser, id: params.id, fullname: `${mappedUser.firstname} ${mappedUser.lastname}` });
-          
-          setError(null);
-        } else {
-          // Get user ID from Supabase session
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            setError("No active session");
-            navigate('/signin');
-            return;
-          }
-          const userId = session.user.id;
-          const mappedUser = await fetchPrivateUserData(userId, session.access_token);
-          setUser({ ...mappedUser, id: userId });
-          setTempUser({ ...mappedUser, id: userId, fullname: `${mappedUser.firstname} ${mappedUser.lastname}` });
-          setError(null);
-        }
-      } catch (err) {
-        setError(err.message);
-        console.error("Error fetching user data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getUser();
-  }, [navigate, params.id, token]);
-
-  // Fetch property tabs once user id is known
-  useEffect(() => {
-    const loadTabs = async () => {
-      if (!user?.id) return;
-      try {
-        const tabs = await getUserPropertyListingTabs(user.id);
-        // Filter out null/undefined values and ensure we have valid strings
-        const validTabs = Array.isArray(tabs) ? tabs.filter(tab => tab != null && tab !== '') : [];
-        console.log('Loaded property tabs:', validTabs);
-        setPropertyTabs(["ALL", ...validTabs]);
-      } catch (err) {
-        console.error("Error fetching property tabs:", err);
-        setPropertyTabs(["ALL"]); // fallback to ALL only
-      }
-    };
-    loadTabs();
-  }, [user?.id]);
-
-  // Fetch user's property listings once user id is known
-  useEffect(() => {
-    const loadListings = async () => {
-      if (!user?.id) return;
-      try {
-        setListingsLoading(true);
-        setListingsError(null);
-        // Fetch all listings for this user (including drafts)
-        const listings = await getUserPropertyListings(user.id);
-        console.log('User property listings fetched:', listings);
-        setUserListings(listings || []);
-      } catch (err) {
-        console.error("Error fetching property listings:", err);
-        setListingsError(err.message || "Failed to load listings");
-        setUserListings([]);
-      } finally {
-        setListingsLoading(false);
-      }
-    };
-    loadListings();
-  }, [user?.id]);
-
-  const filteredListings = useMemo(() => {
-    if (selectedTab === "ALL") return userListings;
-    return userListings.filter((l) => {
-      return l?.status === selectedTab;
-    });
-  }, [userListings, selectedTab]);
-
-  const handleChange = (e) => {
-    setTempUser({ ...tempUser, [e.target.name]: e.target.value });
-  };
-
-  const handlePhotoChange = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch("http://localhost:8080/api/media/upload", {
-          method: "POST",
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`
-          },
-          body: formData,
-          credentials: 'include',
-        });
-        if (!response.ok) {
-          throw new Error(`Upload failed: ${response.status}`);
-        }
-        const data = await response.json();
-        const url = data.url;
-        console.log("Uploaded image URL:", url);
-        const filename = url.split("/").pop();
-        console.log("Extracted filename:", filename);
-
-        const updatedUser = { ...tempUser, photo: filename };
-        setTempUser((prev) => ({ ...prev, photo: filename }));
-        setUser((prev) => ({ ...prev, photo: filename }));
-        saveChanges(updatedUser);
-      } catch (err) {
-        setError(`Photo upload failed: ${err.message}`);
-        console.error("Error uploading photo:", err);
-      }
-    }
-  };
-
-  const saveChanges = async (userDataOverride) => {
-    const currentUser = (userDataOverride && !userDataOverride.nativeEvent) ? userDataOverride : tempUser;
-
-    try {
-      setSaving(true);
-      setError(null);
-      setSuccessMessage("");
-      console.log("Saving user data:", currentUser);
-      const nameParts = currentUser.fullname?.trim().split(/\s+/) || [];
-      const newFirstName = nameParts[0] || "";
-      const newLastName = nameParts.slice(1).join(" ") || "";
-
-      const payload = {
-        email: currentUser.email,
-        firstName: newFirstName,
-        lastName: newLastName,
-        userName: currentUser.username, // backend expects userName
-        location: currentUser.location,
-        phone: currentUser.phone,
-        bio: currentUser.bio,
-        role: currentUser.role,
-        photo: currentUser.photo ? currentUser.photo.split('/').pop() : "",
-        googleOuthId: originalData?.googleOuthId || 0,
-        password: originalData?.password || "",
-        isVerified: originalData?.isVerified || null,
-        verificationToken: originalData?.verificationToken || null,
-        status: originalData?.status || null,
-        failedLoginAttempt: originalData?.failedLoginAttempt || null,
-        banExpiredDate: originalData?.banExpiredDate || null
-      };
-      console.log("saving Payload to be sent to backend:", payload);
-      // Remove any accidental 'username' key from payload
-      if (payload.username !== undefined) delete payload.username;
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(
-        `http://localhost:8080/api/user`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            'Authorization': `Bearer ${session?.access_token}`
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const updatedData = await response.json();
-      // Map backend userName to frontend username
-      setOriginalData(updatedData);
-      setUser((prev) => ({
-        ...prev,
-        ...updatedData,
-        username: updatedData.userName || prev.username,
-        location: updatedData.location || prev.location
-      }));
-      setTempUser((prev) => ({
-        ...prev,
-        ...updatedData,
-        username: updatedData.userName || prev.username,
-        location: updatedData.location || prev.location
-      }));
-      setEditMode(false);
-      setSuccessMessage("Profile updated successfully!");
-    } catch (err) {
-      setError(`Failed to save changes: ${err.message}`);
-      console.error("Error saving user data:", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const cancelChanges = () => {
-    setTempUser(user);
-    setEditMode(false);
-    setError(null);
-    setSuccessMessage("");
-  };
-
- const handleDeleteAccount = async () => {
-    try {
-      const result = await deleteUser();
-
-      if (result.success) {
-        // Navigate to sign in page after successful deletion
-        navigate('/signin');
-      } else {
-        setError(result.error || 'Failed to delete account');
-        setShowDeleteModal(false);
-      }
-    } catch {
-      setError('Failed to delete account');
-      setShowDeleteModal(false);
-    }
-  };
-
-  const handlePasswordChange = async (newPassword) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,  // New password
-      });
-      if (error) {
-        setError(error.message);
-        return;
-      }
-      setError(null);
-      setSuccessMessage('Password changed successfully!');
-      setShowPasswordModal(false);
-    } catch {
-      setError('Failed to change password');
-    }
-  };
-
-  const revertFields = (fields) => {
-    setTempUser((prev) => {
-      const next = { ...prev };
-      fields.forEach((field) => {
-        next[field] = user[field];
-      });
-      return next;
-    });
-  };
-
-  // Property listing handlers
-  const handleCreateListing = () => {
-    navigate('/property-listing-form');
-  };
-
-  const handleEditListing = (listing) => {
-    navigate(`/property-listing-form?id=${listing.id}`);
-  };
-
-
-  const handleDeleteListing = async (listingId) => {
-    try {
-      await deletePropertyListing(listingId);
-      // Reload listings from backend after successful deletion
-      if (user?.id) {
-        const listings = await getUserPropertyListings(user.id);
-        setUserListings(listings || []);
-      }
-      setSuccessMessage("Listing deleted successfully");
-    } catch (err) {
-      setError(`Failed to delete listing: ${err.message}`);
-    }
-  };
-
-
-useEffect(() => {
-  const getSubscriptionStatus = async () => {
-    try {
-      const session = await getAuthToken(); // Must await this async function
-      console.log("Session token:", session);
-      
-      if (!session) {
-        console.log("No session token found");
-        return null;
-      }
-      
-      const subscription = await axios.get(`http://localhost:8080/api/user-subscriptions/my-subscriptions`, {
-        headers: {
-          'Authorization': `Bearer ${session}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log("User subscription data:", subscription.data);
-      return subscription.data;
-    } catch (error) {
-      console.error("Error fetching subscription status:", error);
-      console.error("Error response:", error.response?.data);
-      return null;
-    }
-  };
-  
-  getSubscriptionStatus().then(data => {
-    if (data) {
-      setSubscriptionStatus(data);
-      console.log("Subscription status set:", data);
-    }
-  }).catch(error => {
-    console.error("Promise error:", error);
-  });   
-}, []);
-
-  if (loading || deleteLoading) {
-    return (
-      <div className="profile-page">
-        <div className="loading">{deleteLoading ? 'Deleting account...' : 'Loading profile...'}</div>
-      </div>
-    );
-  }
   return (
-    <div className="profile-page" style={{ display: 'flex', minHeight: '100vh', background: '#f5f5dc' }}>
-      <ProfileTabs tab={tab} setTab={setTab} tabLabels={tabLabels} />
-      <div className="profile-main-content">
-        {tab === 0 && (
-            <ProfileInfo 
-              tempUser={tempUser} 
-              editMode={editMode} 
-              handleChange={handleChange}
-              handlePhotoChange={handlePhotoChange}
-              handleDeletePhoto={() => {
-                setTempUser((prev) => ({ ...prev, photo: "" }));
-                setUser((prev) => ({ ...prev, photo: "" }));
-              }}
-              subscriptionData={subscriptionStatus?.[0]}
-              onSave={saveChanges}
-              onCancel={revertFields}
-            />
-        )}
-        {tab === 1 && (
-          <PropertyDashboard
-            propertyTabs={propertyTabs}
-            selectedTab={selectedTab}
-            setSelectedTab={setSelectedTab}
-            handleCreateListing={handleCreateListing}
-            listingsLoading={listingsLoading}
-            listingsError={listingsError}
-            filteredListings={filteredListings}
-            navigate={navigate}
-            handleEditListing={handleEditListing}
-            handleDeleteListing={handleDeleteListing}
-          />
-        )}
-        {tab === 2 && <AgentDashboard />}
-        {tab === 3 && <ManagementRequests />}
-        {tab === 4 && <PublicProfile id={user.id} />}
-        {tab === 5 && <SavedProperties userId={user.id} />}
-      </div>
-      
-      {/* Success Modal */}
-      {successMessage && (
-        <SuccessModal 
-          message={successMessage} 
-          onClose={() => setSuccessMessage("")} 
-        />
-      )}
+    <div className="bg-surface text-on-surface font-body min-h-screen flex flex-col">
+      <TopNavBar />
+
+      <main className="pt-24 flex-grow max-w-7xl mx-auto px-8 pb-16 w-full">
+        <div className="flex flex-col lg:flex-row gap-12">
+          {/* Sidebar */}
+          <aside className="w-full lg:w-72 flex-shrink-0">
+            <div className="sticky top-28 space-y-8">
+              <div className="bg-surface-container-lowest rounded-xl p-8 transition-all shadow-[0px_12px_32px_rgba(26,27,31,0.06)]">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-24 h-24 rounded-full overflow-hidden mb-4 bg-secondary-container">
+                    <img className="w-full h-full object-cover" alt="Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADJIHuvQI5WvNO3RCQRUnwebc3QOEjw-AshIiBHXtHW1xqcEJPu9zVYtIGc1pJCZaHUvSK4e_m9j_4G7s7zyhLNxq_Op1LJYyhKYefwlzLLhUgNIXFsh8kBhJgqMqNGkfCxvIudj4UOKzwC1hGfdt4MwAUDfZ1cJvOM9CbDa3yfhcCT215Gyhtvp8Rq5IhTHizYS7sTDWGOdkEro90CFDpcVa_iLEWXslQ04H2R7iwM1y6trkgiXpfZPr4XkeFYaMD5WsX4WrvtDm0" />
+                  </div>
+                  <h2 className="font-headline font-extrabold text-xl text-on-surface">Eleanor Vance</h2>
+                  <p className="text-on-surface-variant text-sm mt-1">vance.e@horizon.com</p>
+                  <p className="text-on-surface-variant text-sm">San Francisco, CA</p>
+                  <button className="mt-6 w-full py-2 border border-outline-variant/15 text-primary font-semibold rounded-lg hover:bg-surface-container-low transition-colors">
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+              <nav className="space-y-2">
+                <a className="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg transition-all" href="#">
+                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                  <span>Saved Homes</span>
+                </a>
+                <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="#">
+                  <span className="material-symbols-outlined">search</span>
+                  <span>Saved Searches</span>
+                </a>
+                <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="#">
+                  <span className="material-symbols-outlined">settings</span>
+                  <span>Account Settings</span>
+                </a>
+                <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-all" href="#">
+                  <span className="material-symbols-outlined">notifications</span>
+                  <span>Notifications</span>
+                </a>
+              </nav>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <section className="flex-grow space-y-12">
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              <div className="space-y-1">
+                <h1 className="text-4xl font-headline font-black text-emerald-900 tracking-tight">Saved Homes</h1>
+                <p className="text-on-surface-variant font-body">You have 12 properties saved in your curated list.</p>
+              </div>
+              <div className="flex gap-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-sm font-semibold transition-all hover:opacity-80">
+                  <span className="material-symbols-outlined text-sm">filter_list</span>
+                  Filter
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-sm font-semibold transition-all hover:opacity-80">
+                  Sort: Newest
+                </button>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Property Card 1 */}
+              <PropertyCard
+                image="https://lh3.googleusercontent.com/aida-public/AB6AXuCliRw5IfMfpnl0m_kqiLBmCj_kQ-5nw3fK-3n_YfapFTwEFpNGBUt8KeJpBwjh7jNfeOAsmD85x-ww5eC_8Rn7by8osp47THifPZluCiJ0PAd0xnk8BxO6I7Nflv-pukUnID0xoHn3Ty_bTPWeJc6814DoKLd0eotvvxZLm1LzX92LcrgSkvPm_tUWiQg6DWfSrKrubInjN_5ta3sAuDWux9k7-o4Gl5O2K-ZVgK7KCbCmsqCtDTtDzt_Lt4SuIFJzMK1enffJN6gi"
+                price="$2,450,000"
+                addressLine1="4582 Oakwood Dr, Marin County, CA"
+                beds={4}
+                baths={3.5}
+                sqft="3,200"
+                featured={true}
+              />
+
+              {/* Property Card 2 */}
+              <PropertyCard
+                image="https://lh3.googleusercontent.com/aida-public/AB6AXuAw_7km0axsozpczdaQ9Zen0F15eLRUizSO1HyVJk1U0WMtwy7HNDIJ-m_qH3JRiJ_lkObmzeJsJfCJkaCXfhY8yJKQTG3bxQLKbgMXk148lJFunaJqve7noCBiTNUJUqfTlbwBiWPK2n9B72G9bEkmFiiL1I9nXXlxfiRLlTSUYc1g0fbiqjjDNIO_THWOnyLGZ_3zw4KxLDBYlzqwVSRjPzKiCddKCavduKKVSpwlNhicjTKkpJVJSSMgOmAU-BfHSC_MKTCb0tuq"
+                price="$1,890,000"
+                addressLine1="1209 Skyline Blvd, San Francisco, CA"
+                beds={3}
+                baths={2}
+                sqft="2,100"
+              />
+
+              {/* Property Card 3 */}
+              <PropertyCard
+                image="https://lh3.googleusercontent.com/aida-public/AB6AXuBwHfY3pMThRglmd8z4vC2dswe4BGxEsNSmH2EIZ8mNfY_ES-_rjGeKZ1z1eDNwPzn2wUG13_UBtSAbd1DWMXx-T0hzrhTP-CLSWrXkzNY-DhpuiRWM6TtN0-pRY-YoPeCG_PoR5vty7L_cR92ta-WoKcYL1Xr5RRUyYPs2bXMHW2hcKacebiqkxRHxHmqz_RkeWyyImkf_mIXqc9Q7cFN_AFa6SSP2GgCjXvkB-XuA_UMSsfHqP1um01TgtsD3y1HfcugYU68P_uLR"
+                price="$3,100,000"
+                addressLine1="Ocean View Penthouse, Sausalito, CA"
+                beds={3}
+                baths={3}
+                sqft="2,850"
+              />
+
+              {/* Property Card 4 */}
+              <PropertyCard
+                image="https://lh3.googleusercontent.com/aida-public/AB6AXuDxZlTGP0ABM6fJ265sW2Aa2lptnMt1MF0TQx8pz3_-986lBS1Tnwc_PU_egehGhemNWo3zvxptdtYYJ_eubnliWZ9SqiBcAWrXYt-TU3_s8bADe8KLPvleHkh197RgFlbqaMkxLhEz1lBAAxJUgA22tnhJVQYCtRwc6WWlkeZtZ-PDmogn9CaH08huR7YH6LMPWwWs8yLr0EOwlB0gsn0nF1U_idgf_g6-88h1ll4gnTcDLIHDhMv-6gfex1sc_4cQaJc39yJ7o3FB"
+                price="$4,200,000"
+                addressLine1="772 Ridgecrest Dr, Napa Valley, CA"
+                beds={5}
+                baths={4.5}
+                sqft="5,400"
+              />
+            </div>
+
+            <div className="bg-primary-container/20 rounded-xl p-12 text-center space-y-4">
+              <h4 className="text-2xl font-headline font-bold text-emerald-900">Looking for something specific?</h4>
+              <p className="text-on-surface-variant max-w-md mx-auto">Our local agents are ready to help you find the perfect property that matches your unique vision.</p>
+              <button className="px-8 py-3 bg-primary text-on-primary font-bold rounded-lg mt-4 hover:shadow-lg transition-all">
+                Contact an Agent
+              </button>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 }

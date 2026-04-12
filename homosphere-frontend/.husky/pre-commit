@@ -1,1 +1,0 @@
-cd homosphere-frontend && npx lint-staged

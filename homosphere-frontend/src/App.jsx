@@ -1,15 +1,37 @@
-import { useState } from 'react';
-import './App.css';
-import SignUpPage from './pages/signUpPage.jsx';
-function App() {
-    return (
-        <div className="home-container">
-            <div className="hero-section">
-                <h1>Welcome to HomeShpere</h1>
-                <p>Your trusted platform for seamless property management and modern living solutions.</p>
-            </div>
-        </div>
-    );
-}
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-export default App;
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
+import Subscription from './pages/Subscription';
+import Search from './pages/Search';
+import PropertyDetails from './pages/PropertyDetails';
+import CreateProperty from './pages/CreateProperty';
+import UserManagement from './pages/admin/UserManagement';
+import PropertyApprovals from './pages/admin/PropertyApprovals';
+import Profile from './pages/Profile';
+import ReviewRequest from './pages/admin/ReviewRequest';
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/subscription" element={<Subscription />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/property-details" element={<PropertyDetails />} />
+        <Route path="/create-property" element={<CreateProperty />} />
+        <Route path="/admin/user-management" element={<UserManagement />} />
+        <Route path="/admin/property-approvals" element={<PropertyApprovals />} />
+        <Route path="/admin/review-request" element={<ReviewRequest />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
