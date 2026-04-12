@@ -158,23 +158,14 @@ export default function CreateProperty() {
                   <div className="aspect-square border-2 border-dashed border-outline-variant/30 rounded-xl flex items-center justify-center hover:bg-white hover:border-primary/40 transition-all cursor-pointer">
                     <span className="material-symbols-outlined text-primary/40">add</span>
                   </div>
-                  <div className="aspect-square bg-surface-container-high rounded-xl overflow-hidden group relative">
-                    <img className="w-full h-full object-cover" alt="modern living room interior with floor to ceiling windows showing forest view during sunrise soft warm lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtGLYjB-D3c5Rtq4XoYtkbh5ucWxAuAMSIfO6yN7zsitO4jWG4KniipbUPmoPEfsHJz8htPQm-WxsmrtOvMI3bxcmDwvItkykQfCphfh6KtKt4Afg5f3JG0npqlwsPkkD7nmSOSDBYvmpL6r8bkBpkqql2M20mptsnGGjXDZ1Rp3CUwh-4-9sNY4H-J2uHEJuqDz2KKB47qX7cWNMnNc9KCx_xS-CD68suyve4i-VbdeQiCrhJ2pNYQItOCC7CD0NpYbfmFEktRa8K" />
-                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                      <span className="material-symbols-outlined text-white">close</span>
-                    </div>
+                  <div className="aspect-square border-2 border-dashed border-outline-variant/30 rounded-xl flex items-center justify-center hover:bg-white hover:border-primary/40 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-primary/40">add</span>
                   </div>
-                  <div className="aspect-square bg-surface-container-high rounded-xl overflow-hidden group relative">
-                    <img className="w-full h-full object-cover" alt="minimalist gourmet kitchen with marble countertops and custom sage green cabinetry warm natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUzVOb2Q-62Vjbf5sky1PTBOXmEpzYvrGvzgMsKDqxeQbEonPJwdSTL9pEHvEolou2Ym3XNQdSCBqzfgMmeaFs86228ZFlfTmNNUUbqXGRrBPawapbSaUg79Of7GxLLZLpZj1gcOTY5PaP_g7c8Z9YG7WykyeWmTMHs7mpLWFIy8L3zOTIM91dtxCD_74L88wcrTfYTTaC1a_X01AKsDWVbZg6dBleioU9g65p_U0cqc7E-iFVzw8mLwJm5W5tLC2JOzK7e5G1dvys" />
-                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                      <span className="material-symbols-outlined text-white">close</span>
-                    </div>
+                  <div className="aspect-square border-2 border-dashed border-outline-variant/30 rounded-xl flex items-center justify-center hover:bg-white hover:border-primary/40 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-primary/40">add</span>
                   </div>
-                  <div className="aspect-square bg-surface-container-high rounded-xl overflow-hidden group relative">
-                    <img className="w-full h-full object-cover" alt="contemporary bedroom with high ceilings large windows and view of rolling green hills in the distance" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYnZZG4btMzlbhDskCc0Ee90ojAU3D21S9FYLkbPCErDyGdlpolofaiWFvIRkn9V7Z_sV7ZlE4qMEXj7brjOwAMf__I3rh8EwqaCsOiU4XSMMm8g3HVym0_rF1bUIkZ1EOi1oNGRqIZmN02oiidgxZD54vSdkdd8ljWHmDd5n37rA6-_nBsDLFZRawzSuXBMCwjCMxAI1EjaNaspnCiN83lJbi_NagNuVO8K4Rsu3nxm1r0EMIl_hKgM_-zpAdkfW5TqjhoUYt7wlk" />
-                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                      <span className="material-symbols-outlined text-white">close</span>
-                    </div>
+                  <div className="aspect-square border-2 border-dashed border-outline-variant/30 rounded-xl flex items-center justify-center hover:bg-white hover:border-primary/40 transition-all cursor-pointer">
+                    <span className="material-symbols-outlined text-primary/40">add</span>
                   </div>
                 </div>
               </div>

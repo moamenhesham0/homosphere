@@ -14,7 +14,7 @@ import CreateProperty from './pages/CreateProperty';
 import UserManagement from './pages/admin/UserManagement';
 import PropertyApprovals from './pages/admin/PropertyApprovals';
 import Profile from './pages/Profile';
-import ReviewRequest from './pages/admin/ReviewRequest';
+import ReviewRequest from './pages/ReviewRequest';
 
 export default function App() {
   return (

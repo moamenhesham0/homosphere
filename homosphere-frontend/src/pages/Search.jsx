@@ -43,11 +43,10 @@ export default function Search() {
           <section className="w-full lg:w-3/5 overflow-y-auto bg-surface-container-low px-8 py-10 hide-scrollbar">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-baseline justify-between mb-8">
-                <h1 className="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Luxury Homes in Austin, TX</h1>
-                <span className="text-outline font-medium">142 results</span>
+                {/* <h1 className="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Luxury Homes in Austin, TX</h1> */}
+                {/* <span className="text-outline font-medium">142 results</span> */}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Property Card 1 */}
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <PropertyCard
                   image="https://lh3.googleusercontent.com/aida-public/AB6AXuBAt-ADjoXSJ7sT1xu4a95GdFcm0wfnV9O8MXiOF7U5aS9QUvkRFA5EVrmGmXJkyyzK7L5OxO7UR1D5P28c1V2eugTiSZChTxrD6sEUYiT0FBk9z3rMgz8Yhv9aIjuKJP-pVed0jCcZbufOwi5PhOpVeZOm9YbHSHUY5ltPeGOTEExhoQIhgeYSWpeFbK6Qp41_7wgiKuLPBqYI1-OAhHZDGak0mEaKaKO86cRzvdsdUQ2CoIryuc5QU8WSZ8BtCCrx7ubOXhHw5yLQ"
                   price="$2,450,000"
@@ -60,7 +59,6 @@ export default function Search() {
                   trend="2%"
                 />
 
-                {/* Property Card 2 */}
                 <PropertyCard
                   image="https://lh3.googleusercontent.com/aida-public/AB6AXuC1IpWGStDrgR5TfdwHNR9DQV5McMH0i8ombxL_BHdSkAdx7jm44UHfWOguUKJKzl5fSE_Atk1KeLz2fr-Ny5Ff-5D9sQfVR8NJok6d5vFjUZRcrCpLd7mr8og8BgTrJ-4aNGMgdOugg6haRr8QRox_6W4q3BI-sHo9vysi92EOfrrJTULQhEcEVPXX2gM8rmG84pckuR1wKtVk5t0UQ0stv5BzwbzSveVblY3IWuZXVOQslbYk4PHVhCDFJ5TG5oGx5qaNlfhAcKND"
                   price="$1,875,000"
@@ -71,7 +69,6 @@ export default function Search() {
                   sqft="2,920"
                 />
 
-                {/* Property Card 3 */}
                 <PropertyCard
                   image="https://lh3.googleusercontent.com/aida-public/AB6AXuAPlibxIAuOMJ3V0QyD-9YBGxaj9SLJy3JrGr5Hkkc4K1w3vVjS1TcgR3hfRexXkl5ItcwxwHIuJh90l-QMqBUepsnzcS6X_VfjtTW2BDAB9UnBMZiqIUtfyF36uoRGsHbNvDWaw4Oa72e6DuvWMYyBmF4fCMUdu76n5y5OiQKjUVcU5JjBOf5zjcnojlXBbtpLEf6rM0twTx69nQQ0K9VHZuXAfolPMEE1uyAobwH38KQP22hQ7DVtjV9kQE4YrvQYB2kFg_-9Ad9z"
                   price="$3,100,000"
@@ -83,7 +80,6 @@ export default function Search() {
                   newConstruction={true}
                 />
 
-                {/* Property Card 4 */}
                 <PropertyCard
                   image="https://lh3.googleusercontent.com/aida-public/AB6AXuCaN-PUXdzddpXgUGodl75VdeZtay5vv5OvVXY4zcV0UuqAOak1ieVRyOP29ND0voBsDpl2g50trONpHPeLHHQGuKyhKZ-cvpKndTD5RBXw4lhFAXnJa-nSsq7wLU0imBq6aSZhZEJBDMw7zWX5tgVqkGzoz9veX4gzlOxNfmcr1F0Whn-BrW0dc4U9KAllBIyUsdYgRek6OKPPzELXXhf7yVs2h0wsvYQffyh0hoHA5nq8ihbLbhMw61o4T30raPoo44UX54QDT6lr"
                   price="$1,550,000"
@@ -93,7 +89,7 @@ export default function Search() {
                   baths={2}
                   sqft="2,150"
                 />
-              </div>
+              </div> */}
             </div>
           </section>
 
@@ -123,12 +119,6 @@ export default function Search() {
                 </div>
                 <div className="absolute top-[70%] left-[25%] pointer-events-auto">
                   <div className="px-3 py-1.5 bg-emerald-900 text-on-primary font-bold rounded-full shadow-lg text-sm border-2 border-white">$1.5M</div>
-                </div>
-                <div className="flex justify-center mb-8">
-                  <button className="pointer-events-auto px-6 py-3 rounded-full bg-white/90 backdrop-blur-md shadow-xl border border-outline-variant/15 text-on-surface font-bold text-sm flex items-center gap-2 hover:bg-white transition-all">
-                    <span className="material-symbols-outlined text-emerald-700">layers</span>
-                    Satellite View
-                  </button>
                 </div>
               </div>
             </div>

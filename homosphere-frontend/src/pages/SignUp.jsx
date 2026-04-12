@@ -137,7 +137,7 @@ export default function SignUp() {
         </section>
       </main>
       {/* Simple Footer */}
-      <footer className="w-full border-t border-stone-200/10 bg-stone-50 dark:bg-stone-950 flex flex-col md:flex-row justify-between items-center px-12 py-8">
+      <footer className="w-full border-t border-stone-200/10 bg-stone-50 flex flex-col md:flex-row justify-between items-center px-12 py-8">
         <p className="font-inter text-xs tracking-wide text-stone-500">© 2024 Horizon Realty. All rights reserved.</p>
         <div className="flex gap-8 mt-4 md:mt-0">
           <a className="font-inter text-xs tracking-wide text-stone-500 opacity-80 hover:opacity-100 transition-opacity hover:text-emerald-600" href="#">Terms of Service</a>

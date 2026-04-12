@@ -4,29 +4,29 @@ export default function UserManagement() {
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen flex">
       {/* SideNavBar */}
-      <aside className="fixed top-0 left-0 h-screen w-64 border-r border-gray-100 dark:border-gray-800 bg-[#faf9fe] dark:bg-gray-950 flex flex-col py-6 px-4 z-50">
+      <aside className="fixed top-0 left-0 h-screen w-64 border-r border-gray-100 bg-[#faf9fe] flex flex-col py-6 px-4 z-50">
         <div className="mb-10 px-2">
-          <h1 className="text-xl font-bold text-[#476738] dark:text-[#99bc85] font-headline">Admin Portal</h1>
+          <h1 className="text-xl font-bold text-[#476738] font-headline">Admin Portal</h1>
           <p className="text-xs text-gray-500 font-medium">Management Console</p>
         </div>
         <nav className="flex-1 space-y-1">
           {/* Inactive */}
-          <Link to="/admin/property-approvals" className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-500 dark:text-gray-400 hover:text-[#476738] dark:hover:text-[#99bc85] hover:bg-[#f4f3f8] dark:hover:bg-gray-800 transition-colors font-headline font-medium text-sm">
+          <Link to="/admin/property-approvals" className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-500 hover:text-[#476738] hover:bg-[#f4f3f8] transition-colors font-headline font-medium text-sm">
             <span className="material-symbols-outlined">fact_check</span>
             <span>Property Approvals</span>
           </Link>
           {/* Active: User Management */}
-          <Link to="/admin/user-management" className="flex items-center gap-3 px-3 py-3 rounded-lg text-[#476738] dark:text-[#99bc85] font-bold border-r-4 border-[#476738] dark:border-[#99bc85] bg-[#f4f3f8] dark:bg-gray-800/50 font-headline text-sm">
+          <Link to="/admin/user-management" className="flex items-center gap-3 px-3 py-3 rounded-lg text-[#476738] font-bold border-r-4 border-[#476738] bg-[#f4f3f8] font-headline text-sm">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
             <span>User Management</span>
           </Link>
           {/* Inactive */}
-          <a className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-500 dark:text-gray-400 hover:text-[#476738] dark:hover:text-[#99bc85] hover:bg-[#f4f3f8] dark:hover:bg-gray-800 transition-colors font-headline font-medium text-sm" href="#">
+          <a className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-500 hover:text-[#476738] hover:bg-[#f4f3f8] transition-colors font-headline font-medium text-sm" href="#">
             <span className="material-symbols-outlined">badge</span>
             <span>Admin List</span>
           </a>
           {/* Inactive */}
-          <a className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-500 dark:text-gray-400 hover:text-[#476738] dark:hover:text-[#99bc85] hover:bg-[#f4f3f8] dark:hover:bg-gray-800 transition-colors font-headline font-medium text-sm" href="#">
+          <a className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-500 hover:text-[#476738] hover:bg-[#f4f3f8] transition-colors font-headline font-medium text-sm" href="#">
             <span className="material-symbols-outlined">settings</span>
             <span>System Settings</span>
           </a>
@@ -43,7 +43,7 @@ export default function UserManagement() {
       {/* Main Content Area */}
       <div className="flex-1 ml-64 flex flex-col min-h-screen">
         {/* TopAppBar */}
-        <header className="sticky top-0 h-16 bg-white/60 dark:bg-gray-950/60 backdrop-blur-md flex items-center justify-between px-8 w-full border-b border-gray-100 dark:border-gray-800 z-40 font-headline text-base">
+        <header className="sticky top-0 h-16 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 w-full border-b border-gray-100 z-40 font-headline text-base">
           <div className="flex items-center gap-4 flex-1">
             <div className="relative w-full max-w-md group">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">search</span>
@@ -61,7 +61,7 @@ export default function UserManagement() {
               </button>
             </div>
             <div className="h-8 w-[1px] bg-gray-200"></div>
-            <span className="text-lg font-black text-[#476738] dark:text-[#99bc85]">Sage & Stone Admin</span>
+            <span className="text-lg font-black text-[#476738]">Sage & Stone Admin</span>
           </div>
         </header>
 

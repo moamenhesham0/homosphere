@@ -16,9 +16,8 @@ export default function Subscription() {
 
         {/* Pricing Cards */}
         <section className="max-w-7xl mx-auto px-8 mb-24">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Basic Plan */}
-            <div className="bg-surface-container-lowest p-10 rounded-xl flex flex-col items-start transition-all hover:translate-y-[-4px]">
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-stone-100 p-10 rounded-xl flex flex-col items-start transition-all hover:translate-y-[-4px]">
               <div className="text-sm font-bold text-secondary tracking-widest uppercase mb-4 font-body">Basic</div>
               <div className="flex items-baseline gap-1 mb-6">
                 <span className="text-4xl font-extrabold text-on-surface font-headline">$0</span>
@@ -42,8 +41,7 @@ export default function Subscription() {
               <button className="w-full mt-auto py-3 px-6 rounded-lg bg-secondary-container text-on-secondary-container font-bold hover:opacity-80 transition-all font-body">Get Started</button>
             </div>
 
-            {/* Premier Agent */}
-            <div className="relative bg-surface-container-lowest p-10 rounded-xl flex flex-col items-start border-2 border-primary-container transition-all hover:translate-y-[-4px] overflow-hidden">
+            <div className="relative bg-stone-100 p-10 rounded-xl flex flex-col items-start border-2 border-primary-container transition-all hover:translate-y-[-4px] overflow-hidden">
               <div className="absolute top-0 right-0 bg-primary-container text-on-primary-container px-4 py-1.5 text-xs font-black rounded-bl-xl tracking-tight font-body">MOST POPULAR</div>
               <div className="text-sm font-bold text-primary tracking-widest uppercase mb-4 font-body">Premier Agent</div>
               <div className="flex items-baseline gap-1 mb-6">
@@ -72,8 +70,7 @@ export default function Subscription() {
               <button className="w-full mt-auto py-3 px-6 rounded-lg bg-primary-container text-on-primary-container font-bold hover:scale-105 transition-all shadow-md font-body">Get Started</button>
             </div>
 
-            {/* Enterprise */}
-            <div className="bg-surface-container-lowest p-10 rounded-xl flex flex-col items-start transition-all hover:translate-y-[-4px]">
+            <div className="bg-stone-100 p-10 rounded-xl flex flex-col items-start transition-all hover:translate-y-[-4px]">
               <div className="text-sm font-bold text-secondary tracking-widest uppercase mb-4 font-body">Enterprise</div>
               <div className="flex items-baseline gap-1 mb-6">
                 <span className="text-4xl font-extrabold text-on-surface font-headline">Custom</span>
@@ -99,7 +96,7 @@ export default function Subscription() {
               </ul>
               <button className="w-full mt-auto py-3 px-6 rounded-lg bg-secondary text-on-secondary font-bold hover:opacity-90 transition-all font-body">Contact Sales</button>
             </div>
-          </div>
+          </div> */}
         </section>
 
         {/* Feature Comparison */}
