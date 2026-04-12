@@ -1,8 +1,47 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
+import PropertyCard from '../components/PropertyCard';
+import {
+  formatCompactAddress,
+  formatPrice,
+  getPropertyImageUrl,
+  propertyListingApi,
+} from '../services';
 
 export default function Home() {
+  const [featuredListings, setFeaturedListings] = useState([]);
+  const [featuredError, setFeaturedError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadFeaturedListings() {
+      try {
+        const payload = await propertyListingApi.getPropertyListingStore();
+        if (!isMounted) {
+          return;
+        }
+
+        const listings = Array.isArray(payload) ? payload.slice(0, 3) : [];
+        setFeaturedListings(listings);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
+        setFeaturedError(error.message || 'Failed to load featured listings.');
+      }
+    }
+
+    loadFeaturedListings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="bg-surface text-on-surface antialiased min-h-screen flex flex-col">
       <TopNavBar />
@@ -84,56 +123,27 @@ export default function Home() {
               </button>
             </div>
           </div>
-          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="group cursor-pointer">
-              <div className="relative overflow-hidden rounded-lg aspect-[4/5] mb-6">
-                <img alt="Contemporary white stucco residence" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-qIZ0O6QSFRpzwHNzmrnx9F9blO_auzgyKXQYsfYJ11tTfr0wI2_dG01RMC2Y-yGNQ1qjCyeOPiNlb6Xwq6m1aKGNAsse63LS6YBY1FxIIu6XijG5RkldJ9JUiGi8SKcR-NuYhR_1Qin4zJkTojGASQsX-c_1lkRV90EzpHPF8APbtLP0S2dY2BJUqjuPIX2bvmzBZ-6aM_7fr8-obOBGpAVN_0IKaKW6lM5i6kFG3b-LleGd5-5sEG2hKEIAJvPnTNSGN8ZJ3-eC"/>
-                <div className="absolute top-4 left-4">
-                  <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-on-surface uppercase tracking-widest font-body">New Construction</span>
-                </div>
-                <button className="absolute top-4 right-4 text-white hover:text-red-400 transition-colors">
-                  <span className="material-symbols-outlined">favorite</span>
-                </button>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-extrabold text-on-surface font-headline">$2,450,000</h3>
-                <p className="font-medium text-on-surface-variant font-body">4 bds | 3 ba | 3,200 sqft</p>
-                <p className="text-stone-500 text-sm font-body">882 Skyline Drive, West Haven, CA</p>
-              </div>
-            </div>
-            <div className="group cursor-pointer">
-              <div className="relative overflow-hidden rounded-lg aspect-[4/5] mb-6">
-                <img alt="Charming mid-century modern home" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCurTpLyurfFcDf8o8uXp7RicooCuqV6_l3t0utLp0uF5Nwdre-QtUCq0kd8nj72Ft6MBZawMy1s39ln5vW0rNBtbyJNLB4tSa91pBLXBScxXba2o6tiEDsrTFboEBBV-_DlQc_I8yhBAY9_JCqzoRei96fzDIkxpEYgY7Zf57pEUlgbJNOIc79DL4NOOHcvVNJT7RcUoQ4iN-qdD8x4bOxTbJTW2WaDrNYHrQGNLCpYMIZUxVqC4TGoLcscgjAkfdsB6B2uiO791Th"/>
-                <div className="absolute top-4 left-4">
-                  <span className="bg-primary text-on-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest font-body">Open House: Sat</span>
-                </div>
-                <button className="absolute top-4 right-4 text-white hover:text-red-400 transition-colors">
-                  <span className="material-symbols-outlined">favorite</span>
-                </button>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-extrabold text-on-surface font-headline">$1,195,000</h3>
-                <p className="font-medium text-on-surface-variant font-body">3 bds | 2 ba | 2,150 sqft</p>
-                <p className="text-stone-500 text-sm font-body">45 Oakwood Terrace, Portland, OR</p>
-              </div>
-            </div>
-            <div className="group cursor-pointer">
-              <div className="relative overflow-hidden rounded-lg aspect-[4/5] mb-6">
-                <img alt="Ultra-modern waterfront mansion" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWjilO6YH7kacUjtWkvstnlK9vYaPHKlKXXon3Q1Q4t67n7CowMwfqsLc7HMg2bpet7Wz5Vgyd2ZOrwwfeo_-35P_B1HVX0N0d36nVRzF0IB9nfdbFiRYvQnKXWMx92JM7y4gKSPm3J7rMiRHl_BzUNR4me7GKu1g9pPi-7Q2tnnmmhrjFQxBZuSK6ZHQ461q4JYsm6bzlcBwT1EMGmtsfN8ys5Kw0O-elPGigv2SqRLuYcMJK9VcX4pNGXrXKFtGle4zFqo60aVSC"/>
-                <div className="absolute top-4 left-4">
-                  <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-on-surface uppercase tracking-widest font-body">Price Reduced</span>
-                </div>
-                <button className="absolute top-4 right-4 text-white hover:text-red-400 transition-colors">
-                  <span className="material-symbols-outlined">favorite</span>
-                </button>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-extrabold text-on-surface font-headline">$3,890,000</h3>
-                <p className="font-medium text-on-surface-variant font-body">5 bds | 6 ba | 5,400 sqft</p>
-                <p className="text-stone-500 text-sm font-body">122 Marine Way, Miami Beach, FL</p>
-              </div>
-            </div> */}
-          {/* </div> */}
+          {featuredError && (
+            <p className="mb-6 rounded-lg bg-error-container px-4 py-3 text-sm text-error">
+              {featuredError}
+            </p>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {featuredListings.map((listing) => (
+              <PropertyCard
+                key={listing.propertyListingId}
+                propertyId={listing.propertyListingId}
+                image={getPropertyImageUrl(listing)}
+                price={formatPrice(listing.price)}
+                addressLine1={listing.title || 'Untitled Listing'}
+                addressLine2={formatCompactAddress(listing.city, listing.state)}
+                beds={listing.bedrooms || 0}
+                baths={listing.bathrooms || 0}
+                sqft={listing.propertyAreaSqFt ? Number(listing.propertyAreaSqFt).toLocaleString('en-US') : 'N/A'}
+                newConstruction={listing.condition === 'NEW'}
+              />
+            ))}
+          </div>
         </div>
       </section>
 

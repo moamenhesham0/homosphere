@@ -1,6 +1,7 @@
 import React from 'react';
 
 export default function ReviewRequestCard({
+  propertyId,
   image,
   title,
   address,
@@ -9,6 +10,9 @@ export default function ReviewRequestCard({
   submittedDate,
   status,
   flaggedReason,
+  onApprove,
+  onFlag,
+  onDetails,
 }) {
   const isFlagged = status === 'Flagged';
 
@@ -40,13 +44,37 @@ export default function ReviewRequestCard({
           </div>
         </div>
         <div className="flex gap-2 pt-4 border-t border-surface-container mt-4 font-body">
-          <button className="flex-1 py-2 bg-primary text-on-primary rounded-lg text-sm font-bold hover:opacity-90 transition-all">Approve</button>
+          <button
+            className="flex-1 py-2 bg-primary text-on-primary rounded-lg text-sm font-bold hover:opacity-90 transition-all"
+            type="button"
+            onClick={() => onApprove?.(propertyId)}
+          >
+            Approve
+          </button>
           {isFlagged ? (
-            <button className="px-4 py-2 bg-stone-100 text-stone-600 font-semibold rounded-lg text-sm hover:bg-stone-200 transition-all">Review Flag</button>
+            <button
+              className="px-4 py-2 bg-stone-100 text-stone-600 font-semibold rounded-lg text-sm hover:bg-stone-200 transition-all"
+              type="button"
+              onClick={() => onDetails?.(propertyId)}
+            >
+              Review Flag
+            </button>
           ) : (
-            <button className="px-4 py-2 border border-outline-variant text-error font-semibold rounded-lg text-sm hover:bg-error/5 transition-all">Flag</button>
+            <button
+              className="px-4 py-2 border border-outline-variant text-error font-semibold rounded-lg text-sm hover:bg-error/5 transition-all"
+              type="button"
+              onClick={() => onFlag?.(propertyId)}
+            >
+              Flag
+            </button>
           )}
-          <button className="px-4 py-2 text-primary font-bold text-sm flex items-center gap-1 hover:underline underline-offset-4">Details</button>
+          <button
+            className="px-4 py-2 text-primary font-bold text-sm flex items-center gap-1 hover:underline underline-offset-4"
+            type="button"
+            onClick={() => onDetails?.(propertyId)}
+          >
+            Details
+          </button>
         </div>
       </div>
     </div>

@@ -26,6 +26,7 @@ export default function App() {
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/search" element={<Search />} />
         <Route path="/property-details" element={<PropertyDetails />} />
+        <Route path="/property-details/:propertyId" element={<PropertyDetails />} />
         <Route path="/create-property" element={<CreateProperty />} />
         <Route path="/admin/user-management" element={<UserManagement />} />
         <Route path="/admin/property-approvals" element={<PropertyApprovals />} />
