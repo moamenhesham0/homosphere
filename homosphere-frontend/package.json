@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=127.0.0.1",
+    "dev": "vite --port=3000 --host=localhost",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
@@ -12,15 +12,21 @@
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "@supabase/supabase-js": "^2.103.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "leaflet": "^1.9.4",
+    "leaflet-control-geocoder": "^3.3.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.6.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.14.0",
+    "recharts": "^3.8.1",
     "vite": "^6.2.0"
   },
   "devDependencies": {

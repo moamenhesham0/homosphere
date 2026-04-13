@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSupabaseUser } from '../context/supabaseContext';
 import { authApi, saveAuthSession, signUpWithSupabase } from '../services';
-
+import {ROUTES} from '../constants/routes';
 function splitName(fullName) {
   const trimmed = fullName.trim();
   if (!trimmed) {
@@ -17,6 +18,7 @@ function splitName(fullName) {
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const { syncAuthState } = useSupabaseUser();
   const [formData, setFormData] = useState({
     role: 'BUYER',
     fullName: '',
@@ -59,22 +61,17 @@ export default function SignUp() {
     setIsSubmitting(true);
 
     try {
-      const { accessToken } = await signUpWithSupabase({
+      const { accessToken, user: supabaseUser } = await signUpWithSupabase({
         email: formData.email.trim(),
-        password: formData.password,
-      });
-
-      const payload = await authApi.signup(accessToken, {
-        email: formData.email.trim(),
-        password: formData.password,
-        firstName,
-        lastName,
+        password: formData.password.trim(),
+        lastName: lastName,
+        firstName: firstName,
         role: formData.role,
+        phone: formData.phone.trim(),
       });
 
-      saveAuthSession(accessToken, payload?.user || null);
       setSuccessMessage('Account created successfully.');
-      navigate('/subscription');
+      navigate(ROUTES.SIGNIN);
     } catch (error) {
       setErrorMessage(error.message || 'Signup failed.');
     } finally {

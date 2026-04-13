@@ -1,115 +1,61 @@
-const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
+import supabase from '../utils/supabase';
+import ROUTES from '../constants/routes';
+import {authApi} from '../services/api/authApi';
+import {saveAuthSession} from "../services/authSession";
 
-const SUPABASE_URL = (viteEnv?.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
-const SUPABASE_ANON_KEY =
-    viteEnv?.VITE_SUPABASE_ANON_KEY || viteEnv?.VITE_SUPABASE_PUBLISHABLE_KEY || '';
-
-function parseSupabaseError(payload, status) {
-    if (payload && typeof payload === 'object') {
-        if (typeof payload.msg === 'string' && payload.msg.trim() !== '') {
-            return payload.msg;
+export async function signUpWithSupabase(signUpData) {
+    const { email, phone, password, role, firstName, lastName } = signUpData;
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        phone: phone,
+        password: password,
+        options: {
+            emailRedirectTo: `${window.location.origin}${ROUTES.SUBSCRIPTION}`,
+            data: {
+                role: role,
+                first_name: firstName,
+                last_name: lastName
+            }
         }
+    })
 
-        if (typeof payload.message === 'string' && payload.message.trim() !== '') {
-            return payload.message;
-        }
+    console.log(data);
 
-        if (typeof payload.error_description === 'string' && payload.error_description.trim() !== '') {
-            return payload.error_description;
-        }
-
-        if (typeof payload.error === 'string' && payload.error.trim() !== '') {
-            return payload.error;
-        }
+    if (error) {
+        console.error('Signup error:', error.message)
     }
 
-    if (typeof payload === 'string' && payload.trim() !== '') {
-        return payload;
-    }
-
-    return `Supabase request failed with status ${status}`;
-}
-
-export async function signUpWithSupabase({ email, password }) {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-        throw new Error(
-            'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your frontend env.',
-        );
-    }
-
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-            email,
-            password,
-        }),
-    });
-
-    const contentType = response.headers.get('content-type') || '';
-    const payload = contentType.includes('application/json')
-        ? await response.json()
-        : await response.text();
-
-    if (!response.ok) {
-        throw new Error(parseSupabaseError(payload, response.status));
-    }
-
-    const accessToken = payload?.session?.access_token || '';
-
-    if (!accessToken) {
-        throw new Error(
-            'Supabase signup succeeded but no access token was returned. If email confirmation is enabled, verify email and then sign in before backend sync.',
-        );
-    }
+    const accessToken = data.session.access_token;
+    const response  = await authApi.signup(accessToken, signUpData);
+    console.log(await response.json());
 
     return {
-        accessToken,
-        user: payload?.user || null,
-    };
+        accessToken: accessToken,
+        user: data.user,
+    }
 }
 
 export async function signInWithSupabase({ email, password }) {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-        throw new Error(
-            'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your frontend env.',
-        );
-    }
-
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-            email,
-            password,
-        }),
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
     });
 
-    const contentType = response.headers.get('content-type') || '';
-    const payload = contentType.includes('application/json')
-        ? await response.json()
-        : await response.text();
+    if (error) throw error;
 
-    if (!response.ok) {
-        throw new Error(parseSupabaseError(payload, response.status));
-    }
+    // Get the session token
+    const session = data.session;
+    const supabaseUser = data.user;
+    if (!(session && session.access_token)) return;
 
-    const accessToken = payload?.access_token || '';
+    console.log(`Login complete onto Sync${data}`);
 
-    if (!accessToken) {
-        throw new Error('Supabase sign in succeeded but no access token was returned.');
-    }
+    // Sync with backend for additional data
+    const response  = await authApi.login(session.access_token);
 
-    return {
-        accessToken,
-        user: payload?.user || null,
-    };
+    console.log(await response.json());
+
+    saveAuthSession(session.access_token, supabaseUser);
+
+    return { success: true, message: 'Signed in successfully!' };
 }

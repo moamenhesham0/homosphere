@@ -9,12 +9,14 @@ import {
   getPropertyImageUrl,
   propertyListingApi,
 } from '../services';
-
+import {getCurrentUser, getAuthToken} from "../services";
 export default function Home() {
   const [featuredListings, setFeaturedListings] = useState([]);
   const [featuredError, setFeaturedError] = useState('');
 
   useEffect(() => {
+    const user = getCurrentUser();
+    console.log(`user : ${JSON.stringify(user)}`);
     let isMounted = true;
 
     async function loadFeaturedListings() {

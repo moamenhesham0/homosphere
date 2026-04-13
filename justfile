@@ -4,7 +4,7 @@ BACKEND_LINK := "-f homosphere-backend/pom.xml"
 
 # Packages to install
 #FE_DEV_PACKAGES := "prettier lint-staged"
-#FE_PACKAGES := "@supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder recharts react-icons"
+FE_PACKAGES := "@supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder recharts react-icons"
 
 # Run frontend
 run-fe:
@@ -22,7 +22,7 @@ run: run-fe run-be
 
 # Setup frontend
 setup-fe:
-    cd {{FRONTEND_DIR}} && npm install
+    cd {{FRONTEND_DIR}} && npm install && npm install {{FE_PACKAGES}}
     @echo "Frontend dependencies are installed."
 
 # Setup backend environment

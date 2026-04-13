@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import { authApi, saveAuthSession, signInWithSupabase } from '../services';
+import {ROUTES} from '../constants/routes';
 
 export default function SignIn() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export default function SignIn() {
 
       const payload = await authApi.login(accessToken);
       saveAuthSession(payload?.token || accessToken, payload?.user || user || null);
-      navigate('/profile');
+      navigate(ROUTES.HOME);
     } catch (error) {
       setErrorMessage(error.message || 'Sign in failed.');
     } finally {
