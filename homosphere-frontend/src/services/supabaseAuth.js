@@ -1,7 +1,7 @@
 import supabase from '../utils/supabase';
 import ROUTES from '../constants/routes';
 import {authApi} from '../services/api/authApi';
-import {saveAuthSession} from "../services/authSession";
+import { saveAuthSession } from './authSession';
 
 export async function signUpWithSupabase(signUpData) {
     const { email, phone, password, role, firstName, lastName } = signUpData;
@@ -26,8 +26,7 @@ export async function signUpWithSupabase(signUpData) {
     }
 
     const accessToken = data.session.access_token;
-    const response  = await authApi.signup(accessToken, signUpData);
-    console.log(await response.json());
+    await authApi.signup(accessToken, signUpData);
 
     return {
         accessToken: accessToken,
@@ -50,12 +49,7 @@ export async function signInWithSupabase({ email, password }) {
 
     console.log(`Login complete onto Sync${data}`);
 
-    // Sync with backend for additional data
-    const response  = await authApi.login(session.access_token);
+    await saveAuthSession(session.access_token, supabaseUser);
 
-    console.log(await response.json());
-
-    saveAuthSession(session.access_token, supabaseUser);
-
-    return { success: true, message: 'Signed in successfully!' };
+    return { accessToken: session.access_token, user: supabaseUser };
 }

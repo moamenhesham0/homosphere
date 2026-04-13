@@ -49,7 +49,8 @@ public class SecurityConfig {
                 
                 // admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/user-subscriptions").hasRole("ADMIN") // Get all subscriptions
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/user-subscriptions").hasRole("ADMIN") // Get all subscriptions
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/user-subscriptions").authenticated() // Create own subscription
 
                 .anyRequest().authenticated())
             .httpBasic(Customizer.withDefaults())

@@ -1,9 +1,8 @@
 package com.homosphere.backend.controller;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.Collections;
-
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

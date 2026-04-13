@@ -1,18 +1,82 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
+import { subscriptionTierApi } from '../services';
+import { userSubscriptionApi } from '../services';
+import {ROUTES} from '../constants/routes';
+import {getAuthToken, getCurrentUserId} from "../services/authSession";
 import {useEffect, useState} from "react";
 
 export default function Subscription() {
 
+  const navigate = useNavigate();
   const [tiers, setTiers] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/subscription-tiers/seller-tiers")
-        .then(res => res.json())
+    subscriptionTierApi.getSellerSubscriptionTiers()
         .then(data => setTiers(data))
         .catch(err => console.error(err))
   }, []);
+
+  const handleSelectTier = async (tierId) => {
+    const accessToken = getAuthToken();
+    if (!accessToken) {
+      navigate(ROUTES.SIGNIN);
+      return;
+    }
+
+    const userId = getCurrentUserId();
+    console.log('Current user ID:', userId);
+    if (!userId) {
+      navigate(ROUTES.SIGNIN);
+      return;
+    }
+
+    const subscriptionTierId = Number(tierId);
+    if (!Number.isFinite(subscriptionTierId) || subscriptionTierId <= 0) {
+      console.error('Invalid subscription tier ID:', tierId);
+      return;
+    }
+
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+    const formattedStartDate = startDate.toISOString().split('T')[0];
+    const formattedEndDate = endDate.toISOString().split('T')[0];
+
+    console.log(accessToken);
+    const myTiers = await userSubscriptionApi.getMyRoleAndTier(accessToken);
+    console.log('User role and tier:', myTiers);
+    
+    const hasSubscriptionTier = Array.isArray(myTiers) ? myTiers.length > 0 : Boolean(myTiers);
+    if (hasSubscriptionTier) {
+      // User already has a subscription tier, update it
+      await userSubscriptionApi.updateMySubscriptionTier({
+        newSubscriptionTierId: subscriptionTierId,
+        frequency: 'MONTHLY',
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      }, accessToken);
+    } else {
+      // User does not have a subscription tier, create a new subscription
+      await userSubscriptionApi.createUserSubscription({
+        user: {
+          id: userId,
+        },
+        subscription: {
+          subscriptionId: subscriptionTierId,
+        },
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+        frequency: 'MONTHLY',
+        status: 'ACTIVE',
+      }, accessToken);
+    }
+
+    // After updating or creating the subscription, navigate to the profile page
+    navigate(ROUTES.PROFILE);
+    
+  };
 
 
   const tier_1 = tiers.find(t => t.visibilityPriority === 1) || "";
@@ -59,7 +123,7 @@ export default function Subscription() {
                     </li>
                 ))}
               </ul>
-              <button className="w-full mt-auto py-3 px-6 rounded-lg bg-secondary-container text-on-secondary-container font-bold hover:opacity-80 transition-all font-body">Get Started</button>
+              <button onClick={() => handleSelectTier(tier_1.subscriptionId ?? tier_1.id)} className="w-full mt-auto py-3 px-6 rounded-lg bg-primary-container text-on-primary-container font-bold hover:scale-105 transition-all shadow-md font-body">Get Started</button>
             </div>
 
             {/* Premier Agent */}
@@ -84,7 +148,7 @@ export default function Subscription() {
                     </li>
                 ))}
               </ul>
-              <button className="w-full mt-auto py-3 px-6 rounded-lg bg-primary-container text-on-primary-container font-bold hover:scale-105 transition-all shadow-md font-body">Get Started</button>
+              <button onClick={() => handleSelectTier(tier_2.subscriptionId ?? tier_2.id)} className="w-full mt-auto py-3 px-6 rounded-lg bg-primary-container text-on-primary-container font-bold hover:scale-105 transition-all shadow-md font-body">Get Started</button>
             </div>
 
             {/* Enterprise */}
@@ -108,7 +172,7 @@ export default function Subscription() {
                     </li>
                 ))}
               </ul>
-              <button className="w-full mt-auto py-3 px-6 rounded-lg bg-secondary text-on-secondary font-bold hover:opacity-90 transition-all font-body">Contact Sales</button>
+              <button onClick={() => handleSelectTier(tier_3.subscriptionId ?? tier_3.id)} className="w-full mt-auto py-3 px-6 rounded-lg bg-primary-container text-on-primary-container font-bold hover:scale-105 transition-all shadow-md font-body">Get Started</button>
             </div>
           </div>
         </section>

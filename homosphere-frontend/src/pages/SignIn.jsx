@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
-import { authApi, saveAuthSession, signInWithSupabase } from '../services';
+import { authApi, signInWithSupabase, userSubscriptionApi } from '../services';
 import {ROUTES} from '../constants/routes';
 
 export default function SignIn() {
@@ -35,9 +35,21 @@ export default function SignIn() {
         password: formData.password,
       });
 
-      const payload = await authApi.login(accessToken);
-      saveAuthSession(payload?.token || accessToken, payload?.user || user || null);
-      navigate(ROUTES.HOME);
+      // Sync with backend for additional data
+      console.log('Login complete onto Sync, access token:', accessToken, 'user:', user);
+      await authApi.login(accessToken);
+      
+      const myTiers = await userSubscriptionApi.getMyRoleAndTier(accessToken);
+      console.log('User role and tier:', myTiers);
+
+      const hasSubscriptionTier = Array.isArray(myTiers) ? myTiers.length > 0 : Boolean(myTiers);
+
+      if (!hasSubscriptionTier) {
+         navigate(ROUTES.SUBSCRIPTION);
+         return;
+      }else {
+        navigate(ROUTES.PROFILE);
+      }
     } catch (error) {
       setErrorMessage(error.message || 'Sign in failed.');
     } finally {
@@ -123,4 +135,3 @@ export default function SignIn() {
     </div>
   );
 }
-
