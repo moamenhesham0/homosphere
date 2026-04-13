@@ -10,6 +10,7 @@ import {
   formatCompactAddress,
   formatPrice,
   getAuthToken,
+  getCurrentUser,
   getCurrentUserId,
   getFullName,
   getPropertyImageUrl,
@@ -32,6 +33,14 @@ function splitName(fullName) {
     firstName: firstName || '',
     lastName: rest.join(' '),
   };
+}
+
+function normalizeRole(role) {
+  if (typeof role !== 'string') {
+    return '';
+  }
+
+  return role.trim().toUpperCase().replace(/^ROLE_/, '');
 }
 
 export default function Profile() {
@@ -102,6 +111,7 @@ export default function Profile() {
             userSubscriptionApi.getMySubscriptions(token),
             analyticsApi.getUserSubscriptionAnalytics(token),
           ]);
+          
 
         if (!isMounted) {
           return;
@@ -259,9 +269,18 @@ export default function Profile() {
   };
 
   const displayName = getFullName(profile?.firstName, profile?.lastName, profile?.userName || 'Profile');
-  const normalizedRole = (profile?.role || '').trim().toUpperCase();
-  const isBuyer = normalizedRole === 'BUYER';
-  const isSeller = normalizedRole === 'SELLER' || normalizedRole === 'BROKER';
+  const sessionUser = getCurrentUser();
+  const normalizedProfileRole = normalizeRole(profile?.role);
+  const normalizedSessionRole = normalizeRole(
+    sessionUser?.role || sessionUser?.user_metadata?.role,
+  );
+  const effectiveRole = normalizedProfileRole || normalizedSessionRole;
+  const hasSellerFlag = Boolean(
+    sessionUser?.seller || sessionUser?.broker || sessionUser?.brocker,
+  );
+  const hasBuyerFlag = Boolean(sessionUser?.buyer);
+  const isSeller = ['SELLER', 'BROKER'].includes(effectiveRole) || hasSellerFlag;
+  const isBuyer = effectiveRole === 'BUYER' || hasBuyerFlag || (!isSeller && !effectiveRole);
   const homesPanelLabel = isSeller ? 'Listed Homes' : 'Saved Homes';
   const isSubscriptionActive = (subscriptionAnalytics?.status || '').toUpperCase() === 'ACTIVE';
   const currentPlanLabel = subscriptionAnalytics?.tier || 'Basic';
