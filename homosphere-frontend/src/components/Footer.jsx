@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="bg-stone-100 w-full border-t border-stone-200/15 mt-auto">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12 max-w-7xl mx-auto px-8 py-16">
         <div className="space-y-6">
-          <div className="text-xl font-bold text-emerald-900 font-headline">Horizon Realty</div>
+          <div className="text-xl font-bold text-emerald-900 font-headline">Homosphere</div>
           <p className="text-stone-500 font-body text-sm leading-relaxed">
             Crafting extraordinary living experiences through curated real estate collections and architectural excellence.
           </p>
@@ -42,7 +42,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-8 py-8 border-t border-stone-200/10 flex flex-col md:flex-row justify-between items-center gap-4">
-        <span className="text-stone-500 font-body text-sm">© 2024 Horizon Realty. All rights reserved.</span>
+        <span className="text-stone-500 font-body text-sm">© 2026 Homosphere. All rights reserved.</span>
         <div className="flex gap-8">
           <a className="text-stone-500 text-xs hover:text-emerald-700 font-body" href="#">Privacy Policy</a>
           <a className="text-stone-500 text-xs hover:text-emerald-700 font-body" href="#">Terms of Use</a>

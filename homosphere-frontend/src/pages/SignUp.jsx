@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSupabaseUser } from '../context/supabaseContext';
 import { authApi, saveAuthSession, signUpWithSupabase } from '../services';
-import {ROUTES} from '../constants/routes';
+import { ROUTES } from '../constants/routes';
+import signUpBanner from '../assets/sign-up-banner.jpg';
+
 function splitName(fullName) {
   const trimmed = fullName.trim();
   if (!trimmed) {
@@ -82,18 +84,20 @@ export default function SignUp() {
   return (
     <div className="bg-background text-on-surface font-body min-h-screen flex flex-col">
       <main className="flex-grow flex flex-col md:flex-row">
-        <section className="relative w-full md:w-1/2 lg:w-3/5 min-h-[409px] md:min-h-screen bg-primary-container overflow-hidden flex items-center justify-center p-8 md:p-16">
-          <div className="relative z-10 max-w-xl">
-            <div className="mb-12">
-              <span className="text-on-primary-fixed-variant font-headline font-bold text-2xl tracking-tight">Horizon Realty</span>
-            </div>
-            <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-on-primary leading-[1.1] mb-6">
-              Join the <br />Curated Horizon
-            </h1>
-            <p className="text-on-primary/90 text-lg md:text-xl font-body max-w-md leading-relaxed">
-              Create your backend profile and connect your account to Homosphere services.
-            </p>
-          </div>
+        <section className="relative w-full md:w-1/2 lg:w-3/5 min-h-[409px] md:min-h-screen bg-primary-container overflow-hidden">
+          {/*<div className="relative z-10 max-w-xl">*/}
+          {/*  <div className="mb-12">*/}
+          {/*    <span className="text-on-primary-fixed-variant font-headline font-bold text-2xl tracking-tight">Homosphere</span>*/}
+          {/*  </div>*/}
+          {/*  <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-on-primary leading-[1.1] mb-6">*/}
+          {/*    Join <br /> */}
+          {/*  </h1>*/}
+          {/*</div>*/}
+          <img
+            src={signUpBanner}
+            alt="Sign up banner"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
         </section>
 
         <section className="w-full md:w-1/2 lg:w-2/5 bg-surface-container-lowest flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24">
@@ -222,4 +226,3 @@ export default function SignUp() {
     </div>
   );
 }
-

@@ -8,7 +8,7 @@ export default function TopNavBar() {
     <header className="fixed top-0 w-full z-50 bg-stone-100 backdrop-blur-md">
       <nav className="flex justify-between items-center max-w-7xl mx-auto px-8 h-20">
         <div className="flex items-center gap-12">
-          <Link className="text-2xl font-black text-emerald-900 tracking-tight font-headline" to="/">Horizon Realty</Link>
+          <Link className="text-2xl font-black text-emerald-900 tracking-tight font-headline" to="/">Homosphere</Link>
           <div className="hidden md:flex gap-8">
             <a className="font-headline font-bold tracking-tight text-emerald-700 border-b-2 border-emerald-700 pb-1 hover:text-emerald-500 transition-colors duration-200" href="#">Buy</a>
             <Link className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" to="/create-property">Sell</Link>

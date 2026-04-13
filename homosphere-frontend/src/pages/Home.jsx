@@ -56,7 +56,7 @@ export default function Home() {
         </div>
         <div className="relative z-10 w-full max-w-4xl px-6 text-center">
           <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-8 tracking-tight leading-tight font-headline">
-            Agents to help you <br/> <span className="text-primary-container">find your horizon.</span>
+            Agents to help you <br/> <span className="text-primary-container">find your next horizon.</span>
           </h1>
           <div className="relative group">
             <div className="flex items-center bg-surface-container-lowest p-2 rounded-full shadow-2xl transition-all duration-300 focus-within:ring-4 focus-within:ring-primary/20">
@@ -100,7 +100,7 @@ export default function Home() {
               <div>
                 <span className="material-symbols-outlined text-4xl mb-6">trending_up</span>
                 <h3 className="text-2xl font-bold mb-2 font-headline">Market Trends</h3>
-                <p className="opacity-80 font-body">Home values in Horizon Preferred zip codes are up 4.2% YoY.</p>
+                <p className="opacity-80 font-body">Home values in Homosphere Preferred zip codes are up 4.2% YoY.</p>
               </div>
               <div className="mt-8 pt-8 border-t border-on-primary-container/10">
                 <div className="text-4xl font-black font-headline">$842k</div>

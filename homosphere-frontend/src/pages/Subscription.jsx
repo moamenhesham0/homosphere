@@ -249,7 +249,7 @@ export default function Subscription() {
             </div>
             <div>
               <h2 className="text-4xl font-bold mb-6 text-on-surface font-headline">Built for the top 1% of Real Estate Professionals.</h2>
-              <p className="text-secondary leading-relaxed mb-8 font-body">Horizon Realty isn't just a listing platform. It's an intelligence layer that connects high-intent buyers with the industry's most trusted agents. Our premium features are designed to maximize your efficiency and scale your business effortlessly.</p>
+              <p className="text-secondary leading-relaxed mb-8 font-body">Homosphere isn't just a listing platform. It's an intelligence layer that connects high-intent buyers with the industry's most trusted agents. Our premium features are designed to maximize your efficiency and scale your business effortlessly.</p>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <div className="text-3xl font-black text-primary mb-1 font-headline">98%</div>

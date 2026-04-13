@@ -71,13 +71,11 @@ export default function SignIn() {
         <div className="w-full max-w-6xl flex flex-col md:flex-row items-stretch min-h-[700px] z-10 p-4 relative">
           <div className="hidden md:flex flex-col justify-between w-1/2 p-12 bg-primary rounded-l-xl relative overflow-hidden">
             <div className="z-10">
-              <span className="text-white font-headline text-2xl font-black tracking-tight">Horizon Realty</span>
+              <span className="text-white font-headline text-2xl font-black tracking-tight">Homosphere</span>
               <h1 className="text-white font-headline text-5xl font-extrabold mt-24 leading-tight">
-                Your gateway to the <br /><span className="text-primary-fixed">Curated Horizon.</span>
+                Your gateway to<br /><span className="text-primary-fixed">Homosphere.</span>
               </h1>
-              <p className="text-white/80 mt-6 max-w-sm font-body leading-relaxed">
-                Sign in with your Supabase credentials and we will sync your backend account automatically.
-              </p>
+
             </div>
           </div>
 

@@ -102,7 +102,7 @@ export default function PropertyApprovals() {
                 Property Approvals
               </h1>
               <p className="text-on-surface-variant font-body mt-2">
-                Review and manage incoming property listings for Horizon Realty.
+                Review and manage incoming property listings for Homosphere.
               </p>
             </div>
             <button
