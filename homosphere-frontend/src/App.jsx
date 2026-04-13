@@ -15,6 +15,7 @@ import UserManagement from './pages/admin/UserManagement';
 import PropertyApprovals from './pages/admin/PropertyApprovals';
 import Profile from './pages/Profile';
 import ReviewRequest from './pages/ReviewRequest';
+import PaypalCheckout from './pages/PaypalCheckout';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/subscription" element={<Subscription />} />
+        <Route path="/paypal-checkout" element={<PaypalCheckout />} />
         <Route path="/search" element={<Search />} />
         <Route path="/property-details" element={<PropertyDetails />} />
         <Route path="/property-details/:propertyId" element={<PropertyDetails />} />
