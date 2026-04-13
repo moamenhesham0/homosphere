@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
+import GeoMap from '../components/GeoMap';
 import {
   getAuthToken,
   getCurrentUserId,
@@ -8,6 +9,9 @@ import {
   propertyApi,
   propertyListingApi,
 } from '../services';
+import { toEnum, toNormalString } from '../utils/enumConverter';
+import {ROUTES} from '../constants/routes';
+import { useNavigate } from 'react-router-dom';
 
 function toNumber(value) {
   if (value === '' || value === null || value === undefined) {
@@ -19,18 +23,19 @@ function toNumber(value) {
 }
 
 export default function CreateProperty() {
-  const [propertyTypes, setPropertyTypes] = useState(['APARTMENT', 'VILLA']);
+  const navigate = useNavigate();
+  const [propertyTypes, setPropertyTypes] = useState(['Apartment', 'Villa']);
   const [propertyConditions, setPropertyConditions] = useState([
-    'NEW',
-    'EXCELLENT',
-    'GOOD',
-    'NEEDS_RENOVATION',
+    'New',
+    'Excellent',
+    'Good',
+    'Needs Renovation',
   ]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'APARTMENT',
-    condition: 'NEW',
+    type: 'Apartment',
+    condition: 'New',
     yearBuilt: '',
     price: '',
     lotAreaSqFt: '',
@@ -42,22 +47,58 @@ export default function CreateProperty() {
     city: '',
     state: '',
     zipCode: '',
+    longitude: '',
+    latitude: '',
   });
   const [bannerFile, setBannerFile] = useState(null);
   const [galleryFiles, setGalleryFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [nearbyAmenities, setNearbyAmenities] = useState([]);
+  const [activeDropZone, setActiveDropZone] = useState('');
+  const geocodeAddressRef = useRef(null);
+  const geocodeDebounceRef = useRef(null);
+  const skipNextAutoGeocodeRef = useRef(false);
+  const bannerInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const redirectTimeoutRef = useRef(null);
+
+  const bannerPreviewUrl = useMemo(
+    () => (bannerFile ? URL.createObjectURL(bannerFile) : null),
+    [bannerFile],
+  );
+  const galleryPreviewUrls = useMemo(
+    () => galleryFiles.map((file) => URL.createObjectURL(file)),
+    [galleryFiles],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (bannerPreviewUrl) {
+        URL.revokeObjectURL(bannerPreviewUrl);
+      }
+    };
+  }, [bannerPreviewUrl]);
+
+  useEffect(() => {
+    return () => {
+      galleryPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [galleryPreviewUrls]);
 
   useEffect(() => {
     let isMounted = true;
 
     async function loadOptions() {
       try {
-        const [types, conditions] = await Promise.all([
+        let [types, conditions] = await Promise.all([
           propertyApi.getAllPropertyTypes(),
           propertyApi.getAllPropertyConditions(),
         ]);
+        types = types.map((type) => toNormalString(type));
+        conditions = conditions.map((condition) => toNormalString(condition));
 
         if (!isMounted) {
           return;
@@ -83,6 +124,127 @@ export default function CreateProperty() {
       isMounted = false;
     };
   }, []);
+
+  const handleLocationSelect = (locationData) => {
+    if (!locationData) {
+      return;
+    }
+
+    skipNextAutoGeocodeRef.current = true;
+
+    setFormData((current) => ({
+      ...current,
+      longitude: locationData.longitude,
+      latitude: locationData.latitude,
+      street: locationData.street || current.street,
+      city: locationData.city || current.city,
+      state: locationData.state || current.state,
+      zipCode: locationData.zipCode || current.zipCode,
+    }));
+    setNearbyAmenities(Array.isArray(locationData.amenities) ? locationData.amenities : []);
+  };
+
+  const buildAddressQuery = () => {
+    return [
+      formData.street.trim(),
+      formData.city.trim(),
+      formData.state.trim(),
+      formData.zipCode.trim(),
+    ]
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  const triggerGeocoding = async () => {
+    const geocodeAddress = geocodeAddressRef.current;
+    if (!geocodeAddress) {
+      return;
+    }
+
+    const query = buildAddressQuery();
+    if (!query) {
+      setErrorMessage('Enter location details first, then trigger geocoding.');
+      return;
+    }
+
+    setErrorMessage('');
+    clearTimeout(geocodeDebounceRef.current);
+    const didResolve = await geocodeAddress(query);
+    if (!didResolve) {
+      setErrorMessage('Could not find this address. Add more details and try again.');
+    }
+  };
+
+  useEffect(() => {
+    const geocodeAddress = geocodeAddressRef.current;
+    const street = formData.street.trim();
+    const city = formData.city.trim();
+    const state = formData.state.trim();
+    const zipCode = formData.zipCode.trim();
+
+    if (!geocodeAddress) {
+      return;
+    }
+
+    if (skipNextAutoGeocodeRef.current) {
+      skipNextAutoGeocodeRef.current = false;
+      return;
+    }
+
+    if (!street && !city && !state && !zipCode) {
+      geocodeAddress('');
+      return;
+    }
+
+    if (!city || !state) {
+      return;
+    }
+
+    const query = buildAddressQuery();
+    clearTimeout(geocodeDebounceRef.current);
+    geocodeDebounceRef.current = setTimeout(() => {
+      geocodeAddress(query);
+    }, 500);
+
+    return () => {
+      clearTimeout(geocodeDebounceRef.current);
+    };
+  }, [formData.street, formData.city, formData.state, formData.zipCode]);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(geocodeDebounceRef.current);
+      clearTimeout(redirectTimeoutRef.current);
+    };
+  }, []);
+
+  const removeBannerImage = () => {
+    setBannerFile(null);
+  };
+
+  const removeGalleryImage = (indexToRemove) => {
+    setGalleryFiles((current) => current.filter((_, index) => index !== indexToRemove));
+  };
+
+  const getImageFiles = (fileList) =>
+    Array.from(fileList || []).filter((file) => file.type.startsWith('image/'));
+
+  const handleDropZoneDrop = (zone, event) => {
+    event.preventDefault();
+    setActiveDropZone('');
+    const files = getImageFiles(event.dataTransfer?.files);
+
+    if (files.length === 0) {
+      return;
+    }
+
+    if (zone === 'banner') {
+      setBannerFile(files[0]);
+      return;
+    }
+
+    setGalleryFiles((current) => [...current, ...files]);
+  };
 
   const uploadImages = async (token) => {
     const uploadedGallery = [];
@@ -128,6 +290,11 @@ export default function CreateProperty() {
       return;
     }
 
+    if (isResolvingLocation) {
+      setErrorMessage('Please wait until location lookup finishes.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -151,16 +318,18 @@ export default function CreateProperty() {
           lotAreaSqFt: toNumber(formData.lotAreaSqFt),
           bedrooms: toNumber(formData.bedrooms),
           bathrooms: toNumber(formData.bathrooms),
-          type: formData.type,
+          type: toEnum(formData.type),
           location: {
+            longitude:toNumber(formData.longitude),
+            latitude:toNumber(formData.latitude),
             street: formData.street.trim(),
             city: formData.city.trim(),
             state: formData.state.trim(),
             zipCode: formData.zipCode.trim(),
           },
           yearBuilt: toNumber(formData.yearBuilt),
-          condition: formData.condition,
-          amenities: [],
+          condition: toEnum(formData.condition),
+          amenities: nearbyAmenities,
         },
         managementStatus: formData.seekingBroker
           ? 'BROKER_REQUESTED'
@@ -168,10 +337,12 @@ export default function CreateProperty() {
       };
 
       const created = await propertyListingApi.submitPropertyListing(payload, token);
-      setSuccessMessage(
-        `Listing submitted successfully${created?.propertyListingId ? ` (ID: ${created.propertyListingId})` : ''
-        }.`,
-      );
+      setSuccessMessage("Listing submitted successfully");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      clearTimeout(redirectTimeoutRef.current);
+      redirectTimeoutRef.current = setTimeout(() => {
+        navigate(ROUTES.PROFILE);
+      }, 2500);
     } catch (error) {
       setErrorMessage(error.message || 'Failed to submit listing.');
     } finally {
@@ -183,13 +354,13 @@ export default function CreateProperty() {
     <div className="bg-surface text-on-surface min-h-screen flex flex-col font-body">
       <TopNavBar />
 
-      <main className="pt-32 pb-24 max-w-5xl mx-auto px-6 flex-grow w-full">
+      <main className="pt-32 pb-24 max-w-7xl mx-auto px-6 flex-grow w-full">
         <header className="mb-12">
           <h1 className="text-4xl md:text-5xl font-extrabold text-on-surface tracking-tight mb-4 font-headline">
             List Your Property
           </h1>
           <p className="text-on-surface-variant text-lg max-w-2xl">
-            Submit your listing directly to the backend review workflow.
+            Submit your listing for a potential buyer.
           </p>
         </header>
 
@@ -375,7 +546,7 @@ export default function CreateProperty() {
               <span className="material-symbols-outlined text-primary">location_on</span>
               <h2 className="text-2xl font-bold text-on-surface font-headline">Location</h2>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-on-surface-variant mb-2">Street Address</label>
@@ -427,41 +598,170 @@ export default function CreateProperty() {
                     }
                   />
                 </div>
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    className="h-11 px-5 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={triggerGeocoding}
+                    disabled={isResolvingLocation}
+                  >
+                    Search Location
+                  </button>
+                </div>
+              </div>
+              <div className="w-full h-[26rem] rounded-xl overflow-hidden border border-outline-variant/30">
+                <GeoMap
+                  onLocationSelect={handleLocationSelect}
+                  onGeocodeRequest={(geocodeAddress) => {
+                    geocodeAddressRef.current = geocodeAddress;
+                  }}
+                  onLocationLoadingChange={setIsResolvingLocation}
+                />
               </div>
             </div>
+            {isResolvingLocation && (
+              <p className="text-sm text-on-surface-variant">Resolving location...</p>
+            )}
+
           </section>
 
           <section className="bg-surface-container-low p-8 md:p-10 rounded-xl space-y-8">
             <div className="flex items-center space-x-3 mb-2">
               <span className="material-symbols-outlined text-primary">photo_camera</span>
-              <h2 className="text-2xl font-bold text-on-surface font-headline">Visual Narrative</h2>
+              <h2 className="text-2xl font-bold text-on-surface font-headline">Media</h2>
             </div>
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-on-surface-variant mb-2">Banner Image</label>
                 <input
-                  className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-4 py-3"
+                  ref={bannerInputRef}
+                  className="hidden"
                   type="file"
                   accept="image/*"
-                  onChange={(event) => setBannerFile(event.target.files?.[0] || null)}
+                  onChange={(event) => setBannerFile(getImageFiles(event.target.files)[0] || null)}
                 />
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => bannerInputRef.current?.click()}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      bannerInputRef.current?.click();
+                    }
+                  }}
+                  onDragEnter={(event) => {
+                    event.preventDefault();
+                    setActiveDropZone('banner');
+                  }}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setActiveDropZone('banner');
+                  }}
+                  onDragLeave={() => setActiveDropZone('')}
+                  onDrop={(event) => handleDropZoneDrop('banner', event)}
+                  className={`w-full rounded-xl border-2 border-dashed p-6 text-center transition-all cursor-pointer ${
+                    activeDropZone === 'banner'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-outline-variant/30 bg-surface-container-high hover:border-primary/50 hover:bg-surface-container'
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-on-surface">Click to upload banner or drag & drop</p>
+                  <p className="mt-1 text-xs text-on-surface-variant">Use one high-quality image</p>
+                </div>
+                {bannerPreviewUrl && (
+                  <div className="mt-4 overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container shadow-sm">
+                    <div className="relative h-48 md:h-56">
+                      <img src={bannerPreviewUrl} alt="Banner preview" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-3 rounded-full bg-black/60 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black/70"
+                        onClick={removeBannerImage}
+                        disabled={isSubmitting}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <p className="px-4 py-3 text-sm text-on-surface-variant">{bannerFile?.name}</p>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-on-surface-variant mb-2">Gallery Images</label>
                 <input
-                  className="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-4 py-3"
+                  ref={galleryInputRef}
+                  className="hidden"
                   type="file"
                   accept="image/*"
                   multiple
-                  onChange={(event) => setGalleryFiles(Array.from(event.target.files || []))}
+                  onChange={(event) => {
+                    const files = getImageFiles(event.target.files);
+                    if (files.length > 0) {
+                      setGalleryFiles((current) => [...current, ...files]);
+                    }
+                    event.target.value = '';
+                  }}
                 />
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => galleryInputRef.current?.click()}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      galleryInputRef.current?.click();
+                    }
+                  }}
+                  onDragEnter={(event) => {
+                    event.preventDefault();
+                    setActiveDropZone('gallery');
+                  }}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setActiveDropZone('gallery');
+                  }}
+                  onDragLeave={() => setActiveDropZone('')}
+                  onDrop={(event) => handleDropZoneDrop('gallery', event)}
+                  className={`w-full rounded-xl border-2 border-dashed p-6 text-center transition-all cursor-pointer ${
+                    activeDropZone === 'gallery'
+                      ? 'border-primary bg-primary/10'
+                      : 'border-outline-variant/30 bg-surface-container-high hover:border-primary/50 hover:bg-surface-container'
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-on-surface">Click to add gallery images or drag & drop</p>
+                  <p className="mt-1 text-xs text-on-surface-variant">You can add multiple files</p>
+                </div>
+                {galleryPreviewUrls.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {galleryPreviewUrls.map((previewUrl, index) => (
+                      <div key={previewUrl} className="overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container shadow-sm">
+                        <div className="relative h-28 md:h-32">
+                          <img
+                            src={previewUrl}
+                            alt={`Gallery preview ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-[11px] font-semibold text-white hover:bg-black/70"
+                            onClick={() => removeGalleryImage(index)}
+                            disabled={isSubmitting}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <p className="truncate px-3 py-2 text-xs text-on-surface-variant">{galleryFiles[index]?.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </section>
 
           <div className="flex flex-col md:flex-row items-center justify-end space-y-4 md:space-y-0 md:space-x-6 pt-12 border-t border-outline-variant/10">
-            <button className="w-full md:w-auto bg-primary text-on-primary font-bold px-12 py-4 rounded-full shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting Listing...' : 'Submit Listing'}
+            <button className="w-full md:w-auto bg-primary text-on-primary font-bold px-12 py-4 rounded-full shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={isSubmitting || isResolvingLocation}>
+              {isSubmitting ? 'Submitting Listing...' : isResolvingLocation ? 'Resolving Location...' : 'Submit Listing'}
             </button>
           </div>
         </form>
