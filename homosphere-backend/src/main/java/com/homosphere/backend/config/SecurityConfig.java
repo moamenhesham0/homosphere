@@ -41,12 +41,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll() // All public API endpoints (view profiles, etc)
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/properties/**").permitAll() // Public property search
                 .requestMatchers("/api/viewing-requests/**").permitAll() // Viewing requests
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/property-listing/public/user/**").permitAll() // Allow public access to published properties by user
-                
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/property-listing/public/**").permitAll() // Allow public access to published properties by user
+                    .requestMatchers("/api/property-listing/store").permitAll()
                 // authenticated user endpoints (require token)
                 .requestMatchers("/api/user/**").authenticated() // User's own profile/subscriptions
                 .requestMatchers("/api/media/upload").authenticated() // Authenticated upload
-                
+
                 // admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/user-subscriptions").hasRole("ADMIN") // Get all subscriptions

@@ -16,6 +16,8 @@ import PropertyApprovals from './pages/admin/PropertyApprovals';
 import Profile from './pages/Profile';
 import ReviewRequest from './pages/ReviewRequest';
 import PaypalCheckout from './pages/PaypalCheckout';
+import AdminRoute from './components/AdminRoute';
+import UserSubscriptionChecker from './components/UserSubscriptionChecker';
 
 export default function App() {
   return (
@@ -26,14 +28,23 @@ export default function App() {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/paypal-checkout" element={<PaypalCheckout />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/property-details" element={<PropertyDetails />} />
-        <Route path="/property-details/:propertyId" element={<PropertyDetails />} />
-        <Route path="/create-property" element={<CreateProperty />} />
-        <Route path="/admin/user-management" element={<UserManagement />} />
-        <Route path="/admin/property-approvals" element={<PropertyApprovals />} />
-        <Route path="/admin/review-request" element={<ReviewRequest />} />
-        <Route path="/profile" element={<Profile />} />
+        
+        {/* Global Subscription Check for Sellers and Brokers */}
+        <Route element={<UserSubscriptionChecker />}>
+          <Route path="/search" element={<Search />} />
+          <Route path="/property-details" element={<PropertyDetails />} />
+          <Route path="/property-details/:propertyId" element={<PropertyDetails />} />
+          <Route path="/create-property" element={<CreateProperty />} />
+          
+          {/* Protected Admin Routes */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/user-management" element={<UserManagement />} />
+            <Route path="/admin/property-approvals" element={<PropertyApprovals />} />
+            <Route path="/admin/review-request" element={<ReviewRequest />} />
+          </Route>
+
+          <Route path="/profile" element={<Profile />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

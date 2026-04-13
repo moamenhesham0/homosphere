@@ -4,6 +4,7 @@ const USER_ROLES = {
     BUYER: 'BUYER',
     SELLER: 'SELLER',
     BROKER: 'BROKER',
+    ADMIN: 'ADMIN',
 };
 
 function normalizeRole(role) {
@@ -31,10 +32,12 @@ function normalizeUserWithRoleFlags(user) {
     }
 
     const normalizedRole = extractUserRole(user);
-    const roleForFlags =
-        normalizedRole === USER_ROLES.SELLER || normalizedRole === USER_ROLES.BROKER
-            ? normalizedRole
-            : USER_ROLES.BUYER;
+    
+    // Determine the primary role for flag assignment
+    let roleForFlags = USER_ROLES.BUYER;
+    if (Object.values(USER_ROLES).includes(normalizedRole)) {
+        roleForFlags = normalizedRole;
+    }
 
     return {
         ...user,
@@ -42,7 +45,13 @@ function normalizeUserWithRoleFlags(user) {
         buyer: roleForFlags === USER_ROLES.BUYER,
         seller: roleForFlags === USER_ROLES.SELLER,
         broker: roleForFlags === USER_ROLES.BROKER,
+        admin: roleForFlags === USER_ROLES.ADMIN,
     };
+}
+
+export function isAdmin() {
+    const user = getCurrentUser();
+    return user?.admin === true || user?.role === USER_ROLES.ADMIN;
 }
 
 function hasWindow() {
