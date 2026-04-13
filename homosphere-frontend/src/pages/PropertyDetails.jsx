@@ -9,9 +9,30 @@ import {
   getCurrentUser,
   getFullName,
   getPropertyImageUrl,
-  propertyListingApi,
+  propertyApi,
   viewingRequestApi,
 } from '../services';
+
+const DEFAULT_AI_BASE_URL = 'http://localhost:8000';
+const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
+const AI_BASE_URL = (viteEnv?.VITE_HOMOSPHERE_AI_BASE_URL || DEFAULT_AI_BASE_URL).replace(/\/+$/, '');
+
+function formatCompactCurrency(value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return 'N/A';
+  }
+
+  const amount = Number(value);
+  if (amount >= 1000000) {
+    return `$${(amount / 1000000).toFixed(1)}M`;
+  }
+
+  if (amount >= 1000) {
+    return `$${(amount / 1000).toFixed(0)}K`;
+  }
+
+  return `$${amount.toFixed(0)}`;
+}
 
 export default function PropertyDetails() {
   const { propertyId: pathPropertyId } = useParams();
@@ -20,6 +41,9 @@ export default function PropertyDetails() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [tourMessage, setTourMessage] = useState('');
+  const [valuation, setValuation] = useState(null);
+  const [isValuationLoading, setIsValuationLoading] = useState(false);
+  const [valuationError, setValuationError] = useState('');
 
   const propertyId = useMemo(() => {
     const queryId = new URLSearchParams(location.search).get('id');
@@ -39,7 +63,7 @@ export default function PropertyDetails() {
       setErrorMessage('');
 
       try {
-        const payload = await propertyListingApi.getPublicPropertyListingById(propertyId);
+        const payload = await propertyApi.getPropertyById(propertyId);
         if (!isMounted) {
           return;
         }
@@ -64,6 +88,100 @@ export default function PropertyDetails() {
       isMounted = false;
     };
   }, [propertyId]);
+
+  useEffect(() => {
+    if (!listing) {
+      setValuation(null);
+      setValuationError('');
+      setIsValuationLoading(false);
+      return;
+    }
+
+    let isMounted = true;
+    const controller = new AbortController();
+
+    async function loadValuation() {
+      const propertyData = listing?.property || {};
+      const locationInfo = propertyData?.location || {};
+      const city = locationInfo?.city;
+      const state = locationInfo?.state;
+      const zipCode = locationInfo?.zipCode;
+      const houseSize = Number(propertyData?.propertyAreaSqFt);
+      const lotSize = Number(propertyData?.lotAreaSqFt);
+      const bed = Number(propertyData?.bedrooms);
+      const bath = Number(propertyData?.bathrooms);
+
+      if (!city || !state || !zipCode || !Number.isFinite(houseSize) || houseSize <= 0) {
+        setValuation(null);
+        setValuationError('AI valuation is unavailable for this listing.');
+        return;
+      }
+
+      const payload = {
+        bed: Number.isFinite(bed) && bed > 0 ? bed : 1,
+        bath: Number.isFinite(bath) && bath > 0 ? bath : 1,
+        city: String(city),
+        state: String(state),
+        zip_code: String(zipCode),
+        house_size: houseSize,
+        lot_size_sqft: Number.isFinite(lotSize) && lotSize > 0 ? lotSize : houseSize,
+      };
+
+      setIsValuationLoading(true);
+      setValuationError('');
+
+      try {
+        const response = await fetch(`${AI_BASE_URL}/predict`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const message = await response.text();
+          throw new Error(message || `AI valuation failed with status ${response.status}`);
+        }
+
+        const prediction = await response.json();
+        const estimatedPrice = Number(prediction?.final_estimated_price);
+        const trendFactor = Number(prediction?.market_trend_factor);
+
+        if (!Number.isFinite(estimatedPrice) || estimatedPrice <= 0) {
+          throw new Error('AI valuation returned an invalid estimate.');
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        setValuation({
+          estimatedPrice,
+          trendFactor: Number.isFinite(trendFactor) && trendFactor > 0 ? trendFactor : 1,
+        });
+      } catch (error) {
+        if (!isMounted || error.name === 'AbortError') {
+          return;
+        }
+
+        setValuation(null);
+        setValuationError(error.message || 'Failed to load AI valuation.');
+      } finally {
+        if (isMounted) {
+          setIsValuationLoading(false);
+        }
+      }
+    }
+
+    loadValuation();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [listing]);
 
   const galleryImages = useMemo(() => {
     if (!listing) {
@@ -100,6 +218,23 @@ export default function PropertyDetails() {
   ]
     .filter(Boolean)
     .join(', ');
+
+  const fallbackPrice = Number(listing?.price);
+  const hasAiValuation = Number.isFinite(valuation?.estimatedPrice) && valuation.estimatedPrice > 0;
+  const effectivePrice = hasAiValuation
+    ? valuation.estimatedPrice
+    : Number.isFinite(fallbackPrice) && fallbackPrice > 0
+      ? fallbackPrice
+      : null;
+  const valuationRangeMin = effectivePrice ? effectivePrice * 0.95 : null;
+  const valuationRangeMax = effectivePrice ? effectivePrice * 1.05 : null;
+  const rentalEstimate = effectivePrice ? effectivePrice * 0.0038 : null;
+  const annualForecastPercent = ((valuation?.trendFactor || 1) - 1) * 100;
+  const monthlyTrendPercent = annualForecastPercent / 12;
+  const trendDirectionIcon = monthlyTrendPercent >= 0 ? 'trending_up' : 'trending_down';
+  const trendClassName = monthlyTrendPercent >= 0 ? 'text-emerald-600' : 'text-error';
+  const trendLabel = `${monthlyTrendPercent >= 0 ? '+' : ''}${monthlyTrendPercent.toFixed(1)}% this month`;
+  const forecastLabel = `${annualForecastPercent >= 0 ? '+' : ''}${annualForecastPercent.toFixed(1)}% in 1yr`;
 
   const handleTakeTour = async () => {
     setTourMessage('');
@@ -300,6 +435,47 @@ export default function PropertyDetails() {
                       value={listing?.views ?? 0}
                     />
                   </div>
+                </div>
+
+                <div className="bg-primary-container/10 border border-primary/10 p-8 rounded-xl space-y-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xl font-black font-headline text-primary">HomosphereAI&trade;</h3>
+                      <p className="text-sm text-on-surface-variant">Real-time local market analysis</p>
+                    </div>
+                    <span className="material-symbols-outlined text-primary text-3xl">analytics</span>
+                  </div>
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-4xl font-black font-headline">
+                      {isValuationLoading ? 'Calculating...' : effectivePrice ? formatPrice(effectivePrice) : 'N/A'}
+                    </span>
+                    <span className={`${trendClassName} font-bold flex items-center gap-1 text-sm`}>
+                      <span className="material-symbols-outlined text-xs">{trendDirectionIcon}</span> {trendLabel}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-4 border-t border-primary/10">
+                    <div>
+                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Valuation Range</p>
+                      <p className="font-bold">
+                        {isValuationLoading
+                          ? 'Calculating...'
+                          : `${formatCompactCurrency(valuationRangeMin)} - ${formatCompactCurrency(valuationRangeMax)}`}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Rental Estimate</p>
+                      <p className="font-bold">
+                        {isValuationLoading ? 'Calculating...' : rentalEstimate ? `${formatPrice(rentalEstimate)}/mo` : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="hidden md:block">
+                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Forecast</p>
+                      <p className="font-bold">{forecastLabel}</p>
+                    </div>
+                  </div>
+                  {valuationError && (
+                    <p className="text-xs text-error">{valuationError}</p>
+                  )}
                 </div>
               </div>
 
