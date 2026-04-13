@@ -36,11 +36,11 @@ public class PropertyListing {
     @Column(name = "price")
     private Double price;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", referencedColumnName = "user_id", nullable = false)
     private User seller;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "broker_id", referencedColumnName = "user_id", nullable = true)
     private User broker;
 
