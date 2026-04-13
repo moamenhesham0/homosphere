@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSupabaseUser } from '../context/supabaseContext';
 import { authApi, saveAuthSession, signUpWithSupabase } from '../services';
 import { ROUTES } from '../constants/routes';
-import signUpBanner from '../assets/sign-up-banner.jpg';
 
 function splitName(fullName) {
   const trimmed = fullName.trim();
@@ -84,20 +83,50 @@ export default function SignUp() {
   return (
     <div className="bg-background text-on-surface font-body min-h-screen flex flex-col">
       <main className="flex-grow flex flex-col md:flex-row">
-        <section className="relative w-full md:w-1/2 lg:w-3/5 min-h-[409px] md:min-h-screen bg-primary-container overflow-hidden">
-          {/*<div className="relative z-10 max-w-xl">*/}
-          {/*  <div className="mb-12">*/}
-          {/*    <span className="text-on-primary-fixed-variant font-headline font-bold text-2xl tracking-tight">Homosphere</span>*/}
-          {/*  </div>*/}
-          {/*  <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-on-primary leading-[1.1] mb-6">*/}
-          {/*    Join <br /> */}
-          {/*  </h1>*/}
-          {/*</div>*/}
-          <img
-            src={signUpBanner}
-            alt="Sign up banner"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+        <section className="relative w-full md:w-1/2 lg:w-3/5 min-h-[409px] md:min-h-screen bg-primary-container overflow-hidden flex items-center justify-center p-8 md:p-16">
+          <div className="absolute inset-0 z-0">
+            <img
+              className="w-full h-full object-cover opacity-80 mix-blend-multiply"
+              alt="Modern architectural home with floor-to-ceiling glass windows at sunrise, soft warm morning light hitting a sage green garden landscape"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBKnWHVK3ymxOyiu-1_RnW-Y_AiGAEb_nH7y1bIIG7jsl2bfMBtWbkHyql5sdjCuHpMcF1soKIiqSqJd1vU8X63n6yhjrJX1tAdNUABhxjA9qQ4LAhv1GlNvRfiuYOUr8yX9zeqhfUUwbF5PxkVkZddvyr6C8P-WyPwDL_FN0wydDgiSHSrJDCoZmC0xEQakBNxoutHXguF34V2nR8evtzB1st9I7OBcaI7jHrd3JTElERz7rHGf0ppk3dD97-fxhFOd26bnW6v6Lh"
+            />
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/60 to-primary-container/20" />
+          </div>
+
+          <div className="relative z-10 max-w-xl">
+            <div className="mb-12">
+              <span className="text-on-primary-fixed-variant font-headline font-bold text-2xl tracking-tight">Homosphere</span>
+            </div>
+
+            <h1 className="font-headline text-4xl md:text-6xl font-extrabold text-on-primary leading-[1.1] mb-6">
+              Join the <br />Curated Horizon
+            </h1>
+
+            <p className="text-on-primary/90 text-lg md:text-xl font-body max-w-md leading-relaxed">
+              Create an account to start your journey into a world of architectural distinction and refined living.
+            </p>
+
+            <div className="mt-12 flex items-center gap-4">
+              <div className="flex -space-x-3">
+                <img
+                  className="w-10 h-10 rounded-full border-2 border-primary-fixed"
+                  alt="Close up portrait of a smiling professional woman with soft lighting"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4QSRwr3xRurHSg7RqADC8wWNqsTuEqtrHM3Uc4L5he4468CtW0jzgV2zk7jn_0hEHbVculUeuwl3S4BK6zMzUUgdNCQx9RXVD0PQR18aVDpC74KahoG6ejegGT-bAm4k7HzcQpmvdCHf4PqKYR-EqPqLJ4oA14lknwGNMvLsv9xUdbND-d2brLDxyhvMfHTLXkUDO_50peWS0v8jRGsf-ZLyKAdrEUCIWvtb1rA08QO7Y7rbiMnyAjRTP_hH5bpyWWOBUtUqTZEQY"
+                />
+                <img
+                  className="w-10 h-10 rounded-full border-2 border-primary-fixed"
+                  alt="Close up portrait of a businessman in a suit with blurred office background"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf_CpSq3clJ9kbRsrSbSnkKcFjz0RYy7TMKSfEvtMEKgdprshdODxOMUzbrT6q0LQNtTUi8wcBsFw3GzS1VXmkWVRDbQtTN2peATaojRvF8wNxKQluv-ebLCFKRmfwN59hoiyLRTqzzwg2B6PGDkBdxtIaBkjI4EwccIqdp2UaAaM8sFFAFfmytEciI_BQdhaQ7OsMLdMburz1XnslNUjzf6SofJQFeMHeU6LdFPG4Uet4jx8WGOExp1F1pntta5GXYM76U8kyDryw"
+                />
+                <img
+                  className="w-10 h-10 rounded-full border-2 border-primary-fixed"
+                  alt="Portrait of a young creative professional in a sunlit studio"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR5MHm1WseinIDOSK3a_lRerfU5fTpO7BnB8hIHTVr7CFYNty8BkH5X2R-vlzbzakXSzg94XDs7jMuCOLmeTJgEoanC9xOO2greBMuOTaefYWTelNOsP8bKsAPrAPXhSdivK50NqLTkQb4th6ZM2r7WZUioWuoDWn8wlmayXVUoQNMCXGDO2_FLxofiz5M8CyrqAlQbpFHsOreSMLv6N5RtS4OOWbxKCUUzw3FFCsIncHB6uJlNJzIr3VYKqhMDWcnwsY3EiITCv2u"
+                />
+              </div>
+              <p className="text-on-primary/80 text-sm font-medium">Joined by 2,500+ discerning property owners</p>
+            </div>
+          </div>
         </section>
 
         <section className="w-full md:w-1/2 lg:w-2/5 bg-surface-container-lowest flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24">

@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
-import { getAuthToken } from '../services';
+import { getAuthToken, getCurrentUser } from '../services';
 
 export default function TopNavBar() {
   const isSignedIn = Boolean(getAuthToken());
+  const isSeller = getCurrentUser()?.seller || getCurrentUser()?.brocker || false;
+  console.log('Current user:', getCurrentUser());
+  const isBuyer = getCurrentUser()?.buyer || false;
 
   return (
     <header className="fixed top-0 w-full z-50 bg-stone-100 backdrop-blur-md">
@@ -10,8 +13,12 @@ export default function TopNavBar() {
         <div className="flex items-center gap-12">
           <Link className="text-2xl font-black text-emerald-900 tracking-tight font-headline" to="/">Homosphere</Link>
           <div className="hidden md:flex gap-8">
+            {isBuyer && (
             <a className="font-headline font-bold tracking-tight text-emerald-700 border-b-2 border-emerald-700 pb-1 hover:text-emerald-500 transition-colors duration-200" href="#">Buy</a>
+            )}
+            {isSeller && (
             <Link className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" to="/create-property">Sell</Link>
+            )}
             <a className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" href="#">Agent Finder</a>
           </div>
         </div>

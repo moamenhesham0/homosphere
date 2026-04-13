@@ -65,7 +65,7 @@ export default function SignIn() {
 
         <Link className="absolute top-8 left-8 flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group z-20" to="/">
           <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span>
-          <span className="text-sm font-semibold">Back to Horizon Home</span>
+          <span className="text-sm font-semibold">Back to Homosphere Home</span>
         </Link>
 
         <div className="w-full max-w-6xl flex flex-col md:flex-row items-stretch min-h-[700px] z-10 p-4 relative">
@@ -75,7 +75,29 @@ export default function SignIn() {
               <h1 className="text-white font-headline text-5xl font-extrabold mt-24 leading-tight">
                 Your gateway to<br /><span className="text-primary-fixed">Homosphere.</span>
               </h1>
+              <p className="text-white/80 mt-6 max-w-sm font-body leading-relaxed">
+                Experience a sophisticated approach to finding your next home. Every detail, curated for excellence.
+              </p>
+            </div>
 
+            <div className="z-10 flex gap-4 mt-auto">
+              <div className="flex flex-col">
+                <span className="text-white text-3xl font-bold">12k+</span>
+                <span className="text-white/60 text-xs uppercase tracking-widest font-label">Properties</span>
+              </div>
+              <div className="w-px h-10 bg-white/20 self-center" />
+              <div className="flex flex-col">
+                <span className="text-white text-3xl font-bold">98%</span>
+                <span className="text-white/60 text-xs uppercase tracking-widest font-label">Satisfaction</span>
+              </div>
+            </div>
+
+            <div className="absolute inset-0 opacity-20">
+              <img
+                className="w-full h-full object-cover"
+                alt="Modern architectural interior with clean lines, large windows, and soft natural sunlight filtering through thin curtains"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_onOx1bPs2Mqa8p02pjKCgGVbFdV0vt486yWcVv1_dZQAzGpR61FWXX1fTuKYxKf2-jO7F3kAurIweBqZaQz8dASEsAsnGYlVcUPCjeuzs5SmZvz020KCdpdC-VJFtdm1wfj-5nba9E7EibnyvXNbVFZ-KVk_xyZF5ZaW8rk_1ODh62nSHxcHptjRHQR2s3nbCdGDg595RHqAKIGF3L67QFsPyUtHNWzUUQou-Ms07n7UD9ENu_GKDZvJuDCuzNkEkUcTUQqC2Ezx"
+              />
             </div>
           </div>
 

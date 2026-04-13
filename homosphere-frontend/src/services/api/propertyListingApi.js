@@ -42,8 +42,10 @@ export const propertyListingApi = {
         return apiRequest(`/api/property-listing/public/${encodeURIComponent(propertyListingId)}`);
     },
 
-    getPropertyListingStore() {
-        return apiRequest('/api/property-listing/store');
+    getPropertyListingStore(token) {
+        return apiRequest('/api/property-listing/store', {
+            token,
+        });
     },
 
     getUserPropertyListingTabs(userId, token) {

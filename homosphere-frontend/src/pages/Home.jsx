@@ -21,7 +21,8 @@ export default function Home() {
 
     async function loadFeaturedListings() {
       try {
-        const payload = await propertyListingApi.getPropertyListingStore();
+        const token = getAuthToken();
+        const payload = await propertyListingApi.getPropertyListingStore(token);
         if (!isMounted) {
           return;
         }
