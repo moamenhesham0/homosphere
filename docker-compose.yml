@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    image: hom-backend:latest
+    build:
+      context: ./homosphere-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - hom-network
+
+  ai:
+    image: hom-ai:latest
+    build:
+      context: ./homosphere-ai
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./homosphere-ai/.env
+    networks:
+      - hom-network
+
+  frontend:
+    image: hom-frontend:latest
+    build:
+      context: ./homosphere-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80" # Maps Nginx's port 80 to your computer's port 3000
+    depends_on:
+      - backend
+      - ai
+    networks:
+      - hom-network
+
+networks:
+  hom-network:
+    driver: bridge
