@@ -14,7 +14,6 @@ import CreateProperty from './pages/CreateProperty';
 import UserManagement from './pages/admin/UserManagement';
 import PropertyApprovals from './pages/admin/PropertyApprovals';
 import Profile from './pages/Profile';
-import ReviewRequest from './pages/ReviewRequest';
 import PaypalCheckout from './pages/PaypalCheckout';
 import AdminRoute from './components/AdminRoute';
 import UserSubscriptionChecker from './components/UserSubscriptionChecker';
@@ -40,7 +39,6 @@ export default function App() {
           <Route element={<AdminRoute />}>
             <Route path="/admin/user-management" element={<UserManagement />} />
             <Route path="/admin/property-approvals" element={<PropertyApprovals />} />
-            <Route path="/admin/review-request" element={<ReviewRequest />} />
           </Route>
 
           <Route path="/profile" element={<Profile />} />

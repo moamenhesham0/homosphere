@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   adminApi,
   getAuthToken,
   getFullName,
   usersListingApi,
 } from '../../services';
+import AdminSidebar from '../../components/admin/AdminSidebar';
+import AdminHeader from '../../components/admin/AdminHeader';
 
 const PAGE_SIZE = 10;
 
@@ -32,21 +34,23 @@ function statusDotClass(status) {
   return 'bg-tertiary-container';
 }
 
-export default function UserManagement() {
+function UserManagement() {
+  const navigate = useNavigate();
   const [usersPage, setUsersPage] = useState({
     content: [],
     number: 0,
     totalPages: 1,
     totalElements: 0,
   });
-  const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [adminCount, setAdminCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
 
   const loadUsers = useCallback(
-    async (targetPage = 0) => {
+    async (targetPage = 0, queryOverride = appliedSearchQuery) => {
       const token = getAuthToken();
       if (!token) {
         setErrorMessage('Admin token is required to access user management.');
@@ -59,7 +63,7 @@ export default function UserManagement() {
 
       try {
         let payload;
-        const query = searchQuery.trim();
+        const query = queryOverride.trim();
 
         if (query) {
           payload = await usersListingApi.searchUsers(
@@ -100,7 +104,7 @@ export default function UserManagement() {
         setIsLoading(false);
       }
     },
-    [roleFilter, searchQuery],
+    [appliedSearchQuery, roleFilter],
   );
 
   useEffect(() => {
@@ -120,50 +124,18 @@ export default function UserManagement() {
 
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen flex">
-      <aside className="fixed top-0 left-0 h-screen w-64 border-r border-gray-100 bg-[#faf9fe] flex flex-col py-6 px-4 z-50">
-        <div className="mb-10 px-2">
-          <h1 className="text-xl font-bold text-[#476738] font-headline">Admin Portal</h1>
-          <p className="text-xs text-gray-500 font-medium">Management Console</p>
-        </div>
-        <nav className="flex-1 space-y-1">
-          <Link to="/admin/property-approvals" className="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-500 hover:text-[#476738] hover:bg-[#f4f3f8] transition-colors font-headline font-medium text-sm">
-            <span className="material-symbols-outlined">fact_check</span>
-            <span>Property Approvals</span>
-          </Link>
-          <Link to="/admin/user-management" className="flex items-center gap-3 px-3 py-3 rounded-lg text-[#476738] font-bold border-r-4 border-[#476738] bg-[#f4f3f8] font-headline text-sm">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
-            <span>User Management</span>
-          </Link>
-        </nav>
-      </aside>
+      <AdminSidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <header className="sticky top-0 h-16 bg-white/60 backdrop-blur-md flex items-center justify-between px-8 w-full border-b border-gray-100 z-40 font-headline text-base">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative w-full max-w-md group">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors">search</span>
-              <input
-                className="w-full pl-10 pr-4 py-2 bg-surface-container-high rounded-full border-none focus:ring-2 focus:ring-[#476738]/20 focus:bg-surface-container-lowest transition-all text-sm font-body"
-                placeholder="Search directory..."
-                type="text"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    loadUsers(0);
-                  }
-                }}
-              />
-            </div>
-            <button
-              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-on-primary"
-              type="button"
-              onClick={() => loadUsers(0)}
-            >
-              Search
-            </button>
-          </div>
-        </header>
+        <AdminHeader
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          onSearch={() => {
+            const nextQuery = searchQuery.trim();
+            setAppliedSearchQuery(nextQuery);
+            loadUsers(0, nextQuery);
+          }}
+        />
 
         <main className="flex-1 p-8 bg-surface">
           <div className="flex items-end justify-between mb-10">
@@ -201,12 +173,6 @@ export default function UserManagement() {
                 <p className="text-3xl font-black text-on-surface">{stats.activeAgents}</p>
               </div>
             </div>
-            <div className="bg-primary text-on-primary p-6 rounded-xl flex flex-col justify-between overflow-hidden relative">
-              <div className="z-10">
-                <p className="text-sm opacity-80 font-medium">Current Page</p>
-                <p className="text-3xl font-black">{usersPage.number + 1}</p>
-              </div>
-            </div>
           </div>
 
           <div className="flex items-center gap-4 mb-6">
@@ -233,7 +199,6 @@ export default function UserManagement() {
                 <tr className="bg-surface-container-low border-b border-outline-variant/10 text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">
                   <th className="px-6 py-4">User Details</th>
                   <th className="px-6 py-4">Role</th>
-                  <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -273,17 +238,18 @@ export default function UserManagement() {
                           {user.role || 'USER'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${statusDotClass(user.status)}`} />
-                          <span className="text-sm font-medium">{user.status || 'Unknown'}</span>
-                        </div>
-                      </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors" type="button" title="View User">
-                            <span className="material-symbols-outlined text-lg">visibility</span>
-                          </button>
+                          {(user.role || '').toUpperCase() !== 'ADMIN' ? (
+                            <button
+                              className="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"
+                              type="button"
+                              title="View User"
+                              onClick={() => navigate('/profile')}
+                            >
+                              <span className="material-symbols-outlined text-lg">visibility</span>
+                            </button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -321,3 +287,6 @@ export default function UserManagement() {
     </div>
   );
 }
+
+export { UserManagement };
+export default UserManagement;

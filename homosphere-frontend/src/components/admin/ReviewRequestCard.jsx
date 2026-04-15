@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function ReviewRequestCard({
   propertyId,
   image,
@@ -61,7 +59,7 @@ export default function ReviewRequestCard({
             </button>
           ) : (
             <button
-              className="px-4 py-2 border border-outline-variant text-error font-semibold rounded-lg text-sm hover:bg-error/5 transition-all"
+              className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg text-sm hover:bg-red-700 transition-all"
               type="button"
               onClick={() => onFlag?.(propertyId)}
             >
