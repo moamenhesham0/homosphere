@@ -89,6 +89,7 @@ function buildSearchParams(searchInput, filters, page) {
     type: filters.type === 'ANY' ? undefined : filters.type,
     state: selectedState || undefined,
     page,
+    pageSize: 6,
     sortField: filters.sort.field,
     sortDirection: toSortDirection(filters.sort.direction),
   };
