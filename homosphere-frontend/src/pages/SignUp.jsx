@@ -6,7 +6,8 @@ import { ROUTES } from '../constants/routes';
 import InputField from '../components/forms/InputField';
 import PasswordInput from '../components/forms/PasswordInput';
 import PhoneInput from '../components/forms/PhoneInput';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import FeedbackModal from '../components/FeedbackModal';
+import { AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 function splitName(fullName) {
   const trimmed = fullName.trim();
@@ -110,21 +111,16 @@ export default function SignUp() {
 
   return (
     <div className="bg-background text-on-surface font-body min-h-screen flex flex-col">
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 p-4">
-          <div className="bg-surface-container-lowest rounded-[2rem] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6 shadow-inner">
-              <CheckCircle2 className="w-10 h-10" />
-            </div>
-            <h3 className="font-headline text-2xl font-bold text-on-surface mb-3">Welcome Aboard!</h3>
-            <p className="text-on-surface-variant font-body mb-8 leading-relaxed">
-              Your account has been created successfully. We are redirecting you to sign in...
-            </p>
-            <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
-          </div>
-        </div>
-      )}
-      <main className="flex-grow flex flex-col md:flex-row">
+      <FeedbackModal
+        isVisible={showSuccessModal}
+        title="Welcome Aboard!"
+        message="Your account has been created successfully. We are redirecting you to sign in..."
+      />
+      <main className="flex-grow flex flex-col md:flex-row relative">
+        <Link className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-white/80 hover:text-white transition-colors group z-50 drop-shadow-md" to="/">
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-semibold tracking-wide">Back to Homosphere Home</span>
+        </Link>
         <section className="relative w-full md:w-1/2 lg:w-3/5 min-h-[409px] md:min-h-screen bg-primary-container overflow-hidden flex items-center justify-center p-8 md:p-16">
           <div className="absolute inset-0 z-0">
             <img
@@ -171,11 +167,11 @@ export default function SignUp() {
           </div>
         </section>
 
-        <section className="w-full md:w-1/2 lg:w-2/5 bg-surface-container-lowest flex flex-col justify-center px-6 py-12 md:px-16 lg:px-24">
+        <section className="w-full md:w-1/2 lg:w-2/5 bg-surface-container-lowest flex flex-col justify-center px-6 py-6 md:px-12 lg:px-16">
           <div className="max-w-md w-full mx-auto">
-            <div className="mb-10">
-              <h2 className="font-headline text-3xl font-bold text-on-surface mb-2">Create Account</h2>
-              <p className="text-on-surface-variant font-body">Fill in your details and sync with backend</p>
+            <div className="mb-6">
+              <h2 className="font-headline text-3xl font-bold text-on-surface mb-1">Create Account</h2>
+              <p className="text-on-surface-variant font-body text-sm">Fill in your details and sync with backend</p>
             </div>
 
             {errorMessage && (
@@ -185,8 +181,8 @@ export default function SignUp() {
               </div>
             )}
 
-            <form className="space-y-5" onSubmit={handleSubmit}>
-              <div className="space-y-2">
+            <form className="space-y-3.5" onSubmit={handleSubmit}>
+              <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-on-surface-variant ml-1">Account Type</label>
                 <div className="grid grid-cols-3 gap-2 p-1 bg-surface-container-high rounded-xl">
                   {['BUYER', 'SELLER', 'BROKER'].map((role) => (
@@ -282,14 +278,14 @@ export default function SignUp() {
                   required
                 />
               </div>
-              <div className="pt-4">
-                <button className="w-full py-4 bg-primary text-on-primary font-headline font-bold rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/20 active:scale-[0.98] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={isSubmitting}>
+              <div className="pt-2">
+                <button className="w-full py-3.5 bg-primary text-on-primary font-headline font-bold rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/20 active:scale-[0.98] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={isSubmitting}>
                   {isSubmitting ? 'Creating Account...' : 'Create Account'}
                 </button>
               </div>
             </form>
 
-            <div className="mt-12 text-center">
+            <div className="mt-8 text-center">
               <p className="font-body text-sm text-on-surface-variant">
                 Already have an account?
                 <Link to="/signin" className="text-primary font-bold ml-1 hover:underline underline-offset-4 decoration-2">Sign In</Link>
