@@ -1,23 +1,31 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { getAuthToken, isAdmin } from '../services';
+import { ROUTES } from '../constants/routes';
 
-/**
- * A route guard component that only allows users with the ADMIN role.
- * If not logged in, redirects to /signin.
- * If logged in but not an admin, redirects to /.
- */
 const AdminRoute = () => {
   const token = getAuthToken();
   const isUserAdmin = isAdmin();
   const location = useLocation();
+  const pathname = location.pathname;
+  const isAdminPath = pathname.startsWith('/admin');
+  const isViewProfilePath = /^\/admin\/user-management\/[^/]+\/profile$/.test(pathname);
+  const isPropertyDetailsPath = /^\/property-details(\/[^/]+)?$/.test(pathname);
+  const isAllowedAdminPage = pathname === ROUTES.ADMIN_USER_MANAGEMENT
+    || pathname === ROUTES.ADMIN_PROPERTY_APPROVALS
+    || isViewProfilePath
+    || isPropertyDetailsPath;
 
-  if (!token) {
-    return <Navigate to="/signin" state={{ from: location.pathname }} replace />;
+  if (isAdminPath && !token) {
+    return <Navigate to={ROUTES.SIGNIN} state={{ from: pathname }} replace />;
   }
 
-  if (!isUserAdmin) {
+  if (isAdminPath && !isUserAdmin) {
     console.warn('Access denied: User is not an admin');
-    return <Navigate to="/" replace />;
+    return <Navigate to={ROUTES.HOME} replace />;
+  }
+
+  if (token && isUserAdmin && !isAllowedAdminPage) {
+    return <Navigate to={ROUTES.ADMIN_USER_MANAGEMENT} replace />;
   }
 
   return <Outlet />;

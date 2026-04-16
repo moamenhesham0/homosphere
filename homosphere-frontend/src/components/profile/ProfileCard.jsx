@@ -1,7 +1,8 @@
+import { useRef } from 'react';
+
 export default function ProfileCard({
   profile,
   displayName,
-  randomProfilePhoto,
   isEditing,
   editData,
   setEditData,
@@ -11,25 +12,55 @@ export default function ProfileCard({
   onCancelEdit,
   onSaveProfile,
   isSaving,
+  isPhotoUploading,
+  onUploadPhoto,
   activePanel,
   setActivePanel,
   homesPanelLabel = 'Saved Homes',
 }) {
+  const photoInputRef = useRef(null);
+  const currentPhoto = isEditing ? (editData.photo || profile?.photo || '') : (profile?.photo || '');
+
   return (
     <aside className="w-full lg:w-72 flex-shrink-0">
       <div className="sticky top-28 space-y-8">
         <div className="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10 shadow-sm transition-all">
           <div className="flex flex-col items-center text-center">
-            <div className="relative group w-24 h-24 rounded-full overflow-hidden mb-4 bg-secondary-container">
-              <img
-                className="w-full h-full object-cover"
-                alt="Profile"
-                src={profile?.photo || randomProfilePhoto}
-              />
+            <div className="relative group w-24 h-24 rounded-full overflow-hidden mb-4 bg-secondary-container flex items-center justify-center">
+              {currentPhoto ? (
+                <img
+                  className="w-full h-full object-cover"
+                  alt="Profile"
+                  src={currentPhoto}
+                />
+              ) : (
+                <span className="material-symbols-outlined text-4xl text-on-secondary-container">person</span>
+              )}
               {isEditing && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity cursor-pointer">
-                  <span className="material-symbols-outlined text-white">photo_camera</span>
-                </div>
+                <>
+                  <button
+                    className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity cursor-pointer"
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    disabled={isPhotoUploading}
+                  >
+                    <span className="material-symbols-outlined text-white">photo_camera</span>
+                  </button>
+                  <input
+                    ref={photoInputRef}
+                    className="hidden"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file && typeof onUploadPhoto === 'function') {
+                        onUploadPhoto(file);
+                      }
+                      event.target.value = '';
+                    }}
+                    disabled={isPhotoUploading}
+                  />
+                </>
               )}
             </div>
 
@@ -87,9 +118,9 @@ export default function ProfileCard({
                   className="w-full py-2.5 bg-primary text-on-primary font-bold rounded-lg hover:shadow-md transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                   type="button"
                   onClick={onSaveProfile}
-                  disabled={isSaving}
+                  disabled={isSaving || isPhotoUploading}
                 >
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                  {isPhotoUploading ? 'Uploading Photo...' : isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button
                   className="w-full py-2.5 border border-outline-variant/30 text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-low transition-colors"

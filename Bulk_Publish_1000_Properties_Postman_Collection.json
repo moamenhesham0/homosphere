@@ -1,0 +1,254 @@
+{
+  "info": {
+    "_postman_id": "ccf26eb7-a4be-4c99-b7cf-2f324eead6fd",
+    "name": "Homosphere Bulk Publish 1000 Properties",
+    "description": "Bulk creates and publishes 1000 unique property listings.\n\nHow to use:\n1. Set collection variables: token, sellerIds, baseUrl.\n2. Put sellerIds as either JSON array (e.g. [\"uuid-1\",\"uuid-2\"]) or comma/newline separated IDs.\n3. Keep maxListings=1000 (or change it).\n4. Reset listingIndex=1 before a fresh run.\n5. Click **Run collection** (not Send), start from \"Submit Generated Property\", and run.\n\nEach listing gets random title wording plus unique title index, unique description, price, bedrooms, bathrooms, area fields, location details, and at least 2 online house/apartment images.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Submit Generated Property",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const maxListings = Number(pm.collectionVariables.get(\"maxListings\") || \"1000\");",
+              "let listingIndex = Number(pm.collectionVariables.get(\"listingIndex\") || \"1\");",
+              "const sellerIdsRaw = (pm.collectionVariables.get(\"sellerIds\") || \"\").trim();",
+              "const fallbackSellerId = (pm.collectionVariables.get(\"sellerId\") || \"\").trim();",
+              "",
+              "if (!Number.isFinite(listingIndex) || listingIndex < 1) {",
+              "  listingIndex = 1;",
+              "  pm.collectionVariables.set(\"listingIndex\", \"1\");",
+              "}",
+              "",
+              "if (listingIndex > maxListings) {",
+              "  postman.setNextRequest(null);",
+              "  return;",
+              "}",
+              "",
+              "let sellerIds = [];",
+              "if (sellerIdsRaw) {",
+              "  try {",
+              "    const parsed = JSON.parse(sellerIdsRaw);",
+              "    if (Array.isArray(parsed)) {",
+              "      sellerIds = parsed.map(String).map((id) => id.trim()).filter(Boolean);",
+              "    }",
+              "  } catch (e) {",
+              "    sellerIds = sellerIdsRaw.split(/[\\n,]/).map((id) => id.trim()).filter(Boolean);",
+              "  }",
+              "}",
+              "",
+              "if (sellerIds.length === 0 && fallbackSellerId) {",
+              "  sellerIds = [fallbackSellerId];",
+              "}",
+              "",
+              "if (sellerIds.length === 0) {",
+              "  throw new Error(\"No seller IDs found. Set sellerIds (recommended) or sellerId.\");",
+              "}",
+              "",
+              "const selectedSellerId = sellerIds[Math.floor(Math.random() * sellerIds.length)];",
+              "",
+              "const cities = [\"Austin\", \"Miami\", \"Seattle\", \"Denver\", \"Boston\", \"Phoenix\", \"Dallas\", \"Atlanta\", \"Orlando\", \"Portland\"];",
+              "const states = [\"TX\", \"FL\", \"WA\", \"CO\", \"MA\", \"AZ\", \"TX\", \"GA\", \"FL\", \"OR\"];",
+              "const streetNames = [\"Oak\", \"Pine\", \"Maple\", \"Cedar\", \"Lake\", \"Hill\", \"Sunset\", \"Ridge\", \"Park\", \"River\"];",
+              "const conditions = [\"NEW\", \"EXCELLENT\", \"GOOD\", \"NEEDS_RENOVATION\"];",
+              "const namePrefixes = [\"Grand\", \"Sunny\", \"Emerald\", \"Royal\", \"Crystal\", \"Maple\", \"Skyline\", \"Urban\", \"Serene\", \"Golden\"];",
+              "const nameRoots = [\"Haven\", \"Heights\", \"Vista\", \"Residences\", \"Retreat\", \"Gardens\", \"Terrace\", \"Point\", \"Oasis\", \"Lofts\"];",
+              "const nameKinds = [\"Estate\", \"Apartment\", \"Villa\", \"Home\", \"Suite\", \"Residence\"];",
+              "",
+              "const city = cities[(listingIndex - 1) % cities.length];",
+              "const state = states[(listingIndex - 1) % states.length];",
+              "const streetBase = streetNames[(listingIndex - 1) % streetNames.length];",
+              "const title = `${namePrefixes[Math.floor(Math.random() * namePrefixes.length)]} ${nameRoots[Math.floor(Math.random() * nameRoots.length)]} ${nameKinds[Math.floor(Math.random() * nameKinds.length)]} #${listingIndex}`;",
+              "",
+              "const bedrooms = listingIndex;",
+              "const bathrooms = listingIndex + 1;",
+              "const price = Number((125000 + listingIndex * 321.17).toFixed(2));",
+              "const propertyAreaSqFt = 850 + listingIndex * 4;",
+              "const lotAreaSqFt = 1200 + listingIndex * 6;",
+              "const latitude = Number((25.0 + listingIndex * 0.001).toFixed(6));",
+              "const longitude = Number((-80.0 - listingIndex * 0.001).toFixed(6));",
+              "const type = listingIndex % 2 === 0 ? \"APARTMENT\" : \"VILLA\";",
+              "const condition = conditions[(listingIndex - 1) % conditions.length];",
+              "",
+              "const imageOne = `https://loremflickr.com/1200/800/house?lock=${listingIndex * 2 - 1}`;",
+              "const imageTwo = `https://loremflickr.com/1200/800/apartment?lock=${listingIndex * 2}`;",
+              "",
+              "const payload = {",
+              "  title,",
+              "  description: `Auto-generated property ${listingIndex}: ${bedrooms} beds, ${bathrooms} baths, ${propertyAreaSqFt} sq ft interior, ${lotAreaSqFt} sq ft lot, located at ${1000 + listingIndex} ${streetBase} St, ${city}, ${state}.`,",
+              "  price,",
+              "  sellerId: selectedSellerId,",
+              "  bannerImage: { imageUrl: imageOne },",
+              "  propertyImages: [",
+              "    { imageUrl: imageOne },",
+              "    { imageUrl: imageTwo }",
+              "  ],",
+              "  property: {",
+              "    propertyAreaSqFt,",
+              "    lotAreaSqFt,",
+              "    bedrooms,",
+              "    bathrooms,",
+              "    type,",
+              "    location: {",
+              "      street: `${1000 + listingIndex} ${streetBase} St`,",
+              "      city,",
+              "      state,",
+              "      zipCode: `${90000 + listingIndex}` ,",
+              "      latitude,",
+              "      longitude",
+              "    },",
+              "    yearBuilt: 1950 + (listingIndex % 75),",
+              "    condition,",
+              "    amenities: [",
+              "      { name: `Amenity-${listingIndex}-A`, type: \"FEATURE\" },",
+              "      { name: `Amenity-${listingIndex}-B`, type: \"SERVICE\" },",
+              "      { name: `Amenity-${listingIndex}-C`, type: \"NEARBY\" }",
+              "    ]",
+              "  },",
+              "  managementStatus: \"SELLER_AUTHORIZED\"",
+              "};",
+              "",
+              "pm.variables.set(\"requestBody\", JSON.stringify(payload, null, 2));",
+              "pm.collectionVariables.set(\"currentListingIndex\", String(listingIndex));",
+              "pm.collectionVariables.set(\"currentSellerId\", selectedSellerId);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Submit listing returns 201\", function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "const responseJson = pm.response.json();",
+              "if (!responseJson.propertyListingId) {",
+              "  throw new Error(\"propertyListingId is missing in submit response\");",
+              "}",
+              "",
+              "pm.collectionVariables.set(\"createdPropertyListingId\", responseJson.propertyListingId);",
+              "postman.setNextRequest(\"Publish Submitted Property\");"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{{requestBody}}"
+        },
+        "url": "{{baseUrl}}/api/property-listing/submit",
+        "description": "Submits one generated property listing based on listingIndex."
+      },
+      "response": []
+    },
+    {
+      "name": "Publish Submitted Property",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Publish status update returns 200\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const maxListings = Number(pm.collectionVariables.get(\"maxListings\") || \"1000\");",
+              "let listingIndex = Number(pm.collectionVariables.get(\"listingIndex\") || \"1\");",
+              "",
+              "pm.collectionVariables.set(\"publishedCount\", String(listingIndex));",
+              "listingIndex += 1;",
+              "pm.collectionVariables.set(\"listingIndex\", String(listingIndex));",
+              "",
+              "if (listingIndex <= maxListings) {",
+              "  postman.setNextRequest(\"Submit Generated Property\");",
+              "} else {",
+              "  postman.setNextRequest(null);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"propertyListingId\": \"{{createdPropertyListingId}}\",\n  \"status\": \"PUBLISHED\"\n}"
+        },
+        "url": "{{baseUrl}}/api/properties/update-status",
+        "description": "Marks the most recently submitted property listing as PUBLISHED."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "sellerId",
+      "value": ""
+    },
+    {
+      "key": "sellerIds",
+      "value": "[\"\", \"\"]"
+    },
+    {
+      "key": "maxListings",
+      "value": "1000"
+    },
+    {
+      "key": "listingIndex",
+      "value": "1"
+    },
+    {
+      "key": "currentListingIndex",
+      "value": ""
+    },
+    {
+      "key": "createdPropertyListingId",
+      "value": ""
+    },
+    {
+      "key": "publishedCount",
+      "value": "0"
+    },
+    {
+      "key": "currentSellerId",
+      "value": ""
+    }
+  ]
+}

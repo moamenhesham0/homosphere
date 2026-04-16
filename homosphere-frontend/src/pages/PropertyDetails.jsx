@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
 import FactFeatureCard from '../components/FactFeatureCard';
+import { ROUTES } from '../constants/routes';
 import {
   formatPrice,
   getAuthToken,
   getCurrentUser,
   getFullName,
   getPropertyImageUrl,
+  isAdmin as isAdminSessionUser,
   propertyApi,
   viewingRequestApi,
 } from '../services';
@@ -35,6 +37,7 @@ function formatCompactCurrency(value) {
 }
 
 export default function PropertyDetails() {
+  const navigate = useNavigate();
   const { propertyId: pathPropertyId } = useParams();
   const location = useLocation();
   const [listing, setListing] = useState(null);
@@ -235,6 +238,7 @@ export default function PropertyDetails() {
   const trendClassName = monthlyTrendPercent >= 0 ? 'text-emerald-600' : 'text-error';
   const trendLabel = `${monthlyTrendPercent >= 0 ? '+' : ''}${monthlyTrendPercent.toFixed(1)}% this month`;
   const forecastLabel = `${annualForecastPercent >= 0 ? '+' : ''}${annualForecastPercent.toFixed(1)}% in 1yr`;
+  const isAdminUser = isAdminSessionUser();
 
   const handleTakeTour = async () => {
     setTourMessage('');
@@ -307,9 +311,28 @@ export default function PropertyDetails() {
 
   return (
     <div className="bg-background font-body text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
-      <TopNavBar />
+      {!isAdminUser && <TopNavBar />}
 
-      <main className="pt-20 flex-grow">
+      <main className={`${isAdminUser ? 'pt-8' : 'pt-20'} flex-grow`}>
+        {isAdminUser && (
+          <section className="w-full px-8">
+            <button
+              className="inline-flex items-center gap-2 rounded-lg border border-outline-variant/25 bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary-container transition-colors"
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                  return;
+                }
+                navigate(ROUTES.ADMIN_USER_MANAGEMENT);
+              }}
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              Return to previous page
+            </button>
+          </section>
+        )}
+
         {errorMessage && (
           <section className="max-w-7xl mx-auto px-8 pt-8">
             <p className="rounded-lg bg-error-container px-4 py-3 text-sm text-error">
@@ -479,10 +502,10 @@ export default function PropertyDetails() {
                 </div>
               </div>
 
-              <div className="lg:col-span-1">
-                <div className="sticky top-28 space-y-6">
-                  <div className="bg-surface-container-lowest p-8 rounded-xl shadow-[0px_12px_32px_rgba(26,27,31,0.06)] space-y-6">
-                    <div className="space-y-4">
+              {!isAdminUser && (
+                <div className="lg:col-span-1">
+                  <div className="sticky top-28 space-y-6">
+                    <div className="bg-surface-container-lowest p-8 rounded-xl shadow-[0px_12px_32px_rgba(26,27,31,0.06)] space-y-6">
                       <button
                         className="w-full py-4 bg-primary text-on-primary rounded-lg font-black font-headline text-lg hover:bg-surface-tint transition-all shadow-sm"
                         type="button"
@@ -490,18 +513,18 @@ export default function PropertyDetails() {
                       >
                         Take a Tour
                       </button>
-                      <button className="w-full py-4 bg-secondary-container text-on-secondary-container rounded-lg font-black font-headline text-lg hover:bg-secondary-fixed-dim transition-all" type="button">
+                      <button className="w-full py-4 bg-secondary-container bg-[#dae5dd] text-on-secondary-container rounded-lg font-black font-headline text-lg hover:bg-secondary-fixed-dim transition-all" type="button">
                         Contact Agent
                       </button>
-                    </div>
                     <div className="pt-6 border-t border-outline-variant/15 text-sm text-on-surface-variant">
                       <p>Seller: {listing?.sellerName || 'Unknown Seller'}</p>
                       <p>Broker: {listing?.brokerName || 'Not assigned'}</p>
                       {tourMessage && <p className="mt-3">{tourMessage}</p>}
                     </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </section>
           </>
         )}

@@ -2,11 +2,13 @@ package com.homosphere.backend.service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.stereotype.Service;
 
 import com.homosphere.backend.dto.PropertyStatsDTO;
@@ -30,8 +32,21 @@ public class AnalyticsService {
     
     public UserSubscriptionAnalyticsDTO getUserSubscriptionDetails(UUID id){
 
-        UserSubscription userSubscription = userSubscriptionRepository.findByUserIdAndStatus(id, UserSubscription.Status.ACTIVE)
-        .orElse(null);
+        UserSubscription userSubscription;
+        try {
+            userSubscription = userSubscriptionRepository
+                .findByUserIdAndStatus(id, UserSubscription.Status.ACTIVE)
+                .orElse(null);
+        } catch (IncorrectResultSizeDataAccessException ex) {
+            // Legacy data may temporarily contain more than one ACTIVE row.
+            // Pick the most recent active subscription instead of failing with 500.
+            userSubscription = userSubscriptionRepository.findByUser_Id(id).stream()
+                .filter(sub -> sub.getStatus() == UserSubscription.Status.ACTIVE)
+                .max(Comparator
+                    .comparing(UserSubscription::getStartDate, Comparator.nullsLast(Comparator.naturalOrder()))
+                    .thenComparingLong(UserSubscription::getUserSubscriptionId))
+                .orElse(null);
+        }
 
         if (userSubscription == null) {
             return null;

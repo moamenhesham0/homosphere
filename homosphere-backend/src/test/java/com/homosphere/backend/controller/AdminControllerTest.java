@@ -233,7 +233,7 @@ class AdminControllerTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("User ID is required", response.getBody());
+        assertEquals("Password is required", response.getBody());
     }
 
     @Test
@@ -252,7 +252,7 @@ class AdminControllerTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("User ID is required", response.getBody());
+        assertEquals("Password is required", response.getBody());
     }
 
     @Test

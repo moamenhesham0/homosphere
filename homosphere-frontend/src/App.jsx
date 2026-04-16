@@ -13,6 +13,7 @@ import PropertyDetails from './pages/PropertyDetails';
 import CreateProperty from './pages/CreateProperty';
 import UserManagement from './pages/admin/UserManagement';
 import PropertyApprovals from './pages/admin/PropertyApprovals';
+import ViewProfile from './pages/admin/ViewProfile';
 import Profile from './pages/Profile';
 import PaypalCheckout from './pages/PaypalCheckout';
 import AdminRoute from './components/AdminRoute';
@@ -22,26 +23,27 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/subscription" element={<Subscription />} />
-        <Route path="/paypal-checkout" element={<PaypalCheckout />} />
-        
-        {/* Global Subscription Check for Sellers and Brokers */}
-        <Route element={<UserSubscriptionChecker />}>
-          <Route path="/search" element={<Search />} />
-          <Route path="/property-details" element={<PropertyDetails />} />
-          <Route path="/property-details/:propertyId" element={<PropertyDetails />} />
-          <Route path="/create-property" element={<CreateProperty />} />
+        <Route element={<AdminRoute />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/paypal-checkout" element={<PaypalCheckout />} />
           
-          {/* Protected Admin Routes */}
-          <Route element={<AdminRoute />}>
+          {/* Global Subscription Check for Sellers and Brokers */}
+          <Route element={<UserSubscriptionChecker />}>
+            <Route path="/search" element={<Search />} />
+            <Route path="/property-details" element={<PropertyDetails />} />
+            <Route path="/property-details/:propertyId" element={<PropertyDetails />} />
+            <Route path="/create-property" element={<CreateProperty />} />
+            
+            {/* Admin pages */}
             <Route path="/admin/user-management" element={<UserManagement />} />
+            <Route path="/admin/user-management/:userId/profile" element={<ViewProfile />} />
             <Route path="/admin/property-approvals" element={<PropertyApprovals />} />
-          </Route>
 
-          <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

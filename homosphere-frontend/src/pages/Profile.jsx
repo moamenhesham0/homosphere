@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
@@ -14,13 +14,13 @@ import {
   getCurrentUserId,
   getFullName,
   getPropertyImageUrl,
+  mediaApi,
   propertyListingApi,
   userApi,
   userSubscriptionApi,
 } from '../services';
+import PropertyCard from '../components/PropertyCard';
 import ProfileCard from '../components/profile/ProfileCard';
-import Buyer from '../components/profile/Buyer';
-import Seller from '../components/profile/Seller';
 
 function splitName(fullName) {
   const trimmed = fullName.trim();
@@ -64,14 +64,11 @@ export default function Profile() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [activePanel, setActivePanel] = useState('saved-homes');
   const [fullNameDraft, setFullNameDraft] = useState('');
-  const randomProfilePhoto = useMemo(
-    () => `https://i.pravatar.cc/200?img=${Math.floor(Math.random() * 70) + 1}`,
-    [],
-  );
 
   const syncEditStateFromProfile = (sourceProfile) => {
     setEditData({
@@ -159,6 +156,38 @@ export default function Profile() {
     setIsEditing(false);
   };
 
+  const handleUploadProfilePhoto = async (file) => {
+    const token = getAuthToken();
+    if (!token) {
+      setErrorMessage('Sign in first to update your profile photo.');
+      return;
+    }
+
+    if (!file?.type?.startsWith('image/')) {
+      setErrorMessage('Please select an image file.');
+      return;
+    }
+
+    setIsPhotoUploading(true);
+    setErrorMessage('');
+
+    try {
+      const uploaded = await mediaApi.uploadFile(file, token);
+      if (!uploaded?.url) {
+        throw new Error('Uploaded photo URL was not returned.');
+      }
+
+      setEditData((current) => ({
+        ...current,
+        photo: uploaded.url,
+      }));
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to upload profile photo.');
+    } finally {
+      setIsPhotoUploading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     const token = getAuthToken();
     if (!token) {
@@ -171,10 +200,12 @@ export default function Profile() {
 
     try {
       const parsedName = splitName(fullNameDraft);
+      const normalizedUserName = (editData.userName || '').trim();
       const updatePayload = {
         ...editData,
         firstName: parsedName.firstName || editData.firstName,
         lastName: parsedName.firstName ? parsedName.lastName : editData.lastName,
+        userName: normalizedUserName || null,
       };
 
       const updated = await userApi.updateCurrentUser(updatePayload, token);
@@ -295,6 +326,69 @@ export default function Profile() {
     ? Math.min(100, Math.round((listedCount / listedLimit) * 100))
     : 25;
 
+  const renderPropertiesPanel = ({
+    title,
+    properties,
+    loadingMessage,
+    emptyMessage,
+    onFavoriteClick,
+  }) => (
+    <>
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl font-headline font-black text-emerald-900 tracking-tight">{title}</h1>
+            {isEditing && (
+              <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded">EDIT MODE</span>
+            )}
+          </div>
+          <p className="text-on-surface-variant font-body">
+            {isLoading
+              ? loadingMessage
+              : `You have ${properties.length} ${title.toLowerCase()}.`}
+          </p>
+        </div>
+      </header>
+
+      {isLoading ? (
+        <div className="rounded-xl bg-surface-container-low p-8 text-on-surface-variant">
+          {loadingMessage}
+        </div>
+      ) : properties.length === 0 ? (
+        <div className="rounded-xl bg-surface-container-low p-8 text-on-surface-variant">
+          {emptyMessage}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {properties.map((property, index) => (
+            <PropertyCard
+              key={property.propertyListingId || property.id || `${property.title || 'property'}-${index}`}
+              propertyId={property.propertyListingId}
+              image={getPropertyImageUrl(property)}
+              price={formatPrice(property.price)}
+              addressLine1={property.title || 'Untitled Listing'}
+              addressLine2={formatCompactAddress(property.city, property.state)}
+              beds={property.bedrooms || 0}
+              baths={property.bathrooms || 0}
+              sqft={
+                property.propertyAreaSqFt
+                  ? Number(property.propertyAreaSqFt).toLocaleString('en-US')
+                  : 'N/A'
+              }
+              featured={index === 0}
+              newConstruction={property.condition === 'NEW'}
+              onFavoriteClick={
+                isEditing && typeof onFavoriteClick === 'function'
+                  ? () => onFavoriteClick(property.propertyListingId)
+                  : undefined
+              }
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen flex flex-col">
       <TopNavBar />
@@ -310,7 +404,6 @@ export default function Profile() {
           <ProfileCard
             profile={profile}
             displayName={displayName}
-            randomProfilePhoto={randomProfilePhoto}
             isEditing={isEditing}
             editData={editData}
             setEditData={setEditData}
@@ -320,6 +413,8 @@ export default function Profile() {
             onCancelEdit={handleCancelEdit}
             onSaveProfile={handleSaveProfile}
             isSaving={isSaving}
+            isPhotoUploading={isPhotoUploading}
+            onUploadPhoto={handleUploadProfilePhoto}
             activePanel={activePanel}
             setActivePanel={setActivePanel}
             homesPanelLabel={homesPanelLabel}
@@ -327,25 +422,21 @@ export default function Profile() {
           <section className="flex-grow space-y-12">
             {activePanel === 'saved-homes' ? (
               isBuyer ? (
-                <Buyer
-                  savedProperties={savedProperties}
-                  isLoading={isLoading}
-                  isEditing={isEditing}
-                  onRemoveSavedProperty={handleRemoveSavedProperty}
-                  getPropertyImageUrl={getPropertyImageUrl}
-                  formatPrice={formatPrice}
-                  formatCompactAddress={formatCompactAddress}
-                />
+                renderPropertiesPanel({
+                  title: 'Saved Homes',
+                  properties: savedProperties,
+                  loadingMessage: 'Loading your saved properties...',
+                  emptyMessage: 'No saved properties yet.',
+                  onFavoriteClick: handleRemoveSavedProperty,
+                })
               ) : isSeller ? (
-                <Seller
-                  listedProperties={listedProperties}
-                  isLoading={isLoading}
-                  isEditing={isEditing}
-                  onRemoveListedProperty={handleRemoveListedProperty}
-                  getPropertyImageUrl={getPropertyImageUrl}
-                  formatPrice={formatPrice}
-                  formatCompactAddress={formatCompactAddress}
-                />
+                renderPropertiesPanel({
+                  title: 'Listed Homes',
+                  properties: listedProperties,
+                  loadingMessage: 'Loading your listed properties...',
+                  emptyMessage: 'No listed properties yet.',
+                  onFavoriteClick: handleRemoveListedProperty,
+                })
               ) : (
                 <div className="rounded-xl bg-surface-container-low p-8 space-y-2">
                   <h3 className="text-2xl font-headline font-bold text-on-surface">

@@ -6,6 +6,7 @@ export default function Seller({
   getPropertyImageUrl,
   formatPrice,
   formatCompactAddress,
+  contactAgent,
 }) {
   return (
     <>
@@ -111,15 +112,17 @@ export default function Seller({
         </div>
       )}
 
-      <div className="bg-primary-container/20 rounded-xl p-12 text-center space-y-4">
-        <h4 className="text-2xl font-headline font-bold text-emerald-900">Looking for something specific?</h4>
-        <p className="text-on-surface-variant max-w-md mx-auto">
-          Our local agents are ready to help you find the perfect property that matches your unique vision.
-        </p>
-        <button className="px-8 py-3 bg-primary text-on-primary font-bold rounded-lg mt-4 hover:shadow-lg transition-all" type="button">
-          Contact an Agent
-        </button>
-      </div>
+      {contactAgent && (
+        <div className="bg-primary-container/20 rounded-xl p-12 text-center space-y-4">
+          <h4 className="text-2xl font-headline font-bold text-emerald-900">Looking for something specific?</h4>
+          <p className="text-on-surface-variant max-w-md mx-auto">
+            Our local agents are ready to help you find the perfect property that matches your unique vision.
+          </p>
+          <button className="px-8 py-3 bg-primary text-on-primary font-bold rounded-lg mt-4 hover:shadow-lg transition-all" type="button">
+            Contact an Agent
+          </button>
+        </div>
+      )}
     </>
   );
 }

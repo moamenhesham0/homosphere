@@ -48,6 +48,15 @@ function UserManagement() {
   const [adminCount, setAdminCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
+  const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
+  const [isAddingAdmin, setIsAddingAdmin] = useState(false);
+  const [addAdminError, setAddAdminError] = useState('');
+  const [addAdminForm, setAddAdminForm] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+  });
 
   const loadUsers = useCallback(
     async (targetPage = 0, queryOverride = appliedSearchQuery) => {
@@ -122,6 +131,71 @@ function UserManagement() {
     };
   }, [adminCount, usersPage]);
 
+  const openAddAdminModal = () => {
+    setAddAdminError('');
+    setAddAdminForm({
+      email: '',
+      password: '',
+      firstName: '',
+      lastName: '',
+    });
+    setIsAddAdminModalOpen(true);
+  };
+
+  const closeAddAdminModal = () => {
+    if (isAddingAdmin) {
+      return;
+    }
+    setIsAddAdminModalOpen(false);
+  };
+
+  const handleAddAdminSubmit = async (event) => {
+    event.preventDefault();
+
+    const token = getAuthToken();
+    if (!token) {
+      setAddAdminError('Admin token is required to create a new admin.');
+      return;
+    }
+
+    const payload = {
+      email: addAdminForm.email.trim(),
+      password: addAdminForm.password,
+      firstName: addAdminForm.firstName.trim(),
+      lastName: addAdminForm.lastName.trim(),
+      role: 'ADMIN',
+    };
+
+    if (!payload.email) {
+      setAddAdminError('Email is required.');
+      return;
+    }
+
+    if (!payload.password) {
+      setAddAdminError('Password is required.');
+      return;
+    }
+
+    setIsAddingAdmin(true);
+    setAddAdminError('');
+
+    try {
+      await adminApi.addAdmin(payload, token);
+      setIsAddAdminModalOpen(false);
+      setAddAdminForm({
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+      });
+      await loadUsers(usersPage.number || 0);
+    } catch (error) {
+      setAddAdminError(error.message || 'Failed to create admin.');
+    } finally {
+      setIsAddingAdmin(false);
+    }
+  };
+
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen flex">
       <AdminSidebar />
@@ -171,6 +245,19 @@ function UserManagement() {
               <div>
                 <p className="text-sm text-on-surface-variant font-medium">Active Agents</p>
                 <p className="text-3xl font-black text-on-surface">{stats.activeAgents}</p>
+              </div>
+            </div>
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/15 flex flex-col justify-between">
+              <span className="material-symbols-outlined text-primary mb-4">admin_panel_settings</span>
+              <div className="space-y-3">
+                <p className="text-sm text-on-surface-variant font-medium">Add New Admin</p>
+                <button
+                  className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:opacity-90 transition-opacity"
+                  type="button"
+                  onClick={openAddAdminModal}
+                >
+                  Add Admin
+                </button>
               </div>
             </div>
           </div>
@@ -241,14 +328,21 @@ function UserManagement() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {(user.role || '').toUpperCase() !== 'ADMIN' ? (
-                            <button
-                              className="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors"
-                              type="button"
-                              title="View User"
-                              onClick={() => navigate('/profile')}
-                            >
-                              <span className="material-symbols-outlined text-lg">visibility</span>
-                            </button>
+                          <button
+                            className="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                            type="button"
+                            title="View User"
+                            disabled={!user.id}
+                            onClick={() =>
+                              navigate(`/admin/user-management/${encodeURIComponent(user.id)}/profile`, {
+                                state: {
+                                  userSummary: user,
+                                },
+                              })
+                            }
+                          >
+                            <span className="material-symbols-outlined text-lg">visibility</span>
+                          </button>
                           ) : null}
                         </div>
                       </td>
@@ -284,6 +378,117 @@ function UserManagement() {
           </div>
         </main>
       </div>
+
+      {isAddAdminModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-2xl font-headline font-bold text-on-surface">Create New Admin</h3>
+              <button
+                className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-40"
+                type="button"
+                onClick={closeAddAdminModal}
+                disabled={isAddingAdmin}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            {addAdminError && (
+              <p className="mb-4 rounded-lg bg-error-container px-4 py-3 text-sm text-error">
+                {addAdminError}
+              </p>
+            )}
+
+            <form className="space-y-4" onSubmit={handleAddAdminSubmit}>
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="admin-email">
+                  Email *
+                </label>
+                <input
+                  id="admin-email"
+                  className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  type="email"
+                  value={addAdminForm.email}
+                  onChange={(event) =>
+                    setAddAdminForm((current) => ({ ...current, email: event.target.value }))
+                  }
+                  placeholder="admin@example.com"
+                  disabled={isAddingAdmin}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="admin-password">
+                  Password *
+                </label>
+                <input
+                  id="admin-password"
+                  className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  type="password"
+                  value={addAdminForm.password}
+                  onChange={(event) =>
+                    setAddAdminForm((current) => ({ ...current, password: event.target.value }))
+                  }
+                  placeholder="Enter a secure password"
+                  disabled={isAddingAdmin}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="admin-first-name">
+                    First Name
+                  </label>
+                  <input
+                    id="admin-first-name"
+                    className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    type="text"
+                    value={addAdminForm.firstName}
+                    onChange={(event) =>
+                      setAddAdminForm((current) => ({ ...current, firstName: event.target.value }))
+                    }
+                    disabled={isAddingAdmin}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="admin-last-name">
+                    Last Name
+                  </label>
+                  <input
+                    id="admin-last-name"
+                    className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    type="text"
+                    value={addAdminForm.lastName}
+                    onChange={(event) =>
+                      setAddAdminForm((current) => ({ ...current, lastName: event.target.value }))
+                    }
+                    disabled={isAddingAdmin}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  className="rounded-lg border border-outline-variant/30 px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-40"
+                  type="button"
+                  onClick={closeAddAdminModal}
+                  disabled={isAddingAdmin}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+                  type="submit"
+                  disabled={isAddingAdmin}
+                >
+                  {isAddingAdmin ? 'Creating...' : 'Create Admin'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

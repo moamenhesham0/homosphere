@@ -74,6 +74,18 @@ public class AdminController {
         }
     }
 
+    private void rollbackSupabaseUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            supabaseAdminService.deleteUser(userId);
+        } catch (Exception e) {
+            log.warn("Failed to rollback Supabase user {}: {}", userId, e.getMessage());
+        }
+    }
+
     /**
      * Get all admin users
      */
@@ -107,49 +119,81 @@ public class AdminController {
             return accessCheck;
         }
 
+        String createdSupabaseUserId = null;
         try {
-            String supabaseUserId = request.get("userId");
             String email = request.get("email");
-            
-            if (supabaseUserId == null || supabaseUserId.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("User ID is required");
-            }
+            String supabaseUserId = request.get("userId");
+            String password = request.get("password");
+            String firstName = request.get("firstName");
+            String lastName = request.get("lastName");
+            boolean createInSupabaseFirst = supabaseUserId == null || supabaseUserId.trim().isEmpty();
             
             if (email == null || email.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("Email is required");
             }
 
-            log.info("Syncing new admin from Supabase - ID: {}, Email: {}", supabaseUserId, email);
+            if (createInSupabaseFirst) {
+                if (password == null || password.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body("Password is required");
+                }
+
+                // Prevent duplicate backend users before provisioning in Supabase
+                Optional<User> existingByEmail = userRepository.findByEmail(email);
+                if (existingByEmail.isPresent()) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body("User already exists in the system");
+                }
+
+                supabaseUserId = supabaseAdminService.createAdminUser(
+                    email.trim(),
+                    password,
+                    firstName,
+                    lastName
+                );
+                createdSupabaseUserId = supabaseUserId;
+
+                log.info("Created admin in Supabase - ID: {}, Email: {}", supabaseUserId, email);
+            } else {
+                log.info("Syncing new admin from Supabase - ID: {}, Email: {}", supabaseUserId, email);
+            }
 
             UUID userId = UUID.fromString(supabaseUserId);
 
             // Check if user already exists in database
             Optional<User> existingUser = userRepository.findById(userId);
             if (existingUser.isPresent()) {
+                if (createInSupabaseFirst) {
+                    rollbackSupabaseUser(supabaseUserId);
+                }
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("User already exists in the system");
             }
 
             // Create new admin user in database using mapper
             User newAdmin = adminMapper.mapAdminRequestToUser(request, userId);
+            newAdmin.setRole("ADMIN");
             
             userRepository.save(newAdmin);
 
             // Auto-confirm email in Supabase
-            try {
-                supabaseAdminService.confirmAdminEmail(supabaseUserId);
-                log.info("Email confirmed in Supabase for admin: {}", email);
-            } catch (Exception e) {
-                log.warn("Failed to auto-confirm email in Supabase: {}", e.getMessage());
+            if (!createInSupabaseFirst) {
+                try {
+                    supabaseAdminService.confirmAdminEmail(supabaseUserId);
+                    log.info("Email confirmed in Supabase for admin: {}", email);
+                } catch (Exception e) {
+                    log.warn("Failed to auto-confirm email in Supabase: {}", e.getMessage());
+                }
             }
 
             log.info("Successfully created admin account in database for: {}", email);
             return ResponseEntity.ok(newAdmin);
 
         } catch (IllegalArgumentException e) {
+            rollbackSupabaseUser(createdSupabaseUserId);
             log.error("Invalid UUID format: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Invalid user ID format");
         } catch (Exception e) {
+            rollbackSupabaseUser(createdSupabaseUserId);
             log.error("Error adding admin: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error adding admin: " + e.getMessage());
