@@ -10,7 +10,7 @@ export default function TopNavBar() {
 
   return (
     <header className="fixed top-0 w-full z-50 bg-stone-100 backdrop-blur-md">
-      <nav className="flex justify-between items-center max-w-7xl mx-auto px-8 h-20">
+      <nav className="flex items-center justify-between px-8 h-20 w-full">
         <div className="flex items-center gap-12">
           <Link className="text-2xl font-black text-emerald-900 tracking-tight font-headline" to="/">Homosphere</Link>
           <div className="hidden md:flex gap-8">
@@ -29,7 +29,7 @@ export default function TopNavBar() {
             <a className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" href="#">Agent Finder</a>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-8">
           {isSignedIn ? (
             <Link
               to="/profile"

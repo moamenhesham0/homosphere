@@ -3,17 +3,16 @@ package com.homosphere.backend.controller;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
+import com.homosphere.backend.dto.PropertyMapPoint;
+import com.homosphere.backend.dto.PropertySearchLimits;
+import com.homosphere.backend.dto.PropertySearchParams;
+import org.springframework.data.domain.Page;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.homosphere.backend.dto.property.request.PropertyListingDraftRequest;
 import com.homosphere.backend.dto.property.request.PropertyListingEditRequest;
@@ -118,5 +117,33 @@ public class PropertyListingController {
     public ResponseEntity<List<CompactPropertyListingResponse>> getSavedPropertyListings(@PathVariable UUID userId) {
         List<CompactPropertyListingResponse> response = propertyListingService.getSavedPropertyListings(userId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/map-points")
+    public ResponseEntity<List<PropertyMapPoint>> getPropertyMapPoints(@RequestParam Double minLng,
+                                                                       @RequestParam Double maxLng,
+                                                                       @RequestParam Double minLat,
+                                                                       @RequestParam Double maxLat
+    ) {
+        List<PropertyMapPoint> response = propertyListingService.getPropertyMapPoints();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<CompactPropertyListingResponse>> searchPropertyListings(@ModelAttribute PropertySearchParams searchParams) {
+        Page<CompactPropertyListingResponse> response = propertyListingService.searchPropertiesBySearchParams(searchParams);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/limits")
+    public ResponseEntity<PropertySearchLimits> getPropertySearchLimits() {
+        PropertySearchLimits response = propertyListingService.getPropertySearchLimits();
+
+        CacheControl cacheControl = CacheControl.maxAge(30, TimeUnit.MINUTES)
+                .cachePublic();
+
+        return ResponseEntity.ok()
+                .cacheControl(cacheControl)
+                .body(response);
     }
 }

@@ -1,5 +1,6 @@
 package com.homosphere.backend.mapper;
 
+import com.homosphere.backend.dto.PropertyMapPoint;
 import com.homosphere.backend.dto.property.request.PropertyListingRequest;
 import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingPublicResponse;
@@ -53,7 +54,19 @@ public interface PropertyListingMapper {
     @Mapping(target = "state", source = "property.location.state")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "condition", source = "property.condition")
+    @Mapping(target = "longitude" , source = "property.location.longitude")
+    @Mapping(target = "type", source = "property.type")
+    @Mapping(target = "latitude" , source = "property.location.latitude")
     CompactPropertyListingResponse toCompactResponse(PropertyListing propertyListing);
+
+
+    @Mapping(target = "propertyListingId", source = "propertyListingId")
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "bannerImage", source = "bannerImage.imageUrl")
+    @Mapping(target = "longitude" , source = "property.location.longitude")
+    @Mapping(target = "latitude" , source = "property.location.latitude")
+    PropertyMapPoint toMapPoint(PropertyListing propertyListing);
 
 
     default User map(UUID id, @Context UserRepository repo) {

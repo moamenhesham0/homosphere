@@ -1,5 +1,8 @@
 package com.homosphere.backend.service;
 
+import com.homosphere.backend.dto.PropertyMapPoint;
+import com.homosphere.backend.dto.PropertySearchLimits;
+import com.homosphere.backend.dto.PropertySearchParams;
 import com.homosphere.backend.dto.property.request.PropertyListingDraftRequest;
 import com.homosphere.backend.dto.property.request.PropertyListingEditRequest;
 import com.homosphere.backend.dto.property.request.PropertyListingRequest;
@@ -15,6 +18,10 @@ import com.homosphere.backend.repository.PropertySubmissionReviewRepository;
 import com.homosphere.backend.repository.UserRepository;
 import com.homosphere.backend.updater.PropertyListingUpdater;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +34,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PropertyListingService {
+
+    public static final int PROPERTY_SEARCH_PAGE_SIZE = 8;
 
     private final PropertyListingRepository propertyListingRepository;
 
@@ -214,4 +223,25 @@ public class PropertyListingService {
                 .collect(Collectors.toList());
     }
 
+    public Page<CompactPropertyListingResponse> searchPropertiesBySearchParams(PropertySearchParams searchParams) {
+        Pageable pageable = PageRequest.of(
+                searchParams.page(),
+                searchParams.pageSize(),
+                Sort.by(searchParams.sortDirection(), searchParams.sortField())
+        );
+        Page<PropertyListing> listingsPage = propertyListingRepository.searchPropertiesBySearchParams(searchParams, pageable);
+        return listingsPage.map(propertyListingMapper::toCompactResponse);
+    }
+
+    public List<PropertyMapPoint> getPropertyMapPoints() {
+        List<PropertyListing> listings = propertyListingRepository.findByStatus(PropertyListingStatus.PUBLISHED);
+        return listings.stream()
+                .map(propertyListingMapper::toMapPoint)
+                .collect(Collectors.toList());
+    }
+
+    public PropertySearchLimits  getPropertySearchLimits() {
+        PropertySearchLimits limits = propertyListingRepository.fetchLimits();
+        return limits;
+    }
 }

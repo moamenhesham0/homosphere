@@ -4,7 +4,7 @@ BACKEND_LINK := "-f homosphere-backend/pom.xml"
 
 # Packages to install
 #FE_DEV_PACKAGES := "prettier lint-staged"
-FE_PACKAGES := "@supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder recharts react-icons"
+FE_PACKAGES := "@supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder recharts react-icons react-map-gl maplibre-gl supercluster"
 
 # Run frontend
 run-fe:
