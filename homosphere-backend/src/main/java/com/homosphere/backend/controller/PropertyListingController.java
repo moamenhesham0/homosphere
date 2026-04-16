@@ -9,9 +9,11 @@ import com.homosphere.backend.dto.PropertyMapPoint;
 import com.homosphere.backend.dto.PropertySearchLimits;
 import com.homosphere.backend.dto.PropertySearchParams;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.homosphere.backend.dto.property.request.PropertyListingDraftRequest;
@@ -145,5 +147,16 @@ public class PropertyListingController {
         return ResponseEntity.ok()
                 .cacheControl(cacheControl)
                 .body(response);
+    }
+
+    @GetMapping("store-page")
+    public Page<CompactPropertyListingResponse> getPropertyListingStorePage(Pageable pageable){
+        return propertyListingService.getPagePublishedPropertyListings(pageable);
+    }
+
+    @GetMapping("user-page")
+    public Page<CompactPropertyListingResponse> getPageUserPropertyListings(Authentication authentication, Pageable pageable){
+        UUID userId = UUID.fromString((String) authentication.getPrincipal());
+        return propertyListingService.getPageUserPropertyListings(userId, pageable);
     }
 }

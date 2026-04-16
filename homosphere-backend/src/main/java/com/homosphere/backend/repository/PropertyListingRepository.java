@@ -22,6 +22,8 @@ import org.locationtech.jts.geom.Point;
 public interface PropertyListingRepository extends JpaRepository<PropertyListing, UUID> {
     List<PropertyListing> findBySeller_Id(UUID sellerId);
 
+    Page<PropertyListing> findBySeller_Id(UUID sellerId, Pageable pageable);
+
     @Query("SELECT COUNT(pl) FROM PropertyListing pl WHERE pl.seller.id = :userId")
     Long countByUserId(@Param("userId") UUID userId);
 

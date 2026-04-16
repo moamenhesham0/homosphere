@@ -244,4 +244,16 @@ public class PropertyListingService {
         PropertySearchLimits limits = propertyListingRepository.fetchLimits();
         return limits;
     }
+
+    public Page<CompactPropertyListingResponse> getPagePublishedPropertyListings(Pageable pageable){
+        Page<PropertyListing> listings = propertyListingRepository.findAll(pageable);
+
+        return listings.map(propertyListingMapper::toCompactResponse);
+    }
+
+    public Page<CompactPropertyListingResponse> getPageUserPropertyListings(UUID userId, Pageable pageable){
+        Page<PropertyListing> listings = propertyListingRepository.findBySeller_Id(userId, pageable);
+
+        return listings.map(propertyListingMapper::toCompactResponse);
+    }
 }

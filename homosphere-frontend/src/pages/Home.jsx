@@ -9,24 +9,31 @@ import {
   getPropertyImageUrl,
   propertyListingApi,
 } from '../services';
-import {getCurrentUser, getAuthToken} from "../services";
+import { getCurrentUser, getAuthToken } from '../services';
+
 export default function Home() {
   const [featuredListings, setFeaturedListings] = useState([]);
   const [featuredError, setFeaturedError] = useState('');
+  const [page, setPage] = useState(0);
+  const [morePage, setMorePage] = useState(false);
+  const [isFeaturedLoading, setIsFeaturedLoading] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUser();
-    console.log(`user : ${JSON.stringify(user)}`);
     let isMounted = true;
 
     async function loadFeaturedListings() {
+      setFeaturedError('');
+      setIsFeaturedLoading(true);
       try {
         const token = getAuthToken();
-        const payload = await propertyListingApi.getPropertyListingStore(token);
+        const payloadPage = await propertyListingApi.getPropertyListingStorePage({ token, page });
         if (!isMounted) {
           return;
         }
 
+        const payload = payloadPage.content;
+        setMorePage(!payloadPage.last);
         const listings = Array.isArray(payload) ? payload.slice(0, 3) : [];
         setFeaturedListings(listings);
       } catch (error) {
@@ -35,6 +42,10 @@ export default function Home() {
         }
 
         setFeaturedError(error.message || 'Failed to load featured listings.');
+      } finally {
+        if (isMounted) {
+          setIsFeaturedLoading(false);
+        }
       }
     }
 
@@ -43,7 +54,7 @@ export default function Home() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [page]);
 
   return (
     <div className="bg-surface text-on-surface antialiased min-h-screen flex flex-col">
@@ -118,10 +129,16 @@ export default function Home() {
           <div className="flex justify-between items-center mb-12">
             <h2 className="text-4xl font-extrabold text-on-surface tracking-tight font-headline">Featured Listings</h2>
             <div className="flex gap-2">
-              <button className="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors">
+              <button
+                  onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+                  disabled={isFeaturedLoading || page === 0}
+                  className="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <span className="material-symbols-outlined">chevron_left</span>
               </button>
-              <button className="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors">
+              <button
+                  onClick={() => setPage((prev) => (morePage ? prev + 1 : prev))}
+                  disabled={isFeaturedLoading || !morePage}
+                  className="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <span className="material-symbols-outlined">chevron_right</span>
               </button>
             </div>

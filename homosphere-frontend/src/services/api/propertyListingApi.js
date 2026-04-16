@@ -101,5 +101,19 @@ export const propertyListingApi = {
           method: 'GET'
       })
     },
+
+    getPropertyListingStorePage({ token, page = 0, size = 3, sortField = 'price', sortDirection = 'desc' }) {
+        return apiRequest(
+            `/api/property-listing/store-page?page=${page}&size=${size}&sort=${sortField},${sortDirection}`,
+            { token }
+        );
+    },
+
+    getPropertyListingUserPage({ token, page = 0, size = 6, sortField = 'price', sortDirection = 'desc' }) {
+        return apiRequest(
+            `/api/property-listing/user-page?page=${page}&size=${size}&sort=${sortField},${sortDirection}`,
+            { token }
+        );
+    }
 };
 

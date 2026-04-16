@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
@@ -10,6 +10,7 @@ import {
   formatCompactAddress,
   formatPrice,
   getAuthToken,
+  getCollectionPayload,
   getCurrentUser,
   getCurrentUserId,
   getFullName,
@@ -49,6 +50,11 @@ export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [savedProperties, setSavedProperties] = useState([]);
   const [listedProperties, setListedProperties] = useState([]);
+  const [listedPage, setListedPage] = useState(0);
+  const [hasMoreListed, setHasMoreListed] = useState(true);
+  const [isListedLoading, setIsListedLoading] = useState(false);
+  const observer = useRef();
+  
   const [subscriptions, setSubscriptions] = useState([]);
   const [subscriptionAnalytics, setSubscriptionAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,6 +76,19 @@ export default function Profile() {
   const [activePanel, setActivePanel] = useState('saved-homes');
   const [fullNameDraft, setFullNameDraft] = useState('');
 
+  const sessionUser = useMemo(() => getCurrentUser(), []);
+  const normalizedProfileRole = normalizeRole(profile?.role);
+  const normalizedSessionRole = normalizeRole(
+    sessionUser?.role || sessionUser?.user_metadata?.role,
+  );
+  const effectiveRole = normalizedProfileRole || normalizedSessionRole;
+  const hasSellerFlag = Boolean(
+    sessionUser?.seller || sessionUser?.broker || sessionUser?.brocker,
+  );
+  const hasBuyerFlag = Boolean(sessionUser?.buyer);
+  const isSeller = ['SELLER', 'BROKER'].includes(effectiveRole) || hasSellerFlag;
+  const isBuyer = effectiveRole === 'BUYER' || hasBuyerFlag || (!isSeller && !effectiveRole);
+
   const syncEditStateFromProfile = (sourceProfile) => {
     setEditData({
       firstName: sourceProfile?.firstName || '',
@@ -86,6 +105,52 @@ export default function Profile() {
     );
   };
 
+  const fetchListedProperties = useCallback(async (page) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    setIsListedLoading(true);
+    try {
+      const response = await propertyListingApi.getPropertyListingUserPage({
+        token,
+        page,
+        size: 6,
+      });
+      const collection = getCollectionPayload(response);
+      const hasMore = !response.last && collection.length > 0;
+
+      setListedProperties((prev) => (page === 0 ? collection : [...prev, ...collection]));
+      setHasMoreListed(hasMore);
+    } catch (error) {
+      console.error('Error fetching listed properties:', error);
+      if (page === 0) {
+        setErrorMessage(error.message || 'Failed to load listed properties.');
+      }
+    } finally {
+      setIsListedLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isSeller && profile) {
+      fetchListedProperties(listedPage);
+    }
+  }, [listedPage, isSeller, profile, fetchListedProperties]);
+
+  const lastListedElementRef = useCallback(
+    (node) => {
+      if (isListedLoading || !hasMoreListed) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMoreListed) {
+          setListedPage((prev) => prev + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isListedLoading, hasMoreListed],
+  );
+
   useEffect(() => {
     let isMounted = true;
 
@@ -100,11 +165,10 @@ export default function Profile() {
       }
 
       try {
-        const [profilePayload, savedPayload, listedPayload, mySubscriptionsPayload, analyticsPayload] =
+        const [profilePayload, savedPayload, mySubscriptionsPayload, analyticsPayload] =
           await Promise.all([
             userApi.getCurrentUser(token),
             userId ? propertyListingApi.getSavedPropertyListings(userId, token) : [],
-            userId ? propertyListingApi.getUserPropertyListings(userId, token) : [],
             userSubscriptionApi.getMySubscriptions(token),
             analyticsApi.getUserSubscriptionAnalytics(token),
           ]);
@@ -116,7 +180,6 @@ export default function Profile() {
 
         setProfile(profilePayload);
         setSavedProperties(Array.isArray(savedPayload) ? savedPayload : []);
-        setListedProperties(Array.isArray(listedPayload) ? listedPayload : []);
         setSubscriptions(Array.isArray(mySubscriptionsPayload) ? mySubscriptionsPayload : []);
         setSubscriptionAnalytics(analyticsPayload || null);
         syncEditStateFromProfile(profilePayload);
@@ -300,18 +363,6 @@ export default function Profile() {
   };
 
   const displayName = getFullName(profile?.firstName, profile?.lastName, profile?.userName || 'Profile');
-  const sessionUser = getCurrentUser();
-  const normalizedProfileRole = normalizeRole(profile?.role);
-  const normalizedSessionRole = normalizeRole(
-    sessionUser?.role || sessionUser?.user_metadata?.role,
-  );
-  const effectiveRole = normalizedProfileRole || normalizedSessionRole;
-  const hasSellerFlag = Boolean(
-    sessionUser?.seller || sessionUser?.broker || sessionUser?.brocker,
-  );
-  const hasBuyerFlag = Boolean(sessionUser?.buyer);
-  const isSeller = ['SELLER', 'BROKER'].includes(effectiveRole) || hasSellerFlag;
-  const isBuyer = effectiveRole === 'BUYER' || hasBuyerFlag || (!isSeller && !effectiveRole);
   const homesPanelLabel = isSeller ? 'Listed Homes' : 'Saved Homes';
   const isSubscriptionActive = (subscriptionAnalytics?.status || '').toUpperCase() === 'ACTIVE';
   const currentPlanLabel = subscriptionAnalytics?.tier || 'Basic';
@@ -332,6 +383,8 @@ export default function Profile() {
     loadingMessage,
     emptyMessage,
     onFavoriteClick,
+    lastElementRef,
+    isPagingLoading,
   }) => (
     <>
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -350,7 +403,7 @@ export default function Profile() {
         </div>
       </header>
 
-      {isLoading ? (
+      {isLoading || (properties.length === 0 && isPagingLoading) ? (
         <div className="rounded-xl bg-surface-container-low p-8 text-on-surface-variant">
           {loadingMessage}
         </div>
@@ -359,32 +412,46 @@ export default function Profile() {
           {emptyMessage}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {properties.map((property, index) => (
-            <PropertyCard
-              key={property.propertyListingId || property.id || `${property.title || 'property'}-${index}`}
-              propertyId={property.propertyListingId}
-              image={getPropertyImageUrl(property)}
-              price={formatPrice(property.price)}
-              addressLine1={property.title || 'Untitled Listing'}
-              addressLine2={formatCompactAddress(property.city, property.state)}
-              beds={property.bedrooms || 0}
-              baths={property.bathrooms || 0}
-              sqft={
-                property.propertyAreaSqFt
-                  ? Number(property.propertyAreaSqFt).toLocaleString('en-US')
-                  : 'N/A'
-              }
-              featured={index === 0}
-              newConstruction={property.condition === 'NEW'}
-              onFavoriteClick={
-                isEditing && typeof onFavoriteClick === 'function'
-                  ? () => onFavoriteClick(property.propertyListingId)
-                  : undefined
-              }
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {properties.map((property, index) => {
+              const isLast = index === properties.length - 1;
+              return (
+                <div 
+                  key={property.propertyListingId || property.id || `${property.title || 'property'}-${index}`}
+                  ref={isLast ? lastElementRef : null}
+                >
+                  <PropertyCard
+                    propertyId={property.propertyListingId}
+                    image={getPropertyImageUrl(property)}
+                    price={formatPrice(property.price)}
+                    addressLine1={property.title || 'Untitled Listing'}
+                    addressLine2={formatCompactAddress(property.city, property.state)}
+                    beds={property.bedrooms || 0}
+                    baths={property.bathrooms || 0}
+                    sqft={
+                      property.propertyAreaSqFt
+                        ? Number(property.propertyAreaSqFt).toLocaleString('en-US')
+                        : 'N/A'
+                    }
+                    featured={index === 0}
+                    newConstruction={property.condition === 'NEW'}
+                    onFavoriteClick={
+                      isEditing && typeof onFavoriteClick === 'function'
+                        ? () => onFavoriteClick(property.propertyListingId)
+                        : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+          {isPagingLoading && properties.length > 0 && (
+            <div className="mt-8 text-center text-on-surface-variant font-bold animate-pulse">
+              Loading more properties...
+            </div>
+          )}
+        </>
       )}
     </>
   );
@@ -436,6 +503,8 @@ export default function Profile() {
                   loadingMessage: 'Loading your listed properties...',
                   emptyMessage: 'No listed properties yet.',
                   onFavoriteClick: handleRemoveListedProperty,
+                  lastElementRef: lastListedElementRef,
+                  isPagingLoading: isListedLoading,
                 })
               ) : (
                 <div className="rounded-xl bg-surface-container-low p-8 space-y-2">
