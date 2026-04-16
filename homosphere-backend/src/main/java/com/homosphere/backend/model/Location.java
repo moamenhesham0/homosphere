@@ -9,7 +9,12 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "location")
+@Table(
+        name = "location",
+        indexes = {
+                @Index(name = "idx_location_lat_lng", columnList = "latitude, longitude")
+        }
+)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -87,5 +87,19 @@ export const propertyListingApi = {
             token,
         });
     },
+
+    searchPropertyListings(searchParams = {}, token) {
+        return apiRequest('/api/property-listing/search', {
+            method: 'GET',
+            query: searchParams,
+            token
+        });
+    },
+
+    getSearchLimits() {
+      return apiRequest('/api/property-listing/limits', {
+          method: 'GET'
+      })
+    },
 };
 

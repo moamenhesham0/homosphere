@@ -1,12 +1,9 @@
 import { apiRequest } from './apiClient';
 
 export const propertyApi = {
-    searchProperties(searchQuery, params = {}) {
+    searchProperties(params = {}) {
         return apiRequest('/api/properties/search', {
-            query: {
-                q: searchQuery,
-                ...params,
-            },
+            query: params,
         });
     },
 
