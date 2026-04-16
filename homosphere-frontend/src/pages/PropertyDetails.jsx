@@ -47,6 +47,7 @@ export default function PropertyDetails() {
   const [valuation, setValuation] = useState(null);
   const [isValuationLoading, setIsValuationLoading] = useState(false);
   const [valuationError, setValuationError] = useState('');
+  const [mainImageIndex, setMainImageIndex] = useState(0);
 
   const propertyId = useMemo(() => {
     const queryId = new URLSearchParams(location.search).get('id');
@@ -210,6 +211,18 @@ export default function PropertyDetails() {
     return urls.slice(0, 5);
   }, [listing]);
 
+  useEffect(() => {
+    setMainImageIndex(0);
+  }, [galleryImages]);
+
+  const safeMainImageIndex =
+    mainImageIndex >= 0 && mainImageIndex < galleryImages.length ? mainImageIndex : 0;
+  const mainImageUrl = galleryImages[safeMainImageIndex];
+  const thumbnailImages = galleryImages
+    .map((imageUrl, index) => ({ imageUrl, index }))
+    .filter(({ index }) => index !== safeMainImageIndex)
+    .slice(0, 4);
+
   const property = listing?.property || {};
   const locationData = property?.location || {};
   const title = listing?.title || 'Property Listing';
@@ -349,18 +362,23 @@ export default function PropertyDetails() {
                   <img
                     alt="Main property view"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    src={galleryImages[0]}
+                    src={mainImageUrl}
                   />
                 </div>
 
-                {galleryImages.slice(1).map((imageUrl) => (
-                  <div key={imageUrl} className="hidden md:block relative group overflow-hidden rounded-lg">
+                {thumbnailImages.map(({ imageUrl, index }) => (
+                  <button
+                    key={`${imageUrl}-${index}`}
+                    className="hidden md:block relative group overflow-hidden rounded-lg"
+                    type="button"
+                    onClick={() => setMainImageIndex(index)}
+                  >
                     <img
                       alt="Property gallery"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       src={imageUrl}
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
             </section>
