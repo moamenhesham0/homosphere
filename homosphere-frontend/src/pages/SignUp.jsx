@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSupabaseUser } from '../context/supabaseContext';
 import { authApi, saveAuthSession, signUpWithSupabase } from '../services';
 import { ROUTES } from '../constants/routes';
+import InputField from '../components/forms/InputField';
+import PasswordInput from '../components/forms/PasswordInput';
+import PhoneInput from '../components/forms/PhoneInput';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 function splitName(fullName) {
   const trimmed = fullName.trim();
@@ -30,51 +34,75 @@ export default function SignUp() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const handlePhoneChange = (e) => {
+    setFormData((prev) => ({ ...prev, phone: e.target.value }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrorMessage('');
-    setSuccessMessage('');
 
-    const { firstName, lastName } = splitName(formData.fullName);
-
-    if (!firstName) {
-      setErrorMessage('Full name is required.');
+    if (!formData.fullName.trim()) {
+      setErrorMessage('Please enter your full name to continue.');
       return;
     }
 
-    if (formData.password.length < 8) {
-      setErrorMessage('Password must be at least 8 characters.');
+    const { firstName, lastName } = splitName(formData.fullName);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
+      setErrorMessage('Please enter a valid email address (e.g., alex@horizon.com).');
+      return;
+    }
+
+    const unformattedPhone = formData.phone.replace(/\D/g, '');
+    if (unformattedPhone.length < 10) {
+      setErrorMessage('Please enter a complete 10-digit phone number.');
+      return;
+    }
+
+    const hasUpperCase = /[A-Z]/.test(formData.password);
+    const hasNumbers = /\d/.test(formData.password);
+    const hasSpecialChar = /[^A-Za-z0-9]/.test(formData.password);
+    const isLongEnough = formData.password.length >= 8;
+
+    if (!isLongEnough || !hasUpperCase || !hasNumbers || !hasSpecialChar) {
+      setErrorMessage('Please ensure your password meets all the listed security requirements.');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setErrorMessage('Password and confirm password do not match.');
-      return;
-    }
-
-    if (!formData.email.trim()) {
-      setErrorMessage('Email is required.');
+      setErrorMessage('The passwords you entered do not match. Please check and try again.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const { accessToken, user: supabaseUser } = await signUpWithSupabase({
+      const fullPhone = `+1 ${formData.phone.trim()}`;
+      const { accessToken, user: supabaseUser, errorMsg } = await signUpWithSupabase({
         email: formData.email.trim(),
         password: formData.password.trim(),
         lastName: lastName,
         firstName: firstName,
         role: formData.role,
-        phone: formData.phone.trim(),
+        phone: fullPhone,
       });
 
-      setSuccessMessage('Account created successfully.');
-      navigate(ROUTES.SIGNIN);
+      if(errorMsg) {
+        setErrorMessage(errorMsg);
+        return;
+      }
+
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        navigate(ROUTES.SIGNIN);
+      }, 2500);
     } catch (error) {
-      setErrorMessage(error.message || 'Signup failed.');
+      console.log(error);
+      setErrorMessage(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -82,6 +110,20 @@ export default function SignUp() {
 
   return (
     <div className="bg-background text-on-surface font-body min-h-screen flex flex-col">
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 p-4">
+          <div className="bg-surface-container-lowest rounded-[2rem] p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6 shadow-inner">
+              <CheckCircle2 className="w-10 h-10" />
+            </div>
+            <h3 className="font-headline text-2xl font-bold text-on-surface mb-3">Welcome Aboard!</h3>
+            <p className="text-on-surface-variant font-body mb-8 leading-relaxed">
+              Your account has been created successfully. We are redirecting you to sign in...
+            </p>
+            <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          </div>
+        </div>
+      )}
       <main className="flex-grow flex flex-col md:flex-row">
         <section className="relative w-full md:w-1/2 lg:w-3/5 min-h-[409px] md:min-h-screen bg-primary-container overflow-hidden flex items-center justify-center p-8 md:p-16">
           <div className="absolute inset-0 z-0">
@@ -133,18 +175,14 @@ export default function SignUp() {
           <div className="max-w-md w-full mx-auto">
             <div className="mb-10">
               <h2 className="font-headline text-3xl font-bold text-on-surface mb-2">Create Account</h2>
-              <p className="text-on-surface-variant font-body">Fill in your details and sync with backend.</p>
+              <p className="text-on-surface-variant font-body">Fill in your details and sync with backend</p>
             </div>
 
             {errorMessage && (
-              <p className="mb-4 rounded-lg bg-error-container px-4 py-3 text-sm text-error">
-                {errorMessage}
-              </p>
-            )}
-            {successMessage && (
-              <p className="mb-4 rounded-lg bg-primary-container px-4 py-3 text-sm text-on-primary-container">
-                {successMessage}
-              </p>
+              <div className="mb-6 flex items-start gap-3 rounded-xl bg-[#FFF0F0] border border-[#ffb4ab] px-4 py-3.5 text-sm text-[#ba1a1a] shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-[#ba1a1a]" />
+                <p className="font-medium leading-relaxed">{errorMessage}</p>
+              </div>
             )}
 
             <form className="space-y-5" onSubmit={handleSubmit}>
@@ -172,68 +210,76 @@ export default function SignUp() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-on-surface-variant ml-1" htmlFor="name">Full Name</label>
-                <input
-                  className="w-full px-4 py-3.5 bg-surface-container-high border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-300 font-body placeholder:text-outline/60 text-on-surface"
-                  id="name"
+                <InputField
+                  label="Full Name"
+                  id="fullName"
                   placeholder="Alex Sterling"
-                  type="text"
                   value={formData.fullName}
-                  onChange={(event) =>
-                    setFormData((current) => ({ ...current, fullName: event.target.value }))
-                  }
+                  onChange={(event) => setFormData((current) => ({ ...current, fullName: event.target.value }))}
+                  maxLength={80}
+                  required
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-on-surface-variant ml-1" htmlFor="email">Email Address</label>
-                <input
-                  className="w-full px-4 py-3.5 bg-surface-container-high border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-300 font-body placeholder:text-outline/60 text-on-surface"
+                <InputField
+                  label="Email Address"
                   id="email"
-                  placeholder="alex@horizon.com"
                   type="email"
+                  placeholder="alex@horizon.com"
                   value={formData.email}
-                  onChange={(event) =>
-                    setFormData((current) => ({ ...current, email: event.target.value }))
-                  }
+                  onChange={(event) => setFormData((current) => ({ ...current, email: event.target.value }))}
+                  maxLength={254}
+                  required
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-on-surface-variant ml-1" htmlFor="phone">Phone Number</label>
-                <input
-                  className="w-full px-4 py-3.5 bg-surface-container-high border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-300 font-body placeholder:text-outline/60 text-on-surface"
+                <PhoneInput
+                  label="Phone Number"
                   id="phone"
-                  placeholder="+1 (555) 000-0000"
-                  type="tel"
+                  placeholder="(555) 000-0000"
                   value={formData.phone}
-                  onChange={(event) =>
-                    setFormData((current) => ({ ...current, phone: event.target.value }))
-                  }
+                  onChange={handlePhoneChange}
+                  maxLength={14}
+                  required
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-on-surface-variant ml-1" htmlFor="password">Password</label>
-                <input
-                  className="w-full px-4 py-3.5 bg-surface-container-high border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-300 font-body placeholder:text-outline/60 text-on-surface"
+                <PasswordInput
+                  label="Password"
                   id="password"
                   placeholder="••••••••"
-                  type="password"
                   value={formData.password}
-                  onChange={(event) =>
-                    setFormData((current) => ({ ...current, password: event.target.value }))
-                  }
+                  onChange={(event) => setFormData((current) => ({ ...current, password: event.target.value }))}
+                  maxLength={128}
+                  required
                 />
+                <div className="pt-1.5 pl-1 grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-2">
+                  {[
+                    { label: '8+ characters', met: formData.password.length >= 8 },
+                    { label: 'Uppercase (e.g., A)', met: /[A-Z]/.test(formData.password) },
+                    { label: 'Number (e.g., 1)', met: /\d/.test(formData.password) },
+                    { label: 'Special (e.g., @)', met: /[^A-Za-z0-9]/.test(formData.password) },
+                  ].map((req, idx) => (
+                    <div key={idx} className={`flex items-center gap-1.5 text-[11px] transition-colors duration-300 ${req.met ? 'text-[#146c2e] font-medium' : 'text-on-surface-variant/70'}`}>
+                      {req.met ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      ) : (
+                        <div className="w-1.5 h-1.5 shrink-0 rounded-full bg-current opacity-50 ml-1 mr-1" />
+                      )}
+                      <span>{req.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-on-surface-variant ml-1" htmlFor="confirm-password">Confirm Password</label>
-                <input
-                  className="w-full px-4 py-3.5 bg-surface-container-high border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all duration-300 font-body placeholder:text-outline/60 text-on-surface"
-                  id="confirm-password"
+                <PasswordInput
+                  label="Confirm Password"
+                  id="confirmPassword"
                   placeholder="••••••••"
-                  type="password"
                   value={formData.confirmPassword}
-                  onChange={(event) =>
-                    setFormData((current) => ({ ...current, confirmPassword: event.target.value }))
-                  }
+                  onChange={(event) => setFormData((current) => ({ ...current, confirmPassword: event.target.value }))}
+                  maxLength={128}
+                  required
                 />
               </div>
               <div className="pt-4">

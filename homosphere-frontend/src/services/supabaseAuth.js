@@ -2,8 +2,14 @@ import supabase from '../utils/supabase';
 import ROUTES from '../constants/routes';
 import {authApi} from '../services/api/authApi';
 import { saveAuthSession } from './authSession';
+import {SUPABASE_ERROR} from "@/src/constants/supabaseErrors.js";
 
 export async function signUpWithSupabase(signUpData) {
+    let payload = {
+        accessToken: null,
+        user: null,
+        errorMsg: null,
+    }
     const { email, phone, password, role, firstName, lastName } = signUpData;
     const { data, error } = await supabase.auth.signUp({
         email: email,
@@ -23,18 +29,31 @@ export async function signUpWithSupabase(signUpData) {
 
     if (error) {
         console.error('Signup error:', error.message)
+        const errorMsg = SUPABASE_ERROR[error.message] || error.message;
+        payload = {
+            ...payload,
+            errorMsg: errorMsg
+        };
+    } else {
+        const accessToken = data.session.access_token;
+        const user = data.user
+        await authApi.signup(accessToken, signUpData);
+        payload = {
+            ...payload,
+            user : user,
+            accessToken: accessToken
+        }
     }
 
-    const accessToken = data.session.access_token;
-    await authApi.signup(accessToken, signUpData);
-
-    return {
-        accessToken: accessToken,
-        user: data.user,
-    }
+    return payload;
 }
 
 export async function signInWithSupabase({ email, password }) {
+    const payload = {
+        accessToken: null,
+        user: null,
+        errorMsg: null,
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
