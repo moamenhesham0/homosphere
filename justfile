@@ -3,8 +3,8 @@ FRONTEND_DIR := "homosphere-frontend"
 BACKEND_LINK := "-f homosphere-backend/pom.xml"
 
 # Packages to install
-FE_DEV_PACKAGES := "eslint prettier eslint-plugin-prettier eslint-config-prettier husky lint-staged"
-FE_PACKAGES := "zustand @supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder recharts react-icons"
+#FE_DEV_PACKAGES := "prettier lint-staged"
+FE_PACKAGES := "@supabase/supabase-js leaflet react-leaflet leaflet-control-geocoder recharts react-icons react-map-gl maplibre-gl supercluster"
 
 # Run frontend
 run-fe:
@@ -22,7 +22,7 @@ run: run-fe run-be
 
 # Setup frontend
 setup-fe:
-    cd {{FRONTEND_DIR}} && npm install && npm install {{FE_DEV_PACKAGES}} --save-dev && npm install {{FE_PACKAGES}}
+    cd {{FRONTEND_DIR}} && npm install && npm install {{FE_PACKAGES}}
     @echo "Frontend dependencies are installed."
 
 # Setup backend environment

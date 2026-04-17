@@ -39,9 +39,30 @@ class TrendRepository:
             )
             self.connection.autocommit = True  # Enable autocommit for immediate persistence
             print("Connected successfully to Supabase PostgreSQL")
+            self._ensure_table_exists()
             self._verify_connection()
         except Exception as e:
             raise ConnectionError(f"Failed to connect to database: {str(e)}")
+
+    def _ensure_table_exists(self):
+        """Create zip_trends table when it does not exist."""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS zip_trends (
+                    zip_code VARCHAR(20) PRIMARY KEY,
+                    factor DOUBLE PRECISION NOT NULL DEFAULT 1.0,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            cursor.close()
+        except Exception as e:
+            raise ConnectionError(
+                f"Failed to ensure zip_trends table exists. Error: {str(e)}"
+            )
     
     def _verify_connection(self):
         """Verify that the connection to Supabase is working and table exists."""
@@ -52,7 +73,7 @@ class TrendRepository:
             print("zip_trends table is accessible")
         except psycopg2.errors.UndefinedTable:
             raise ConnectionError(
-                "zip_trends table does not exist. Please run the SQL script to create it."
+                "zip_trends table is missing even after initialization."
             )
         except Exception as e:
             raise ConnectionError(

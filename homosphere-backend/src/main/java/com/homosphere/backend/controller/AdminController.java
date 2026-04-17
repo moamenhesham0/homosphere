@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.homosphere.backend.mapper.AdminMapper;
 import com.homosphere.backend.model.User;
 import com.homosphere.backend.repository.UserRepository;
+import com.homosphere.backend.repository.UserSubscriptionRepository;
 import com.homosphere.backend.service.SupabaseAdminService;
 
 import jakarta.transaction.Transactional;
@@ -40,6 +41,9 @@ public class AdminController {
 
     @Autowired
     private AdminMapper adminMapper;
+
+    @Autowired
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     /*
      * Check if the authenticated user is an admin
@@ -71,6 +75,18 @@ public class AdminController {
             log.error("Error checking admin access: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid authentication");
+        }
+    }
+
+    private void rollbackSupabaseUser(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            supabaseAdminService.deleteUser(userId);
+        } catch (Exception e) {
+            log.warn("Failed to rollback Supabase user {}: {}", userId, e.getMessage());
         }
     }
 
@@ -107,52 +123,129 @@ public class AdminController {
             return accessCheck;
         }
 
+        String createdSupabaseUserId = null;
         try {
-            String supabaseUserId = request.get("userId");
             String email = request.get("email");
-            
-            if (supabaseUserId == null || supabaseUserId.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("User ID is required");
-            }
+            String supabaseUserId = request.get("userId");
+            String password = request.get("password");
+            String firstName = request.get("firstName");
+            String lastName = request.get("lastName");
+            boolean createInSupabaseFirst = supabaseUserId == null || supabaseUserId.trim().isEmpty();
             
             if (email == null || email.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("Email is required");
             }
 
-            log.info("Syncing new admin from Supabase - ID: {}, Email: {}", supabaseUserId, email);
+            if (createInSupabaseFirst) {
+                if (password == null || password.trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body("Password is required");
+                }
+
+                // Prevent duplicate backend users before provisioning in Supabase
+                Optional<User> existingByEmail = userRepository.findByEmail(email);
+                if (existingByEmail.isPresent()) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body("User already exists in the system");
+                }
+
+                supabaseUserId = supabaseAdminService.createAdminUser(
+                    email.trim(),
+                    password,
+                    firstName,
+                    lastName
+                );
+                createdSupabaseUserId = supabaseUserId;
+
+                log.info("Created admin in Supabase - ID: {}, Email: {}", supabaseUserId, email);
+            } else {
+                log.info("Syncing new admin from Supabase - ID: {}, Email: {}", supabaseUserId, email);
+            }
 
             UUID userId = UUID.fromString(supabaseUserId);
 
             // Check if user already exists in database
             Optional<User> existingUser = userRepository.findById(userId);
             if (existingUser.isPresent()) {
+                if (createInSupabaseFirst) {
+                    rollbackSupabaseUser(supabaseUserId);
+                }
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("User already exists in the system");
             }
 
             // Create new admin user in database using mapper
             User newAdmin = adminMapper.mapAdminRequestToUser(request, userId);
+            newAdmin.setRole("ADMIN");
             
             userRepository.save(newAdmin);
 
             // Auto-confirm email in Supabase
-            try {
-                supabaseAdminService.confirmAdminEmail(supabaseUserId);
-                log.info("Email confirmed in Supabase for admin: {}", email);
-            } catch (Exception e) {
-                log.warn("Failed to auto-confirm email in Supabase: {}", e.getMessage());
+            if (!createInSupabaseFirst) {
+                try {
+                    supabaseAdminService.confirmAdminEmail(supabaseUserId);
+                    log.info("Email confirmed in Supabase for admin: {}", email);
+                } catch (Exception e) {
+                    log.warn("Failed to auto-confirm email in Supabase: {}", e.getMessage());
+                }
             }
 
             log.info("Successfully created admin account in database for: {}", email);
             return ResponseEntity.ok(newAdmin);
 
         } catch (IllegalArgumentException e) {
+            rollbackSupabaseUser(createdSupabaseUserId);
             log.error("Invalid UUID format: {}", e.getMessage());
             return ResponseEntity.badRequest().body("Invalid user ID format");
         } catch (Exception e) {
+            rollbackSupabaseUser(createdSupabaseUserId);
             log.error("Error adding admin: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error adding admin: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Delete non-admin user account completely (from database and Supabase)
+     */
+    @DeleteMapping("/users/{userId}")
+    @Transactional
+    public ResponseEntity<?> removeUserAccount(@PathVariable UUID userId, Authentication authentication) {
+        ResponseEntity<?> accessCheck = checkAdminAccess(authentication);
+        if (accessCheck != null) {
+            return accessCheck;
+        }
+
+        try {
+            log.info("Deleting user account ID: {}", userId);
+
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (!userOptional.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("User not found");
+            }
+
+            User user = userOptional.get();
+            if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Use /admins endpoint to delete admin accounts");
+            }
+
+            userSubscriptionRepository.deleteByUser_Id(userId);
+            userRepository.deleteById(userId);
+
+            try {
+                supabaseAdminService.deleteUser(userId.toString());
+            } catch (Exception e) {
+                log.warn("Warning: Failed to delete user from Supabase Auth: {}", e.getMessage());
+            }
+
+            log.info("Successfully deleted user account: {}", user.getEmail());
+            return ResponseEntity.ok("User account deleted successfully");
+
+        } catch (Exception e) {
+            log.error("Error deleting user account: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting user account: " + e.getMessage());
         }
     }
 

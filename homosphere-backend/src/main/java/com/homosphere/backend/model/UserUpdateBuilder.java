@@ -58,7 +58,8 @@ public class UserUpdateBuilder {
         
         public UserUpdateBuilder withUserName(String userName) {
             if(userName != null) {
-                user.setUserName(userName);
+                String normalizedUserName = userName.trim();
+                user.setUserName(normalizedUserName.isEmpty() ? null : normalizedUserName);
             }
             return this;
         }

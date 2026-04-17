@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
+import com.homosphere.backend.dto.property.response.PropertyAdminStatusCountsResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.enums.PropertyListingStatus;
 import com.homosphere.backend.enums.PropertyType;
@@ -105,6 +106,20 @@ public class PropertyService {
                 .stream()
                 .map(propertyListingMapper::toCompactResponse)
                 .collect(Collectors.toList());
+    }
+
+    public Page<CompactPropertyListingResponse> getPendingPropertiesPage(Pageable pageable) {
+        Page<PropertyListing> listings = propertyListingRepository.findByStatus(PropertyListingStatus.PENDING, pageable);
+        return listings.map(propertyListingMapper::toCompactResponse);
+    }
+
+    public PropertyAdminStatusCountsResponse getAdminStatusCounts() {
+        long pending = propertyListingRepository.countByStatus(PropertyListingStatus.PENDING);
+        long flagged = propertyListingRepository.countByStatus(PropertyListingStatus.REQUIRES_CHANGES);
+        long processed = propertyListingRepository.countByStatus(PropertyListingStatus.PUBLISHED)
+                + propertyListingRepository.countByStatus(PropertyListingStatus.REJECTED);
+
+        return new PropertyAdminStatusCountsResponse(pending, flagged, processed);
     }
 
     public List<CompactPropertyListingResponse> getAllPublishedProperties() {

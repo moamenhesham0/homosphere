@@ -1,19 +1,28 @@
 package com.homosphere.backend.controller;
 
-import com.homosphere.backend.dto.property.request.PropertyListingStatusUpdateRequest;
-import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
-import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
-import com.homosphere.backend.dto.property.response.PropertyListingResponse;
-import com.homosphere.backend.service.PropertyService;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.UUID;
+import com.homosphere.backend.dto.property.request.PropertyListingStatusUpdateRequest;
+import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
+import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
+import com.homosphere.backend.dto.property.response.PropertyAdminStatusCountsResponse;
+import com.homosphere.backend.dto.property.response.PropertyListingResponse;
+import com.homosphere.backend.service.PropertyService;
+
+import lombok.RequiredArgsConstructor;
 
 
 @RestController
@@ -74,6 +83,19 @@ public class PropertyController {
     @GetMapping("/admin/pending")
     public ResponseEntity<List<CompactPropertyListingResponse>> getAllPendingProperties() {
         return ResponseEntity.ok(propertyService.getAllPendingProperties());
+    }
+
+    @GetMapping("/admin/pending-page")
+    public Page<CompactPropertyListingResponse> getPendingPropertiesPage(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "8") int size
+    ) {
+        return propertyService.getPendingPropertiesPage(PageRequest.of(page, size));
+    }
+
+    @GetMapping("/admin/status-counts")
+    public ResponseEntity<PropertyAdminStatusCountsResponse> getAdminStatusCounts() {
+        return ResponseEntity.ok(propertyService.getAdminStatusCounts());
     }
 
     @GetMapping("/admin/published")

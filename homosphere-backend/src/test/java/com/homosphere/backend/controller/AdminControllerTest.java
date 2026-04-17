@@ -27,6 +27,7 @@ import org.springframework.security.core.Authentication;
 
 import com.homosphere.backend.model.User;
 import com.homosphere.backend.repository.UserRepository;
+import com.homosphere.backend.repository.UserSubscriptionRepository;
 import com.homosphere.backend.service.SupabaseAdminService;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +38,9 @@ class AdminControllerTest {
 
     @Mock
     private SupabaseAdminService supabaseAdminService;
+
+    @Mock
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     @Mock
     private Authentication authentication;
@@ -233,7 +237,7 @@ class AdminControllerTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("User ID is required", response.getBody());
+        assertEquals("Password is required", response.getBody());
     }
 
     @Test
@@ -252,7 +256,7 @@ class AdminControllerTest {
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("User ID is required", response.getBody());
+        assertEquals("Password is required", response.getBody());
     }
 
     @Test
@@ -362,7 +366,78 @@ class AdminControllerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
-    // ========== Test removeAdmin ==========
+    // ========== Test removeUserAccount / removeAdmin ==========
+
+    @Test
+    void testRemoveUserAccount_Success() {
+        // Arrange
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(adminUserId.toString());
+        when(userRepository.findById(adminUserId)).thenReturn(Optional.of(adminUser));
+
+        UUID targetUserId = UUID.randomUUID();
+        User targetUser = new User();
+        targetUser.setId(targetUserId);
+        targetUser.setEmail("target-user@test.com");
+        targetUser.setRole("BUYER");
+
+        when(userRepository.findById(targetUserId)).thenReturn(Optional.of(targetUser));
+        doNothing().when(userSubscriptionRepository).deleteByUser_Id(targetUserId);
+        doNothing().when(userRepository).deleteById(targetUserId);
+        when(supabaseAdminService.deleteUser(targetUserId.toString())).thenReturn(true);
+
+        // Act
+        ResponseEntity<?> response = adminController.removeUserAccount(targetUserId, authentication);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("User account deleted successfully", response.getBody());
+        verify(userSubscriptionRepository).deleteByUser_Id(targetUserId);
+        verify(userRepository).deleteById(targetUserId);
+        verify(supabaseAdminService).deleteUser(targetUserId.toString());
+    }
+
+    @Test
+    void testRemoveUserAccount_UserNotFound() {
+        // Arrange
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(adminUserId.toString());
+        when(userRepository.findById(adminUserId)).thenReturn(Optional.of(adminUser));
+
+        UUID targetUserId = UUID.randomUUID();
+        when(userRepository.findById(targetUserId)).thenReturn(Optional.empty());
+
+        // Act
+        ResponseEntity<?> response = adminController.removeUserAccount(targetUserId, authentication);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("User not found", response.getBody());
+    }
+
+    @Test
+    void testRemoveUserAccount_AdminRejected() {
+        // Arrange
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(adminUserId.toString());
+        when(userRepository.findById(adminUserId)).thenReturn(Optional.of(adminUser));
+
+        // Act
+        ResponseEntity<?> response = adminController.removeUserAccount(adminUserId, authentication);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Use /admins endpoint to delete admin accounts", response.getBody());
+    }
+
+    @Test
+    void testRemoveUserAccount_Unauthorized() {
+        // Act
+        ResponseEntity<?> response = adminController.removeUserAccount(UUID.randomUUID(), null);
+
+        // Assert
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
 
     @Test
     void testRemoveAdmin_Success() {

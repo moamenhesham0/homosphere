@@ -1,32 +1,64 @@
-import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
+import http from 'http';
+import {defineConfig, loadEnv} from 'vite';
 
-/* Function to automatically generate path aliases based on the src directory structure */
-function generateAliases() {
-    const srcPath = path.resolve(__dirname, 'src');
-    const entries = fs.readdirSync(srcPath, { withFileTypes: true });
-
-    const aliases = {};
-    entries.forEach((entry) => {
-        if (entry.isDirectory()) {
-            const name = entry.name;
-            aliases[`@${name}`] = path.resolve(srcPath, name);
+function paypalRedirectPlugin() {
+  return {
+    name: 'paypal-redirect-plugin',
+    configureServer() {
+      const server = http.createServer((req, res) => {
+        if (req.url && req.url.startsWith('/paypal-checkout')) {
+          res.writeHead(302, { Location: `http://localhost:3000${req.url}` });
+          res.end();
+        } else {
+          res.writeHead(404);
+          res.end('Not Found');
         }
-    });
-
-    return aliases;
+      });
+      
+      server.on('error', (e) => {
+        console.error('PayPal proxy port 5173 could not be started:', e.message);
+      });
+      
+      server.listen(5173, () => {
+        console.log('PayPal redirect proxy listening on port 5173 -> forwarding to 3000');
+      });
+    }
+  };
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+export default defineConfig(({mode}) => {
+  const envFilePath = path.resolve(__dirname, 'env');
+  const envFromFile = fs.existsSync(envFilePath)
+    ? dotenv.parse(fs.readFileSync(envFilePath))
+    : {};
+  const env = {
+    ...envFromFile,
+    ...loadEnv(mode, '.', ''),
+  };
 
-export default defineConfig({
-    plugins: [react()],
-    resolve: {
-        alias: generateAliases(),
+  return {
+    plugins: [react(), tailwindcss(), paypalRedirectPlugin()],
+    define: {
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || ''),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || ''),
+      'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(
+        env.VITE_SUPABASE_PUBLISHABLE_KEY || '',
+      ),
+      'import.meta.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL || ''),
     },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
+    },
+    server: {
+      host: 'localhost',
+    },
+  };
 });

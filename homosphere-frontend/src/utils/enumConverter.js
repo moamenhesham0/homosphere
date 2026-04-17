@@ -1,12 +1,13 @@
 
-export function enumToText(enumText) {
-    enumText.replace(/_/g, ' ');
-    enumText.toLowerCase();
-    enumText.charAt(0).toUpperCase() + enumText.slice(1);
-
-    return enumText;
+export function toNormalString(value) {
+    const temp = value.trim()
+                            .replace('_', ' ')
+                            .toLowerCase();
+    return temp.charAt(0).toUpperCase() + temp.slice(1);
 }
 
-export function textToEnum(text) {
-    return text.replace(/ /g, '_').toUpperCase();
+export function toEnum(value) {
+    return value.trim()
+                .replace(/\s/g, '_')
+                .toUpperCase();
 }

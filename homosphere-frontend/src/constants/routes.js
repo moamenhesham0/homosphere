@@ -1,26 +1,16 @@
-// Route constants for the application
 export const ROUTES = {
   HOME: '/',
   SIGNIN: '/signin',
   SIGNUP: '/signup',
-  PROFILE: '/profile',
-  FORGET_PASSWORD: '/forget-password',
-  AUTH: '/auth',
   SUBSCRIPTION: '/subscription',
-  PAYPAL_CHECKOUT: '/paypal-checkout',
-  PROPERTY_LISTING_FORM: '/property-listing-form',
-  ADMIN_PORTAL: '/admin-portal',
   SEARCH: '/search',
-  REQUEST_VIEW: '/request-viewing',
-  ANALYTICS: '/analytics',
-  AGENT_DASHBOARD: '/agent-dashboard',
+  PROPERTY_DETAILS: '/property-details',
+  CREATE_PROPERTY: '/create-property',
+  ADMIN_USER_MANAGEMENT: '/admin/user-management',
+  ADMIN_PROPERTY_APPROVALS: '/admin/property-approvals',
+  ADMIN_REVIEW_REQUEST: '/admin/review-request',
+  PROFILE: '/profile',
 };
 
-// External links
-export const EXTERNAL_LINKS = {
-  PRIVACY_POLICY: 'https://www.termsfeed.com/public/uploads/2021/12/sample-privacy-policy-template.pdf',
-};
+export default ROUTES;
 
-export const AUTH_ARGS = {
-  REDIRECT_TO: 'redirectTo',
-}
