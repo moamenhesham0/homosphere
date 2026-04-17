@@ -21,5 +21,11 @@ export const adminApi = {
             token,
         });
     },
-};
 
+    removeUserAccount(userId, token) {
+        return apiRequest(`/api/admin/users/${encodeURIComponent(userId)}`, {
+            method: 'DELETE',
+            token,
+        });
+    },
+};

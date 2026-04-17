@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   adminApi,
   getAuthToken,
+  getCurrentUserId,
   getFullName,
   usersListingApi,
 } from '../../services';
@@ -36,6 +37,7 @@ function statusDotClass(status) {
 
 function UserManagement() {
   const navigate = useNavigate();
+  const currentUserId = getCurrentUserId();
   const [usersPage, setUsersPage] = useState({
     content: [],
     number: 0,
@@ -50,6 +52,8 @@ function UserManagement() {
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
   const [isAddingAdmin, setIsAddingAdmin] = useState(false);
+  const [deletingUserId, setDeletingUserId] = useState('');
+  const [deleteTargetUser, setDeleteTargetUser] = useState(null);
   const [addAdminError, setAddAdminError] = useState('');
   const [addAdminForm, setAddAdminForm] = useState({
     email: '',
@@ -196,6 +200,70 @@ function UserManagement() {
     }
   };
 
+  const getUserDisplayName = (user) => (
+    getFullName(user?.firstName, user?.lastName, user?.userName || 'this user')
+  );
+
+  const openDeleteUserModal = (user) => {
+    if (!user?.id) {
+      setErrorMessage('User id is required to delete this account.');
+      return;
+    }
+
+    if (user.id === currentUserId) {
+      setErrorMessage('You cannot delete your own account from User Management.');
+      return;
+    }
+
+    setDeleteTargetUser(user);
+  };
+
+  const closeDeleteUserModal = () => {
+    if (deletingUserId) {
+      return;
+    }
+    setDeleteTargetUser(null);
+  };
+
+  const handleDeleteUserAccount = async () => {
+    const user = deleteTargetUser;
+    const token = getAuthToken();
+    if (!token) {
+      setErrorMessage('Admin token is required to delete user accounts.');
+      return;
+    }
+
+    if (!user?.id) {
+      setErrorMessage('User id is required to delete this account.');
+      return;
+    }
+
+    if (user.id === currentUserId) {
+      setErrorMessage('You cannot delete your own account from User Management.');
+      return;
+    }
+
+    const targetRole = (user.role || '').toUpperCase();
+    setDeletingUserId(user.id);
+    setErrorMessage('');
+
+    try {
+      if (targetRole === 'ADMIN') {
+        await adminApi.removeAdmin(user.id, token);
+      } else {
+        await adminApi.removeUserAccount(user.id, token);
+      }
+      setDeleteTargetUser(null);
+      const shouldLoadPreviousPage = usersPage.content.length === 1 && usersPage.number > 0;
+      const targetPage = shouldLoadPreviousPage ? usersPage.number - 1 : usersPage.number;
+      await loadUsers(targetPage);
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to delete account.');
+    } finally {
+      setDeletingUserId('');
+    }
+  };
+
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen flex">
       <AdminSidebar />
@@ -307,11 +375,17 @@ function UserManagement() {
                     <tr key={user.id} className="group hover:bg-surface-container-low/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <img
-                            alt="User Profile"
-                            className="w-10 h-10 rounded-full object-cover"
-                            src={user.photo || 'https://via.placeholder.com/80x80?text=User'}
-                          />
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary-container flex items-center justify-center">
+                            {user.photo ? (
+                              <img
+                                alt="User Profile"
+                                className="w-full h-full object-cover"
+                                src={user.photo}
+                              />
+                            ) : (
+                              <span className="material-symbols-outlined text-xl text-on-secondary-container">person</span>
+                            )}
+                          </div>
                           <div>
                             <p className="font-bold text-on-surface">
                               {getFullName(user.firstName, user.lastName, user.userName || 'Unnamed')}
@@ -328,22 +402,33 @@ function UserManagement() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {(user.role || '').toUpperCase() !== 'ADMIN' ? (
-                          <button
-                            className="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-                            type="button"
-                            title="View User"
-                            disabled={!user.id}
-                            onClick={() =>
-                              navigate(`/admin/user-management/${encodeURIComponent(user.id)}/profile`, {
-                                state: {
-                                  userSummary: user,
-                                },
-                              })
-                            }
-                          >
-                            <span className="material-symbols-outlined text-lg">visibility</span>
-                          </button>
+                            <>
+                              <button
+                                className="p-2 hover:bg-surface-container-high rounded-lg text-on-surface-variant transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                                type="button"
+                                title="View User"
+                                disabled={!user.id || deletingUserId === user.id}
+                                onClick={() =>
+                                  navigate(`/admin/user-management/${encodeURIComponent(user.id)}/profile`, {
+                                    state: {
+                                      userSummary: user,
+                                    },
+                                  })
+                                }
+                              >
+                                <span className="material-symbols-outlined text-lg">visibility</span>
+                              </button>
+                            </>
                           ) : null}
+                          <button
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-red-500 px-1 py-1 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                            type="button"
+                            title="Delete Account"
+                            disabled={!user.id || deletingUserId === user.id || user.id === currentUserId}
+                            onClick={() => openDeleteUserModal(user)}
+                          >
+                            <span className="material-symbols-outlined text-base">delete</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -486,6 +571,47 @@ function UserManagement() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTargetUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-xl font-headline font-bold text-on-surface">Delete Account</h3>
+              <button
+                className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-40"
+                type="button"
+                onClick={closeDeleteUserModal}
+                disabled={Boolean(deletingUserId)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <p className="text-sm text-on-surface-variant">
+              Delete <span className="font-bold text-on-surface">{getUserDisplayName(deleteTargetUser)}</span> permanently? This action cannot be undone.
+            </p>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                className="rounded-lg border border-outline-variant/30 px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-40"
+                type="button"
+                onClick={closeDeleteUserModal}
+                disabled={Boolean(deletingUserId)}
+              >
+                Cancel
+              </button>
+              <button
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={handleDeleteUserAccount}
+                disabled={Boolean(deletingUserId)}
+              >
+                {deletingUserId ? 'Deleting...' : 'Delete Account'}
+              </button>
+            </div>
           </div>
         </div>
       )}

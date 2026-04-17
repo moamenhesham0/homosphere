@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { getAuthToken, getCurrentUser, isAdmin } from '../services';
+
 
 export default function PropertyCard({
   propertyId,
@@ -14,7 +16,12 @@ export default function PropertyCard({
   trend,
   newConstruction,
   onFavoriteClick,
-}) {
+  isFavorited = false,
+})
+{
+   const user = getCurrentUser();
+   const isSeller = user?.seller || user?.broker || false;
+   const isBuyer = user?.buyer || false;
   const card = (
     <div className="group flex flex-col bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-on-surface/5 hover:translate-y-[-4px]">
       <div className="aspect-[4/3] relative overflow-hidden">
@@ -29,8 +36,13 @@ export default function PropertyCard({
             New Construction
           </div>
         )}
+        {isBuyer && (
         <button
-          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md text-error flex items-center justify-center hover:bg-white transition-all shadow-sm"
+          className={`absolute top-4 right-4 w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all shadow-sm ${
+            isFavorited
+              ? 'bg-primary text-on-primary hover:opacity-90'
+              : 'bg-white/90 text-on-surface-variant hover:bg-white'
+          }`}
           type="button"
           onClick={(event) => {
             event.preventDefault();
@@ -38,8 +50,14 @@ export default function PropertyCard({
             onFavoriteClick?.();
           }}
         >
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+          <span
+            className="material-symbols-outlined"
+            style={{ fontVariationSettings: `'FILL' ${isFavorited ? 1 : 0}` }}
+          >
+            favorite
+          </span>
         </button>
+        )}
       </div>
       <div className="p-6 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-2">

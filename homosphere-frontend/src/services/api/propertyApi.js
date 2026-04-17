@@ -37,6 +37,22 @@ export const propertyApi = {
         });
     },
 
+    getPendingPropertiesPage({ token, page = 0, size = 8 }) {
+        return apiRequest('/api/properties/admin/pending-page', {
+            token,
+            query: {
+                page,
+                size,
+            },
+        });
+    },
+
+    getAdminStatusCounts(token) {
+        return apiRequest('/api/properties/admin/status-counts', {
+            token,
+        });
+    },
+
     getPublishedProperties(token) {
         return apiRequest('/api/properties/admin/published', {
             token,
@@ -75,4 +91,3 @@ export const propertyApi = {
         });
     },
 };
-

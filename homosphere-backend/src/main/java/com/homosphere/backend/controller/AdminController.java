@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.homosphere.backend.mapper.AdminMapper;
 import com.homosphere.backend.model.User;
 import com.homosphere.backend.repository.UserRepository;
+import com.homosphere.backend.repository.UserSubscriptionRepository;
 import com.homosphere.backend.service.SupabaseAdminService;
 
 import jakarta.transaction.Transactional;
@@ -40,6 +41,9 @@ public class AdminController {
 
     @Autowired
     private AdminMapper adminMapper;
+
+    @Autowired
+    private UserSubscriptionRepository userSubscriptionRepository;
 
     /*
      * Check if the authenticated user is an admin
@@ -197,6 +201,51 @@ public class AdminController {
             log.error("Error adding admin: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error adding admin: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Delete non-admin user account completely (from database and Supabase)
+     */
+    @DeleteMapping("/users/{userId}")
+    @Transactional
+    public ResponseEntity<?> removeUserAccount(@PathVariable UUID userId, Authentication authentication) {
+        ResponseEntity<?> accessCheck = checkAdminAccess(authentication);
+        if (accessCheck != null) {
+            return accessCheck;
+        }
+
+        try {
+            log.info("Deleting user account ID: {}", userId);
+
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (!userOptional.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("User not found");
+            }
+
+            User user = userOptional.get();
+            if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Use /admins endpoint to delete admin accounts");
+            }
+
+            userSubscriptionRepository.deleteByUser_Id(userId);
+            userRepository.deleteById(userId);
+
+            try {
+                supabaseAdminService.deleteUser(userId.toString());
+            } catch (Exception e) {
+                log.warn("Warning: Failed to delete user from Supabase Auth: {}", e.getMessage());
+            }
+
+            log.info("Successfully deleted user account: {}", user.getEmail());
+            return ResponseEntity.ok("User account deleted successfully");
+
+        } catch (Exception e) {
+            log.error("Error deleting user account: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting user account: " + e.getMessage());
         }
     }
 

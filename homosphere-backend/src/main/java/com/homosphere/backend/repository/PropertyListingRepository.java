@@ -39,6 +39,10 @@ public interface PropertyListingRepository extends JpaRepository<PropertyListing
     @Query("SELECT pl FROM PropertyListing pl WHERE pl.status = :status")
     List<PropertyListing> findByStatus(@Param("status") PropertyListingStatus status);
 
+    Page<PropertyListing> findByStatus(PropertyListingStatus status, Pageable pageable);
+
+    long countByStatus(PropertyListingStatus status);
+
     @Query("SELECT DISTINCT pl.status FROM PropertyListing pl WHERE pl.seller.id = :userId")
     List<PropertyListingStatus> findDistinctStatusesByUserId(@Param("userId") UUID userId);
 
@@ -49,6 +53,8 @@ public interface PropertyListingRepository extends JpaRepository<PropertyListing
     List<UUID> findSavedListingIdsByUserId(@Param("userId") UUID userId);
 
     List<PropertyListing> findAllBySavedByUsers_Id(UUID userId);
+
+    Page<PropertyListing> findAllBySavedByUsers_Id(UUID userId, Pageable pageable);
 
     Optional<PropertyListing> findByProperty_PropertyId(UUID propertyId);
 
@@ -115,4 +121,3 @@ public interface PropertyListingRepository extends JpaRepository<PropertyListing
 """)
     PropertySearchLimits fetchLimits();
 }
-

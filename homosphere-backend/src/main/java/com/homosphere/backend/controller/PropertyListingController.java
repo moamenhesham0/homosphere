@@ -88,6 +88,11 @@ public class PropertyListingController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("user/{userId}/page")
+    public Page<CompactPropertyListingResponse> getUserPropertyListingsPage(@PathVariable("userId") UUID userId, Pageable pageable) {
+        return propertyListingService.getPageUserPropertyListingsByUserId(userId, pageable);
+    }
+
     @GetMapping("/public/user/{userId}")
     public ResponseEntity<List<CompactPropertyListingResponse>> getPublishedPropertyListingsByUser(@PathVariable("userId") UUID userId) {
         List<CompactPropertyListingResponse> response = propertyListingService.getPublishedPropertyListingsByUser(userId);
@@ -119,6 +124,11 @@ public class PropertyListingController {
     public ResponseEntity<List<CompactPropertyListingResponse>> getSavedPropertyListings(@PathVariable UUID userId) {
         List<CompactPropertyListingResponse> response = propertyListingService.getSavedPropertyListings(userId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/saved/{userId}/page")
+    public Page<CompactPropertyListingResponse> getSavedPropertyListingsPage(@PathVariable UUID userId, Pageable pageable) {
+        return propertyListingService.getPageSavedPropertyListings(userId, pageable);
     }
 
     @GetMapping("/map-points")

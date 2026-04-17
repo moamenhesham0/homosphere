@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import PropertyCard from '../../components/PropertyCard';
 import { ROUTES } from '../../constants/routes';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import {
   formatCompactAddress,
   formatPrice,
+  getCollectionPayload,
   getAuthToken,
   getFullName,
   getPropertyImageUrl,
@@ -34,19 +36,106 @@ function resolveLocation(profile) {
   return profile?.country || 'Location not set';
 }
 
+const PROFILE_PROPERTIES_PAGE_SIZE = 8;
+
 export default function ViewProfile() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const { userId } = useParams();
   const [profile, setProfile] = useState(state?.userSummary || null);
-  const [savedProperties, setSavedProperties] = useState([]);
-  const [listedProperties, setListedProperties] = useState([]);
+  const [savedTotal, setSavedTotal] = useState(0);
+  const [listedTotal, setListedTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const randomProfilePhoto = useMemo(
-    () => `https://i.pravatar.cc/200?img=${Math.floor(Math.random() * 70) + 1}`,
-    [],
+
+  const normalizedRole = normalizeRole(profile?.role);
+  const isSeller = ['SELLER', 'BROKER'].includes(normalizedRole) || (
+    listedTotal > 0 && savedTotal === 0
   );
+
+  const fetchPropertiesPage = useCallback(async (page) => {
+    if (isLoading || !userId) {
+      return {
+        items: [],
+        hasMore: false,
+      };
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setErrorMessage('Admin token is required to access this profile.');
+      return {
+        items: [],
+        hasMore: false,
+      };
+    }
+
+    try {
+      const payload = isSeller
+        ? await propertyListingApi.getUserPropertyListingsPage(userId, token, {
+          page,
+          size: PROFILE_PROPERTIES_PAGE_SIZE,
+        })
+        : await propertyListingApi.getSavedPropertyListingsPage(userId, token, {
+          page,
+          size: PROFILE_PROPERTIES_PAGE_SIZE,
+        });
+
+      const items = getCollectionPayload(payload);
+      const totalElements = Number(payload?.totalElements);
+      if (Number.isFinite(totalElements)) {
+        if (isSeller) {
+          setListedTotal(totalElements);
+        } else {
+          setSavedTotal(totalElements);
+        }
+      } else if (page === 0) {
+        if (isSeller) {
+          setListedTotal(items.length);
+        } else {
+          setSavedTotal(items.length);
+        }
+      }
+
+      return {
+        items,
+        hasMore:
+          typeof payload?.hasNext === 'boolean'
+            ? payload.hasNext
+            : Number.isFinite(totalElements)
+              ? (page + 1) * PROFILE_PROPERTIES_PAGE_SIZE < totalElements
+              : false,
+      };
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to load profile properties.');
+      return {
+        items: [],
+        hasMore: false,
+      };
+    }
+  }, [isLoading, isSeller, userId]);
+
+  const {
+    items: properties,
+    isLoading: isPagingLoading,
+    hasMore: hasMoreProperties,
+    loadNextPage,
+  } = useInfiniteScroll(fetchPropertiesPage, [
+    userId || '',
+    isSeller,
+    isLoading,
+  ]);
+
+  const handlePropertiesScroll = useCallback((event) => {
+    if (isPagingLoading || !hasMoreProperties) {
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    if (scrollHeight - (scrollTop + clientHeight) <= 120) {
+      loadNextPage();
+    }
+  }, [hasMoreProperties, isPagingLoading, loadNextPage]);
 
   useEffect(() => {
     let isMounted = true;
@@ -70,10 +159,10 @@ export default function ViewProfile() {
       setErrorMessage('');
 
       try {
-        const [profilePayload, savedPayload, listedPayload] = await Promise.all([
+        const [profilePayload, savedPagePayload, listedPagePayload] = await Promise.all([
           userApi.getPrivateUserById(userId, token),
-          propertyListingApi.getSavedPropertyListings(userId, token),
-          propertyListingApi.getUserPropertyListings(userId, token),
+          propertyListingApi.getSavedPropertyListingsPage(userId, token, { page: 0, size: 1 }),
+          propertyListingApi.getUserPropertyListingsPage(userId, token, { page: 0, size: 1 }),
         ]);
 
         if (!isMounted) {
@@ -81,8 +170,16 @@ export default function ViewProfile() {
         }
 
         setProfile(profilePayload || null);
-        setSavedProperties(Array.isArray(savedPayload) ? savedPayload : []);
-        setListedProperties(Array.isArray(listedPayload) ? listedPayload : []);
+        setSavedTotal(
+          Number.isFinite(Number(savedPagePayload?.totalElements))
+            ? Number(savedPagePayload.totalElements)
+            : getCollectionPayload(savedPagePayload).length,
+        );
+        setListedTotal(
+          Number.isFinite(Number(listedPagePayload?.totalElements))
+            ? Number(listedPagePayload.totalElements)
+            : getCollectionPayload(listedPagePayload).length,
+        );
       } catch (error) {
         if (!isMounted) {
           return;
@@ -103,13 +200,9 @@ export default function ViewProfile() {
   }, [userId]);
 
   const displayName = getFullName(profile?.firstName, profile?.lastName, profile?.userName || 'Profile');
-  const normalizedRole = normalizeRole(profile?.role);
-  const isSeller = ['SELLER', 'BROKER'].includes(normalizedRole) || (
-    listedProperties.length > 0 && savedProperties.length === 0
-  );
   const homesPanelLabel = isSeller ? 'Listed Homes' : 'Saved Homes';
   const locationLabel = resolveLocation(profile);
-  const properties = isSeller ? listedProperties : savedProperties;
+  const totalPropertiesCount = isSeller ? listedTotal : savedTotal;
   const propertiesTitle = isSeller ? 'Listed Homes' : 'Saved Homes';
   const loadingMessage = isSeller ? 'Loading listed properties...' : 'Loading saved properties...';
   const emptyMessage = isSeller ? 'No listed properties yet.' : 'No saved properties yet.';
@@ -141,12 +234,16 @@ export default function ViewProfile() {
               <div className="sticky top-28 space-y-8">
                 <div className="bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10 shadow-sm transition-all">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-24 h-24 rounded-full overflow-hidden mb-4 bg-secondary-container">
-                      <img
-                        className="w-full h-full object-cover"
-                        alt="Profile"
-                        src={profile?.photo || randomProfilePhoto}
-                      />
+                    <div className="w-24 h-24 rounded-full overflow-hidden mb-4 bg-secondary-container flex items-center justify-center">
+                      {profile?.photo ? (
+                        <img
+                          className="w-full h-full object-cover"
+                          alt="Profile"
+                          src={profile.photo}
+                        />
+                      ) : (
+                        <span className="material-symbols-outlined text-4xl text-on-secondary-container">person</span>
+                      )}
                     </div>
                     <div className="w-full text-center">
                       <h2 className="font-manrope font-extrabold text-xl text-on-surface">{displayName}</h2>
@@ -172,12 +269,12 @@ export default function ViewProfile() {
                   <p className="text-on-surface-variant font-body">
                     {isLoading
                       ? loadingMessage
-                      : `This user has ${properties.length} ${propertiesTitle.toLowerCase()}.`}
+                      : `This user has ${totalPropertiesCount} ${propertiesTitle.toLowerCase()}.`}
                   </p>
                 </div>
               </header>
 
-              {isLoading ? (
+              {isLoading || (isPagingLoading && properties.length === 0) ? (
                 <div className="rounded-xl bg-surface-container-low p-8 text-on-surface-variant">
                   {loadingMessage}
                 </div>
@@ -186,26 +283,36 @@ export default function ViewProfile() {
                   {emptyMessage}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="max-h-[68vh] overflow-y-auto pr-1" onScroll={handlePropertiesScroll}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {properties.map((property, index) => (
-                    <PropertyCard
+                    <div
                       key={property.propertyListingId || property.id || `${property.title || 'property'}-${index}`}
-                      propertyId={property.propertyListingId}
-                      image={getPropertyImageUrl(property)}
-                      price={formatPrice(property.price)}
-                      addressLine1={property.title || 'Untitled Listing'}
-                      addressLine2={formatCompactAddress(property.city, property.state)}
-                      beds={property.bedrooms || 0}
-                      baths={property.bathrooms || 0}
-                      sqft={
-                        property.propertyAreaSqFt
-                          ? Number(property.propertyAreaSqFt).toLocaleString('en-US')
-                          : 'N/A'
-                      }
-                      featured={index === 0}
-                      newConstruction={property.condition === 'NEW'}
-                    />
+                    >
+                      <PropertyCard
+                        propertyId={property.propertyListingId}
+                        image={getPropertyImageUrl(property)}
+                        price={formatPrice(property.price)}
+                        addressLine1={property.title || 'Untitled Listing'}
+                        addressLine2={formatCompactAddress(property.city, property.state)}
+                        beds={property.bedrooms || 0}
+                        baths={property.bathrooms || 0}
+                        sqft={
+                          property.propertyAreaSqFt
+                            ? Number(property.propertyAreaSqFt).toLocaleString('en-US')
+                            : 'N/A'
+                        }
+                        featured={index === 0}
+                        newConstruction={property.condition === 'NEW'}
+                      />
+                    </div>
                   ))}
+                  {isPagingLoading && properties.length > 0 && (
+                    <div className="md:col-span-2 rounded-xl bg-surface-container-low p-4 text-center text-on-surface-variant">
+                      Loading more properties...
+                    </div>
+                  )}
+                  </div>
                 </div>
               )}
             </section>

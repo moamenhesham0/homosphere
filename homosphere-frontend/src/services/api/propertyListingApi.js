@@ -60,6 +60,16 @@ export const propertyListingApi = {
         });
     },
 
+    getUserPropertyListingsPage(userId, token, { page = 0, size = 8 } = {}) {
+        return apiRequest(`/api/property-listing/user/${encodeURIComponent(userId)}/page`, {
+            token,
+            query: {
+                page,
+                size,
+            },
+        });
+    },
+
     getPublishedPropertyListingsByUser(userId) {
         return apiRequest(`/api/property-listing/public/user/${encodeURIComponent(userId)}`);
     },
@@ -85,6 +95,16 @@ export const propertyListingApi = {
     getSavedPropertyListings(userId, token) {
         return apiRequest(`/api/property-listing/saved/${encodeURIComponent(userId)}`, {
             token,
+        });
+    },
+
+    getSavedPropertyListingsPage(userId, token, { page = 0, size = 8 } = {}) {
+        return apiRequest(`/api/property-listing/saved/${encodeURIComponent(userId)}/page`, {
+            token,
+            query: {
+                page,
+                size,
+            },
         });
     },
 
@@ -116,4 +136,3 @@ export const propertyListingApi = {
         );
     }
 };
-

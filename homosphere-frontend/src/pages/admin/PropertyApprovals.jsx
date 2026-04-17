@@ -1,22 +1,30 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import AdminHeader from '../../components/admin/AdminHeader';
 import ReviewRequestCard from '../../components/admin/ReviewRequestCard';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import {
   formatCompactAddress,
   formatPrice,
+  getCollectionPayload,
   getAuthToken,
   getPropertyImageUrl,
   propertyApi,
   propertySubmissionReviewApi,
 } from '../../services';
 
+const APPROVALS_PAGE_SIZE = 8;
+
 export default function PropertyApprovals() {
   const navigate = useNavigate();
-  const [pendingProperties, setPendingProperties] = useState([]);
-  const [allPartitioned, setAllPartitioned] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [stats, setStats] = useState({
+    pending: 0,
+    flagged: 0,
+    processed: 0,
+  });
   const [errorMessage, setErrorMessage] = useState('');
   const [headerSearchQuery, setHeaderSearchQuery] = useState('');
   const [isFlagModalOpen, setIsFlagModalOpen] = useState(false);
@@ -24,34 +32,88 @@ export default function PropertyApprovals() {
   const [flagMessage, setFlagMessage] = useState('Requires additional documents');
   const [isSubmittingFlag, setIsSubmittingFlag] = useState(false);
 
-  const loadApprovals = useCallback(async () => {
+  const fetchPendingPage = useCallback(async (page) => {
     const token = getAuthToken();
     if (!token) {
       setErrorMessage('Admin token is required to view property approvals.');
-      setIsLoading(false);
-      return;
+      return {
+        items: [],
+        hasMore: false,
+      };
     }
 
-    setIsLoading(true);
-    setErrorMessage('');
-
     try {
-      const [pendingPayload, partitionedPayload] = await Promise.all([
-        propertyApi.getPendingProperties(token),
-        propertyApi.getAllPropertiesPartitionedByStatus(token),
+      const [pendingPayload, statsPayload] = await Promise.all([
+        propertyApi.getPendingPropertiesPage({
+          token,
+          page,
+          size: APPROVALS_PAGE_SIZE,
+        }),
+        page === 0 ? propertyApi.getAdminStatusCounts(token) : Promise.resolve(null),
       ]);
-      setPendingProperties(Array.isArray(pendingPayload) ? pendingPayload : []);
-      setAllPartitioned(partitionedPayload?.propertiesByStatus || null);
+
+      if (page === 0 && statsPayload) {
+        setStats({
+          pending: Number(statsPayload?.pending || 0),
+          flagged: Number(statsPayload?.flagged || 0),
+          processed: Number(statsPayload?.processed || 0),
+        });
+      }
+
+      const items = getCollectionPayload(pendingPayload);
+      const totalElements = Number(pendingPayload?.totalElements);
+      if (Number.isFinite(totalElements)) {
+        setPendingTotal(totalElements);
+      } else if (page === 0) {
+        setPendingTotal(items.length);
+      }
+
+      return {
+        items,
+        hasMore:
+          typeof pendingPayload?.hasNext === 'boolean'
+            ? pendingPayload.hasNext
+            : Number.isFinite(totalElements)
+              ? (page + 1) * APPROVALS_PAGE_SIZE < totalElements
+              : false,
+      };
     } catch (error) {
       setErrorMessage(error.message || 'Failed to load property approvals.');
-    } finally {
-      setIsLoading(false);
+      return {
+        items: [],
+        hasMore: false,
+      };
     }
   }, []);
 
-  useEffect(() => {
-    loadApprovals();
-  }, [loadApprovals]);
+  const {
+    items: pendingProperties,
+    isLoading,
+    hasMore,
+    loadNextPage,
+  } = useInfiniteScroll(fetchPendingPage, [reloadKey]);
+
+  const handlePendingScroll = useCallback((event) => {
+    if (isLoading || !hasMore) {
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    if (scrollHeight - (scrollTop + clientHeight) <= 120) {
+      loadNextPage();
+    }
+  }, [hasMore, isLoading, loadNextPage]);
+
+  const loadApprovals = useCallback(() => {
+    setErrorMessage('');
+    setPendingTotal(0);
+    setStats({
+      pending: 0,
+      flagged: 0,
+      processed: 0,
+    });
+    setReloadKey((prev) => prev + 1);
+  }, []);
 
   const handleStatusUpdate = async (propertyListingId, status) => {
     const token = getAuthToken();
@@ -68,31 +130,17 @@ export default function PropertyApprovals() {
         },
         token,
       );
-      await loadApprovals();
+      loadApprovals();
     } catch (error) {
       setErrorMessage(error.message || 'Failed to update property status.');
     }
   };
 
-  const stats = useMemo(() => {
-    if (!allPartitioned) {
-      return {
-        pending: pendingProperties.length,
-        flagged: 0,
-        processed: 0,
-      };
-    }
-
-    const published = allPartitioned.PUBLISHED?.length || 0;
-    const rejected = allPartitioned.REJECTED?.length || 0;
-    const requiresChanges = allPartitioned.REQUIRES_CHANGES?.length || 0;
-
-    return {
-      pending: allPartitioned.PENDING?.length || pendingProperties.length,
-      flagged: requiresChanges,
-      processed: published + rejected,
-    };
-  }, [allPartitioned, pendingProperties.length]);
+  const displayStats = useMemo(() => ({
+    pending: stats.pending || pendingTotal,
+    flagged: stats.flagged || 0,
+    processed: stats.processed || 0,
+  }), [pendingTotal, stats.flagged, stats.pending, stats.processed]);
 
   const handleFlag = (propertyId) => {
     if (!propertyId) {
@@ -138,7 +186,7 @@ export default function PropertyApprovals() {
         token,
       );
       closeFlagModal();
-      await loadApprovals();
+      loadApprovals();
     } catch (error) {
       setErrorMessage(error.message || 'Failed to flag listing.');
     } finally {
@@ -189,9 +237,9 @@ export default function PropertyApprovals() {
                   Pipeline Status
                 </p>
                 <div className="flex items-center gap-2 text-xs font-semibold">
-                  <span className="rounded-full bg-primary-container/20 px-3 py-1 text-primary">Pending {stats.pending}</span>
-                  <span className="rounded-full bg-error-container px-3 py-1 text-error">Flagged {stats.flagged}</span>
-                  <span className="rounded-full bg-secondary-container px-3 py-1 text-on-secondary-container">Processed {stats.processed}</span>
+                  <span className="rounded-full bg-primary-container/20 px-3 py-1 text-primary">Pending {displayStats.pending}</span>
+                  <span className="rounded-full bg-error-container px-3 py-1 text-error">Flagged {displayStats.flagged}</span>
+                  <span className="rounded-full bg-secondary-container px-3 py-1 text-on-secondary-container">Processed {displayStats.processed}</span>
                 </div>
               </div>
               <button
@@ -210,7 +258,7 @@ export default function PropertyApprovals() {
             </p>
           )}
 
-          <div className="space-y-4">
+          <div className="max-h-[68vh] space-y-4 overflow-y-auto pr-1" onScroll={handlePendingScroll}>
             {isLoading ? (
               <p className="rounded-xl bg-surface-container-lowest p-6 text-on-surface-variant">
                 Loading pending approvals...
@@ -223,23 +271,34 @@ export default function PropertyApprovals() {
               </p>
             ) : null}
 
-            {pendingCards.map((property) => (
-              <ReviewRequestCard
-                key={`${property.status}-${property.propertyId}`}
-                propertyId={property.propertyId}
-                image={property.image}
-                title={property.title}
-                address={property.address}
-                price={property.price}
-                agent={property.agent}
-                submittedDate={property.submittedDate}
-                status={property.status}
-                flaggedReason={property.flaggedReason}
-                onApprove={(id) => handleStatusUpdate(id, 'PUBLISHED')}
-                onFlag={handleFlag}
-                onDetails={(id) => navigate(`/property-details/${id}`)}
-              />
-            ))}
+            {pendingCards.map((property) => {
+              return (
+                <div
+                  key={`${property.status}-${property.propertyId}`}
+                >
+                  <ReviewRequestCard
+                    propertyId={property.propertyId}
+                    image={property.image}
+                    title={property.title}
+                    address={property.address}
+                    price={property.price}
+                    agent={property.agent}
+                    submittedDate={property.submittedDate}
+                    status={property.status}
+                    flaggedReason={property.flaggedReason}
+                    onApprove={(id) => handleStatusUpdate(id, 'PUBLISHED')}
+                    onFlag={handleFlag}
+                    onDetails={(id) => navigate(`/property-details/${id}`)}
+                  />
+                </div>
+              );
+            })}
+
+            {isLoading && pendingCards.length > 0 ? (
+              <p className="rounded-xl bg-surface-container-lowest p-6 text-center text-sm text-on-surface-variant">
+                Loading more approvals...
+              </p>
+            ) : null}
           </div>
         </main>
       </div>

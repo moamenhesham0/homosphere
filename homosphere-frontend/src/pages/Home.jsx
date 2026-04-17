@@ -6,10 +6,16 @@ import PropertyCard from '../components/PropertyCard';
 import {
   formatCompactAddress,
   formatPrice,
+  getCurrentUserId,
   getPropertyImageUrl,
   propertyListingApi,
 } from '../services';
 import { getCurrentUser, getAuthToken } from '../services';
+
+function isBuyerUser(user) {
+  const normalizedRole = typeof user?.role === 'string' ? user.role.trim().toUpperCase() : '';
+  return user?.buyer === true || normalizedRole === 'BUYER';
+}
 
 export default function Home() {
   const [featuredListings, setFeaturedListings] = useState([]);
@@ -17,9 +23,9 @@ export default function Home() {
   const [page, setPage] = useState(0);
   const [morePage, setMorePage] = useState(false);
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(false);
+  const [savedPropertyIds, setSavedPropertyIds] = useState(() => new Set());
 
   useEffect(() => {
-    const user = getCurrentUser();
     let isMounted = true;
 
     async function loadFeaturedListings() {
@@ -55,6 +61,66 @@ export default function Home() {
       isMounted = false;
     };
   }, [page]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadSavedPropertyIds() {
+      const user = getCurrentUser();
+      const token = getAuthToken();
+      const userId = getCurrentUserId();
+
+      if (!token || !userId || !isBuyerUser(user)) {
+        setSavedPropertyIds(new Set());
+        return;
+      }
+
+      try {
+        const savedIds = await propertyListingApi.getSavedPropertyIds(userId, token);
+        if (!ignore) {
+          const normalized = Array.isArray(savedIds) ? savedIds.map((id) => String(id)) : [];
+          setSavedPropertyIds(new Set(normalized));
+        }
+      } catch (error) {
+        if (!ignore) {
+          setFeaturedError(error.message || 'Failed to load saved properties.');
+        }
+      }
+    }
+
+    loadSavedPropertyIds();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const handleToggleFavorite = async (propertyListingId) => {
+    const user = getCurrentUser();
+    const token = getAuthToken();
+    const userId = getCurrentUserId();
+
+    if (!token || !userId || !isBuyerUser(user)) {
+      setFeaturedError('Only buyer accounts can save properties.');
+      return;
+    }
+
+    try {
+      await propertyListingApi.toggleSaveProperty(propertyListingId, userId, token);
+      setSavedPropertyIds((previous) => {
+        const next = new Set(previous);
+        const normalizedId = String(propertyListingId);
+        if (next.has(normalizedId)) {
+          next.delete(normalizedId);
+        } else {
+          next.add(normalizedId);
+        }
+        return next;
+      });
+    } catch (error) {
+      setFeaturedError(error.message || 'Failed to save property.');
+    }
+  };
 
   return (
     <div className="bg-surface text-on-surface antialiased min-h-screen flex flex-col">
@@ -161,6 +227,8 @@ export default function Home() {
                 baths={listing.bathrooms || 0}
                 sqft={listing.propertyAreaSqFt ? Number(listing.propertyAreaSqFt).toLocaleString('en-US') : 'N/A'}
                 newConstruction={listing.condition === 'NEW'}
+                isFavorited={savedPropertyIds.has(String(listing.propertyListingId))}
+                onFavoriteClick={() => handleToggleFavorite(listing.propertyListingId)}
               />
             ))}
           </div>

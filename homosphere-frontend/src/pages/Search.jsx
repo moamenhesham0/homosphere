@@ -6,11 +6,13 @@ import PropertyCardSkeleton from "../components/PropertyCardSkeleton";
 import { toStateCode } from '../constants/usStates';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { useURLState } from '../hooks/useURLState';
-import {getAuthToken} from "../services/authSession.js";
 import {
   formatCompactAddress,
   formatPrice,
   getCollectionPayload,
+  getCurrentUser,
+  getCurrentUserId,
+  getAuthToken,
   getPropertyImageUrl,
   propertyListingApi,
 } from '../services';
@@ -140,6 +142,11 @@ function buildURLState(searchInput, filters, page) {
   };
 }
 
+function isBuyerUser(user) {
+  const normalizedRole = typeof user?.role === 'string' ? user.role.trim().toUpperCase() : '';
+  return user?.buyer === true || normalizedRole === 'BUYER';
+}
+
 
 
 export default function Search() {
@@ -172,6 +179,7 @@ export default function Search() {
   const [targetPage, setTargetPage] = useState(initialURLState.page);
   const [openFilter, setOpenFilter] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [savedPropertyIds, setSavedPropertyIds] = useState(() => new Set());
 
   const [hoveredPropertyId, setHoveredPropertyId] = useState(null);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -225,6 +233,66 @@ export default function Search() {
     lastElementRef,
     // limits
   } = useInfiniteScroll(fetchPage, requestDependencies);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadSavedPropertyIds = async () => {
+      const user = getCurrentUser();
+      const token = getAuthToken();
+      const userId = getCurrentUserId();
+
+      if (!token || !userId || !isBuyerUser(user)) {
+        setSavedPropertyIds(new Set());
+        return;
+      }
+
+      try {
+        const savedIds = await propertyListingApi.getSavedPropertyIds(userId, token);
+        if (!ignore) {
+          const normalized = Array.isArray(savedIds) ? savedIds.map((id) => String(id)) : [];
+          setSavedPropertyIds(new Set(normalized));
+        }
+      } catch (error) {
+        if (!ignore) {
+          setErrorMessage(error.message || 'Failed to load saved properties.');
+        }
+      }
+    };
+
+    loadSavedPropertyIds();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const handleToggleFavorite = useCallback(async (propertyListingId) => {
+    const user = getCurrentUser();
+    const token = getAuthToken();
+    const userId = getCurrentUserId();
+
+    if (!token || !userId || !isBuyerUser(user)) {
+      setErrorMessage('Only buyer accounts can save properties.');
+      return;
+    }
+
+    try {
+      await propertyListingApi.toggleSaveProperty(propertyListingId, userId, token);
+      setSavedPropertyIds((previous) => {
+        const next = new Set(previous);
+        const normalizedId = String(propertyListingId);
+        if (next.has(normalizedId)) {
+          next.delete(normalizedId);
+        } else {
+          next.add(normalizedId);
+        }
+        return next;
+      });
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to save property.');
+    }
+  }, []);
 
 
   useEffect(() => {
@@ -434,6 +502,8 @@ export default function Search() {
                             : 'N/A'
                         }
                         newConstruction={listing.condition === 'NEW'}
+                        isFavorited={savedPropertyIds.has(String(listing.propertyListingId))}
+                        onFavoriteClick={() => handleToggleFavorite(listing.propertyListingId)}
                       />
                     </div>
                   );
@@ -479,5 +549,4 @@ export default function Search() {
     </div>
   );
 }
-
 

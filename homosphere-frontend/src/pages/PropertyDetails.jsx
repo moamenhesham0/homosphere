@@ -48,6 +48,17 @@ export default function PropertyDetails() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [tourMessage, setTourMessage] = useState('');
+  const [tourMessageType, setTourMessageType] = useState('');
+  const [isTourModalOpen, setIsTourModalOpen] = useState(false);
+  const [isSubmittingTour, setIsSubmittingTour] = useState(false);
+  const [tourForm, setTourForm] = useState({
+    preferredDate: '',
+    startTime: '',
+    endTime: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
   const [valuation, setValuation] = useState(null);
   const [isValuationLoading, setIsValuationLoading] = useState(false);
   const [valuationError, setValuationError] = useState('');
@@ -257,8 +268,9 @@ export default function PropertyDetails() {
   const forecastLabel = `${annualForecastPercent >= 0 ? '+' : ''}${annualForecastPercent.toFixed(1)}% in 1yr`;
   const isAdminUser = isAdminSessionUser();
 
-  const handleTakeTour = async () => {
+  const openTourModal = () => {
     setTourMessage('');
+    setTourMessageType('');
 
     const token = getAuthToken();
     const currentUser = getCurrentUser();
@@ -273,20 +285,62 @@ export default function PropertyDetails() {
       return;
     }
 
-    const preferredDate =
-      window.prompt('Preferred viewing date (YYYY-MM-DD):', new Date().toISOString().slice(0, 10)) ||
-      '';
-    if (!preferredDate.trim()) {
+    setTourForm({
+      preferredDate: new Date().toISOString().slice(0, 10),
+      startTime: '10:00',
+      endTime: '11:00',
+      email: currentUser.email || '',
+      phone: currentUser.phone || '',
+      message: 'Interested in viewing this property.',
+    });
+    setIsTourModalOpen(true);
+  };
+
+  const closeTourModal = () => {
+    if (isSubmittingTour) {
+      return;
+    }
+    setIsTourModalOpen(false);
+  };
+
+  const handleTakeTour = async (event) => {
+    event.preventDefault();
+    setTourMessage('');
+    setTourMessageType('');
+
+    const token = getAuthToken();
+    const currentUser = getCurrentUser();
+
+    if (!token || !currentUser?.id) {
+      setTourMessage('Sign in first to request a viewing.');
+      setTourMessageType('error');
+      setIsTourModalOpen(false);
       return;
     }
 
-    const startTime = window.prompt('Preferred start time (HH:MM):', '10:00') || '';
-    if (!startTime.trim()) {
+    if (!property?.propertyId) {
+      setTourMessage('This listing is missing a property identifier.');
+      setTourMessageType('error');
+      setIsTourModalOpen(false);
       return;
     }
 
-    const endTime = window.prompt('Preferred end time (HH:MM):', '11:00') || '';
-    if (!endTime.trim()) {
+    const preferredDate = (tourForm.preferredDate || '').trim();
+    const startTime = (tourForm.startTime || '').trim();
+    const endTime = (tourForm.endTime || '').trim();
+    const email = (tourForm.email || '').trim();
+    const phone = (tourForm.phone || '').trim();
+    const message = (tourForm.message || '').trim();
+
+    if (!preferredDate || !startTime || !endTime) {
+      setTourMessage('Preferred date and time range are required.');
+      setTourMessageType('error');
+      return;
+    }
+
+    if (!email || !phone) {
+      setTourMessage('Email and phone are required to submit a viewing request.');
+      setTourMessageType('error');
       return;
     }
 
@@ -296,15 +350,8 @@ export default function PropertyDetails() {
       currentUser.userName || 'Buyer',
     );
     const name = currentUser.userName || fallbackName;
-    const email = currentUser.email || window.prompt('Email:', '') || '';
-    const phone = currentUser.phone || window.prompt('Phone:', '') || '';
-    const message = window.prompt('Message for the seller/agent:', 'Interested in viewing this property.') || '';
 
-    if (!email.trim() || !phone.trim()) {
-      setTourMessage('Email and phone are required to submit a viewing request.');
-      return;
-    }
-
+    setIsSubmittingTour(true);
     try {
       await viewingRequestApi.createViewingRequest(
         {
@@ -313,16 +360,20 @@ export default function PropertyDetails() {
           name,
           email,
           phone,
-          preferredDate: preferredDate.trim(),
-          startTime: `${startTime.trim()}:00`,
-          endTime: `${endTime.trim()}:00`,
-          message: message.trim(),
+          preferredDate,
+          startTime: `${startTime}:00`,
+          endTime: `${endTime}:00`,
+          message,
         },
         token,
       );
       setTourMessage('Viewing request submitted successfully.');
+      setTourMessageType('success');
     } catch (error) {
       setTourMessage(error.message || 'Failed to submit viewing request.');
+      setTourMessageType('error');
+    } finally {
+      setIsSubmittingTour(false);
     }
   };
 
@@ -533,7 +584,7 @@ export default function PropertyDetails() {
                       <button
                         className="w-full py-4 bg-primary text-on-primary rounded-lg font-black font-headline text-lg hover:bg-surface-tint transition-all shadow-sm"
                         type="button"
-                        onClick={handleTakeTour}
+                        onClick={openTourModal}
                       >
                         Take a Tour
                       </button>
@@ -564,7 +615,11 @@ export default function PropertyDetails() {
                       <div className="pt-6 border-t border-outline-variant/15 text-sm text-on-surface-variant">
                         <p>Seller: {listing?.sellerName || 'Unknown Seller'}</p>
                         <p>Broker: {listing?.brokerName || 'Not assigned'}</p>
-                        {tourMessage && <p className="mt-3">{tourMessage}</p>}
+                        {tourMessage && (
+                          <p className={`mt-3 ${tourMessageType === 'success' ? 'text-emerald-700' : 'text-error'}`}>
+                            {tourMessage}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -576,6 +631,158 @@ export default function PropertyDetails() {
       </main>
 
       <Footer />
+
+      {isTourModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-outline-variant/20 bg-surface-container-lowest p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-2xl font-headline font-bold text-on-surface">Request a Viewing</h3>
+              <button
+                className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-40"
+                type="button"
+                onClick={closeTourModal}
+                disabled={isSubmittingTour}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleTakeTour}>
+              {tourMessage && (
+                <p
+                  className={`rounded-lg px-4 py-3 text-sm ${
+                    tourMessageType === 'success'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-error-container text-error'
+                  }`}
+                >
+                  {tourMessage}
+                </p>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="tour-date">
+                    Preferred Date
+                  </label>
+                  <input
+                    id="tour-date"
+                    className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    type="date"
+                    value={tourForm.preferredDate}
+                    onChange={(event) =>
+                      setTourForm((current) => ({ ...current, preferredDate: event.target.value }))
+                    }
+                    disabled={isSubmittingTour}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="tour-start-time">
+                    Start Time
+                  </label>
+                  <input
+                    id="tour-start-time"
+                    className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    type="time"
+                    value={tourForm.startTime}
+                    onChange={(event) =>
+                      setTourForm((current) => ({ ...current, startTime: event.target.value }))
+                    }
+                    disabled={isSubmittingTour}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="tour-end-time">
+                  End Time
+                </label>
+                <input
+                  id="tour-end-time"
+                  className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  type="time"
+                  value={tourForm.endTime}
+                  onChange={(event) =>
+                    setTourForm((current) => ({ ...current, endTime: event.target.value }))
+                  }
+                  disabled={isSubmittingTour}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="tour-email">
+                  Email
+                </label>
+                <input
+                  id="tour-email"
+                  className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  type="email"
+                  value={tourForm.email}
+                  onChange={(event) =>
+                    setTourForm((current) => ({ ...current, email: event.target.value }))
+                  }
+                  disabled={isSubmittingTour}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="tour-phone">
+                  Phone
+                </label>
+                <input
+                  id="tour-phone"
+                  className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  type="tel"
+                  value={tourForm.phone}
+                  onChange={(event) =>
+                    setTourForm((current) => ({ ...current, phone: event.target.value }))
+                  }
+                  disabled={isSubmittingTour}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-on-surface-variant" htmlFor="tour-message">
+                  Message
+                </label>
+                <textarea
+                  id="tour-message"
+                  className="w-full rounded-lg border border-outline-variant/30 bg-surface px-3 py-2 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  rows={4}
+                  value={tourForm.message}
+                  onChange={(event) =>
+                    setTourForm((current) => ({ ...current, message: event.target.value }))
+                  }
+                  disabled={isSubmittingTour}
+                />
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  className="rounded-lg border border-outline-variant/30 px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors disabled:opacity-40"
+                  type="button"
+                  onClick={closeTourModal}
+                  disabled={isSubmittingTour}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:opacity-90 transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+                  type="submit"
+                  disabled={isSubmittingTour}
+                >
+                  {isSubmittingTour ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

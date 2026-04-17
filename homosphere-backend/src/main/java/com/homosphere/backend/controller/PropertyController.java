@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.homosphere.backend.dto.property.request.PropertyListingStatusUpdateRequest;
 import com.homosphere.backend.dto.property.response.CompactPropertyListingResponse;
 import com.homosphere.backend.dto.property.response.PropertyAdminResponse;
+import com.homosphere.backend.dto.property.response.PropertyAdminStatusCountsResponse;
 import com.homosphere.backend.dto.property.response.PropertyListingResponse;
 import com.homosphere.backend.service.PropertyService;
 
@@ -82,6 +83,19 @@ public class PropertyController {
     @GetMapping("/admin/pending")
     public ResponseEntity<List<CompactPropertyListingResponse>> getAllPendingProperties() {
         return ResponseEntity.ok(propertyService.getAllPendingProperties());
+    }
+
+    @GetMapping("/admin/pending-page")
+    public Page<CompactPropertyListingResponse> getPendingPropertiesPage(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "8") int size
+    ) {
+        return propertyService.getPendingPropertiesPage(PageRequest.of(page, size));
+    }
+
+    @GetMapping("/admin/status-counts")
+    public ResponseEntity<PropertyAdminStatusCountsResponse> getAdminStatusCounts() {
+        return ResponseEntity.ok(propertyService.getAdminStatusCounts());
     }
 
     @GetMapping("/admin/published")

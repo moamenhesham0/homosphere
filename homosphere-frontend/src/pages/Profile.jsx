@@ -385,8 +385,11 @@ export default function Profile() {
     onFavoriteClick,
     lastElementRef,
     isPagingLoading,
-  }) => (
-    <>
+  }) => {
+    const isSavedHomesPanel = title === 'Saved Homes';
+
+    return (
+      <>
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
@@ -436,6 +439,7 @@ export default function Profile() {
                     }
                     featured={index === 0}
                     newConstruction={property.condition === 'NEW'}
+                    isFavorited={isSavedHomesPanel}
                     onFavoriteClick={
                       isEditing && typeof onFavoriteClick === 'function'
                         ? () => onFavoriteClick(property.propertyListingId)
@@ -453,8 +457,9 @@ export default function Profile() {
           )}
         </>
       )}
-    </>
-  );
+      </>
+    );
+  };
 
   return (
     <div className="bg-surface text-on-surface font-body min-h-screen flex flex-col">

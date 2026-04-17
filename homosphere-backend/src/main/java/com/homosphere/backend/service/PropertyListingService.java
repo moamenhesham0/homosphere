@@ -256,4 +256,19 @@ public class PropertyListingService {
 
         return listings.map(propertyListingMapper::toCompactResponse);
     }
+
+    public Page<CompactPropertyListingResponse> getPageUserPropertyListingsByUserId(UUID userId, Pageable pageable){
+        Page<PropertyListing> listings = propertyListingRepository.findBySeller_Id(userId, pageable);
+
+        return listings.map(propertyListingMapper::toCompactResponse);
+    }
+
+    public Page<CompactPropertyListingResponse> getPageSavedPropertyListings(UUID userId, Pageable pageable) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found");
+        }
+
+        Page<PropertyListing> listings = propertyListingRepository.findAllBySavedByUsers_Id(userId, pageable);
+        return listings.map(propertyListingMapper::toCompactResponse);
+    }
 }
