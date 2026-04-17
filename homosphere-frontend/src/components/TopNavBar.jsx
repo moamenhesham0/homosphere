@@ -16,10 +16,10 @@ export default function TopNavBar() {
           <div className="hidden md:flex gap-8">
             {isBuyer && (
               <a className="font-headline font-bold tracking-tight text-emerald-700 border-b-2 border-emerald-700 pb-1 hover:text-emerald-500 transition-colors duration-200" href="#">Buy</a>
-            )}
+              )}
             {isSeller && (
               <Link className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" to="/create-property">Sell</Link>
-            )}
+              )}
             {isUserAdmin && (
               <Link className="font-headline font-bold tracking-tight text-primary-fixed-variant hover:text-primary transition-colors duration-200 flex items-center gap-1" to="/admin/user-management">
                 <span className="material-symbols-outlined text-lg">admin_panel_settings</span>
@@ -27,6 +27,8 @@ export default function TopNavBar() {
               </Link>
             )}
             <a className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" href="#">Agent Finder</a>
+            <Link className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" to="/support">Support</Link>
+            <Link className="font-headline font-bold tracking-tight text-stone-600 hover:text-emerald-500 transition-colors duration-200" to="/about">About</Link>
           </div>
         </div>
         <div className="flex items-center gap-8">

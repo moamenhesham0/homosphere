@@ -167,9 +167,9 @@ export default function SignUp() {
           </div>
         </section>
 
-        <section className="w-full md:w-1/2 lg:w-2/5 bg-surface-container-lowest flex flex-col justify-center px-6 py-6 md:px-12 lg:px-16">
-          <div className="max-w-md w-full mx-auto">
-            <div className="mb-6">
+        <section className="w-full md:w-1/2 lg:w-2/5 bg-surface-container-lowest flex flex-col justify-center px-6 py-2 md:px-12 lg:px-16">
+          <div className="max-w-md w-full mx-auto mt-[-2rem]">
+            <div className="mb-4">
               <h2 className="font-headline text-3xl font-bold text-on-surface mb-1">Create Account</h2>
               <p className="text-on-surface-variant font-body text-sm">Fill in your details and sync with backend</p>
             </div>

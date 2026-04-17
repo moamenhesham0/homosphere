@@ -443,9 +443,9 @@ export default function Search() {
                 ))}
               </div>
 
-              {isLoading && listings.length > 0 && (
-                <p className="mt-8 text-center text-sm text-outline">Loading more listings...</p>
-              )}
+              {/*{isLoading && listings.length > 0 && (*/}
+              {/*  // <p className="mt-8 text-center text-sm text-outline"></p>*/}
+              {/*)}*/}
             </div>
           </section>
 

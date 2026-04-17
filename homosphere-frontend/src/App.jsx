@@ -16,6 +16,8 @@ import PropertyApprovals from './pages/admin/PropertyApprovals';
 import ViewProfile from './pages/admin/ViewProfile';
 import Profile from './pages/Profile';
 import PaypalCheckout from './pages/PaypalCheckout';
+import About from './pages/About';
+import Support from './pages/Support';
 import AdminRoute from './components/AdminRoute';
 import UserSubscriptionChecker from './components/UserSubscriptionChecker';
 
@@ -25,6 +27,8 @@ export default function App() {
       <Routes>
         <Route element={<AdminRoute />}>
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/subscription" element={<Subscription />} />
