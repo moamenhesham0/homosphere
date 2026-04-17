@@ -32,19 +32,19 @@ It combines property discovery, listing management, subscriptions, payments, adm
 
 
 ### Buyer flow
-<video src="docs/buyer-edit.mp4" controls preload="metadata" width="960"></video>
-
-[Open video directly](docs/buyer-edit.mp4)
+<video controls preload="metadata" width="960">
+  <source src="docs/buyer-edit.mp4" type="video/mp4">
+</video>
 
 ### Seller flow
-<video src="docs/seller-cut.mp4" controls preload="metadata" width="960"></video>
-
-[Open video directly](docs/seller-cut.mp4)
+<video controls preload="metadata" width="960">
+  <source src="docs/seller-cut.mp4" type="video/mp4">
+</video>
 
 ### Admin flow
-<video src="docs/admin.mp4" controls preload="metadata" width="960"></video>
-
-[Open video directly](docs/admin.mp4)
+<video controls preload="metadata" width="960">
+  <source src="docs/admin.mp4" type="video/mp4">
+</video>
 
 ## Repository Structure
 
