@@ -3,6 +3,9 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import TopNavBar from '../components/TopNavBar';
 import Footer from '../components/Footer';
 import FactFeatureCard from '../components/FactFeatureCard';
+import { Map, Marker } from 'react-map-gl/maplibre';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { ROUTES } from '../constants/routes';
 import {
   formatPrice,
@@ -14,6 +17,7 @@ import {
   propertyApi,
   viewingRequestApi,
 } from '../services';
+import {toNormalString} from "@/src/utils/enumConverter.js";
 
 const DEFAULT_AI_BASE_URL = 'http://localhost:8000';
 const viteEnv = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
@@ -322,6 +326,8 @@ export default function PropertyDetails() {
     }
   };
 
+  const SAFE_MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+
   return (
     <div className="bg-background font-body text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
       {!isAdminUser && <TopNavBar />}
@@ -392,7 +398,7 @@ export default function PropertyDetails() {
                     </span>
                     {property?.condition && (
                       <span className="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant rounded-full text-xs font-bold tracking-wider uppercase">
-                        {property.condition.replaceAll('_', ' ')}
+                        {toNormalString(property.condition)}
                       </span>
                     )}
                   </div>
@@ -458,7 +464,7 @@ export default function PropertyDetails() {
                     <FactFeatureCard
                       icon="home"
                       title="Property Type"
-                      value={property?.type || 'N/A'}
+                      value={property?.type ? toNormalString(property.type) : 'N/A'}
                     />
                     <FactFeatureCard
                       icon="event_available"
@@ -468,7 +474,7 @@ export default function PropertyDetails() {
                     <FactFeatureCard
                       icon="directions_car"
                       title="Condition"
-                      value={property?.condition ? property.condition.replaceAll('_', ' ') : 'N/A'}
+                      value={property?.condition ? toNormalString(property.condition) : 'N/A'}
                     />
                     <FactFeatureCard
                       icon="visibility"
@@ -534,11 +540,32 @@ export default function PropertyDetails() {
                       <button className="w-full py-4 bg-secondary-container bg-[#dae5dd] text-on-secondary-container rounded-lg font-black font-headline text-lg hover:bg-secondary-fixed-dim transition-all" type="button">
                         Contact Agent
                       </button>
-                    <div className="pt-6 border-t border-outline-variant/15 text-sm text-on-surface-variant">
-                      <p>Seller: {listing?.sellerName || 'Unknown Seller'}</p>
-                      <p>Broker: {listing?.brokerName || 'Not assigned'}</p>
-                      {tourMessage && <p className="mt-3">{tourMessage}</p>}
-                    </div>
+
+                      {locationData.latitude && locationData.longitude && (
+                        <div className="h-64 w-full rounded-lg overflow-hidden border border-outline-variant/15 mt-6">
+                          <Map
+                            mapLib={maplibregl}
+                            initialViewState={{
+                              longitude: locationData.longitude,
+                              latitude: locationData.latitude,
+                              zoom: 14,
+                            }}
+                            style={{ width: '100%', height: '100%' }}
+                            mapStyle={SAFE_MAP_STYLE}
+                            interactive={false}
+                          >
+                            <Marker longitude={locationData.longitude} latitude={locationData.latitude} anchor="bottom">
+                              <span className="material-symbols-outlined text-primary text-3xl location-pin">location_on</span>
+                            </Marker>
+                          </Map>
+                        </div>
+                      )}
+
+                      <div className="pt-6 border-t border-outline-variant/15 text-sm text-on-surface-variant">
+                        <p>Seller: {listing?.sellerName || 'Unknown Seller'}</p>
+                        <p>Broker: {listing?.brokerName || 'Not assigned'}</p>
+                        {tourMessage && <p className="mt-3">{tourMessage}</p>}
+                      </div>
                     </div>
                   </div>
                 </div>
