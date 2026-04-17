@@ -32,19 +32,15 @@ It combines property discovery, listing management, subscriptions, payments, adm
 
 
 ### Buyer flow
-<video controls preload="metadata" width="960">
-  <source src="docs/buyer-edit.mp4" type="video/mp4">
-</video>
+https://github.com/user-attachments/assets/00813627-9061-4786-bca0-bb6d6b7ac151
 
 ### Seller flow
-<video controls preload="metadata" width="960">
-  <source src="docs/seller-cut.mp4" type="video/mp4">
-</video>
+https://github.com/user-attachments/assets/1ff96678-054d-4f9d-aa3d-99c719ca64e6
 
 ### Admin flow
-<video controls preload="metadata" width="960">
-  <source src="docs/admin.mp4" type="video/mp4">
-</video>
+https://github.com/user-attachments/assets/42ad6fca-334d-499c-9eec-f6722318f804
+
+
 
 ## Repository Structure
 
@@ -110,6 +106,7 @@ You can run frontend, backend, and AI services together with Docker Compose:
 ```bash
 docker compose up --build
 ```
+For more details on the setup : [Setup Guide](docs/README.md)
 
 ## Contributers
 - Ahmed Ali Hassan
