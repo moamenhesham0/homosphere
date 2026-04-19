@@ -42,6 +42,16 @@ https://github.com/user-attachments/assets/42ad6fca-334d-499c-9eec-f6722318f804
 
 
 
+## Next Iteration
+
+Planned improvements for the next iteration:
+
+- End-to-end messaging flow between buyers and sellers with unread status tracking.
+- Property recommendation feed based on saved listings, views, and budget preferences.
+- Expanded analytics dashboard with conversion funnel and retention metrics.
+- Stronger quality gates with higher backend and frontend test coverage.
+- CI pipeline enhancements for automated linting, testing, and Docker image validation.
+
 ## Repository Structure
 
 ```text
@@ -109,8 +119,8 @@ docker compose up --build
 For more details on the setup : [Setup Guide](docs/README.md)
 
 ## Contributers
-- Ahmed Ali Hassan
-- Ahmed Farag Elsayed
-- Moamen Hesham Mohammed
-- Mohand Sayed Ahmed
-- Yousef Khamis Abo-Elmagd
+- [Ahmed Ali Hassan](https://github.com/AhmedAliElashmawy)
+- [Ahmed Farag Elsayed](https://github.com/AhmedFaragElsayed)
+- [Moamen Hesham Mohammed](https://github.com/moamenhesham0)
+- [Mohand Sayed Ahmed](https://github.com/muhannd2004)
+- [Yousef Khamis Abo-Elmagd](https://github.com/youssefkhamis998)
