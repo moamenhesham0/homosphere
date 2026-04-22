@@ -1,11 +1,35 @@
 name: CI
 
 on:
-  workflow_call:
+  push:
+    branches: [ "main" ]
+    pull_request:
+      branches: [ "main" ]
+    workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    env:
+      DB_HOMOSPHERE_HOST: ${{ secrets.DB_HOMOSPHERE_HOST }}
+      DB_HOMOSPHERE_PORT: ${{ secrets.DB_HOMOSPHERE_PORT }}
+      DB_HOMOSPHERE_NAME: ${{ secrets.DB_HOMOSPHERE_NAME }}
+      DB_HOMOSPHERE_USERNAME: ${{ secrets.DB_HOMOSPHERE_USERNAME }}
+      DB_HOMSPHERE_PASS: ${{ secrets.DB_HOMOSPHERE_PASS }}
+
+      HOMOSPHERE_JWT_SECRET: ${{ secrets.HOMOSPHERE_JWT_SECRET }}
+      HOMOSPHERE_SUPABASE_SERVICE_KEY: ${{ secrets.HOMOSPHERE_SUPABASE_SERVICE_KEY }}
+      HOMOSPHERE_SUPABASE_URL: ${{ secrets.HOMOSPHERE_SUPABASE_URL }}
+
+      HOMOSPHERE_CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ secrets.HOMOSPHERE_CLOUDFLARE_R2_ACCESS_KEY_ID }}
+      HOMOSPHERE_CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ secrets.HOMOSPHERE_CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
+      HOMOSPHERE_CLOUDFLARE_R2_BUCKET_NAME: ${{ secrets.HOMOSPHERE_CLOUDFLARE_R2_BUCKET_NAME }}
+      HOMOSPHERE_CLOUDFLARE_R2_ACCOUNT_ID: ${{ secrets.HOMOSPHERE_CLOUDFLARE_R2_ACCOUNT_ID }}
+      HOMOSPHERE_CLOUDFLARE_R2_PUBLIC_DOMAIN: ${{ secrets.HOMOSPHERE_CLOUDFLARE_R2_PUBLIC_DOMAIN }}
+
+      HOM_PAYPAL_CLIENT: ${{ secrets.HOM_PAYPAL_CLIENT }}
+      HOM_PAYPAL_SECRET: ${{ secrets.HOM_PAYPAL_SECRET }}
 
     steps:
       - uses: actions/checkout@v4
