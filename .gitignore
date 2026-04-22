@@ -45,4 +45,3 @@ homosphere-backend/data/
 *.mv.db
 *.trace.db
 
-application.properties
