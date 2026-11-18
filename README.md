@@ -31,10 +31,10 @@ It combines property discovery, listing management, subscriptions, payments, adm
 ## Product Demo Videos
 
 
-### Buyer flow
+### Seller flow
 https://github.com/user-attachments/assets/00813627-9061-4786-bca0-bb6d6b7ac151
 
-### Seller flow
+### Buyer flow
 https://github.com/user-attachments/assets/1ff96678-054d-4f9d-aa3d-99c719ca64e6
 
 ### Admin flow
